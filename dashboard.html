@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mélodie's Book — Tableau de bord</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400;1,600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+</head>
+
+<body class="dashboard-body">
+
+  <!-- LOADING -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-logo">✦ Mélodie's Book</div>
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- PARTICULES DÉCORATIVES -->
+  <div class="particles" id="particles"></div>
+
+  <!-- ==================== NAVBAR ==================== -->
+  <nav class="navbar">
+    <a class="navbar-brand" href="dashboard.html">
+      <div class="navbar-logo">♪</div>
+      <span class="navbar-title">Mélodie's Book</span>
+    </a>
+
+    <ul class="navbar-nav" id="navLinks">
+      <li><a href="dashboard.html" class="active"><span class="nav-icon">🏠</span> Accueil</a></li>
+      <li><a href="repertoire.html"><span class="nav-icon">🎵</span> Répertoire</a></li>
+      <li><a href="themes.html"><span class="nav-icon">📖</span> Thèmes</a></li>
+      <li><a href="historique.html"><span class="nav-icon">📜</span> Historique</a></li>
+      <li><a href="bibliotheque.html"><span class="nav-icon">📚</span> Bibliothèque</a></li>
+      <!-- Admin uniquement -->
+      <li data-role-required="admin"><a href="comptes.html"><span class="nav-icon">👥</span> Comptes</a></li>
+      <li data-role-required="admin"><a href="statistiques.html"><span class="nav-icon">📊</span> Stats</a></li>
+    </ul>
+
+    <div class="navbar-user">
+      <div class="user-info">
+        <span class="user-name" id="navUserName">—</span>
+        <span class="user-role-badge" id="navUserRole">—</span>
+      </div>
+      <div class="user-avatar-placeholder" id="navAvatar">?</div>
+      <button class="btn-logout" id="btnLogout">⬡ Quitter</button>
+    </div>
+  </nav>
+
+  <!-- ==================== ACCÈS EN ATTENTE ==================== -->
+  <div class="waiting-screen hidden" id="waitingScreen">
+    <div class="waiting-icon">⏳</div>
+    <h2 class="waiting-title">Accès en attente de validation</h2>
+    <p class="waiting-text">
+      Votre compte a bien été enregistré. Un administrateur doit valider votre accès
+      et vous attribuer un rôle avant que vous puissiez accéder au site.
+    </p>
+    <blockquote class="waiting-verset">
+      « Car je sais quels sont mes projets sur vous, dit l'Éternel,
+      projets de paix et non de malheur, afin de vous donner un avenir. »
+      <br/>— Jérémie 29:11
+    </blockquote>
+  </div>
+
+  <!-- ==================== CONTENU PRINCIPAL ==================== -->
+  <main class="main-content hidden" id="mainContent">
+
+    <!-- Verset du jour -->
+    <div class="verset-du-jour">
+      <div class="verset-texte" id="versetTexte">
+        « Chantez à l'Éternel un cantique nouveau ! Que sa louange retentisse dans l'assemblée des fidèles. »
+      </div>
+      <div class="verset-ref" id="versetRef">— Psaume 149:1</div>
+    </div>
+
+    <!-- En-tête personnalisé -->
+    <div class="dashboard-header">
+      <div class="dashboard-greeting">Bienvenue,</div>
+      <h1 class="dashboard-title" id="dashboardTitle">Chargement…</h1>
+      <p class="dashboard-verset" id="dashboardSub"></p>
+    </div>
+
+    <!-- STATISTIQUES RAPIDES -->
+    <div class="divider-or">
+      <span class="divider-or-label">✦ Vue d'ensemble</span>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">🎵</div>
+        <div class="stat-value" id="statChansons">—</div>
+        <div class="stat-label">Chansons</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📖</div>
+        <div class="stat-value" id="statThemes">—</div>
+        <div class="stat-label">Thèmes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <div class="stat-value" id="statCultes">—</div>
+        <div class="stat-label">Cultes</div>
+      </div>
+      <div class="stat-card" id="statMembresCard">
+        <div class="stat-icon">👥</div>
+        <div class="stat-value" id="statMembres">—</div>
+        <div class="stat-label">Membres actifs</div>
+      </div>
+    </div>
+
+    <!-- GRILLE PRINCIPALE -->
+    <div class="dashboard-grid">
+
+      <!-- ACCÈS RAPIDES (colonne pleine) -->
+      <div class="section-card col-full">
+        <div class="section-card-header">
+          <div class="section-card-title">
+            <span class="s-icon">⚡</span> Accès rapides
+          </div>
+        </div>
+        <div class="section-card-body">
+          <div class="quick-access-grid" id="quickAccessGrid">
+            <!-- Généré dynamiquement selon le rôle -->
+          </div>
+        </div>
+      </div>
+
+      <!-- PROCHAIN CULTE -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <div class="section-card-title">
+            <span class="s-icon">✝️</span> Prochain culte
+          </div>
+          <a href="historique.html" class="section-card-link">Voir tout →</a>
+        </div>
+        <div class="section-card-body" id="prochainCulteBody">
+          <div class="no-culte">Chargement…</div>
+        </div>
+      </div>
+
+      <!-- ACTIVITÉ RÉCENTE -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <div class="section-card-title">
+            <span class="s-icon">🕊️</span> Activité récente
+          </div>
+        </div>
+        <div class="section-card-body">
+          <div class="activity-list" id="activityList">
+            <div class="no-culte">Chargement…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROPOSITIONS (admin uniquement) -->
+      <div class="section-card col-full" id="propositionsSection" style="display:none;">
+        <div class="section-card-header">
+          <div class="section-card-title">
+            <span class="s-icon">💡</span> Propositions en attente
+          </div>
+          <a href="propositions.html" class="section-card-link">Gérer →</a>
+        </div>
+        <div class="section-card-body" id="propositionsBody">
+          <div class="no-culte">Aucune proposition en attente.</div>
+        </div>
+      </div>
+
+    </div><!-- fin dashboard-grid -->
+  </main>
+
+
+  <!-- ==================== JAVASCRIPT ==================== -->
+  <script>
+    const SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ---- Versets rotatifs ----
+    const VERSETS = [
+      { texte: '« Chantez à l\'Éternel un cantique nouveau ! Que sa louange retentisse dans l\'assemblée des fidèles. »', ref: '— Psaume 149:1' },
+      { texte: '« Que la parole de Christ habite parmi vous abondamment. Enseignez-vous et exhortez-vous les uns les autres avec sagesse, par des psaumes, des hymnes, des cantiques spirituels. »', ref: '— Colossiens 3:16' },
+      { texte: '« Mon cœur est prêt, ô Dieu ! Je veux chanter et célébrer ma gloire. »', ref: '— Psaume 108:1' },
+      { texte: '« Louez l\'Éternel, car il est bon ! Car sa bonté dure à toujours ! »', ref: '— Psaume 136:1' },
+      { texte: '« Chantez à l\'Éternel, bénissez son nom ! Annoncez de jour en jour son salut. »', ref: '— Psaume 96:2' },
+    ];
+
+    // ---- Accès rapides selon le rôle ----
+    const QUICK_ACCESS = {
+      all: [
+        { icon: '🎵', label: 'Répertoire', href: 'repertoire.html' },
+        { icon: '📖', label: 'Thèmes', href: 'themes.html' },
+        { icon: '📚', label: 'Bibliothèque', href: 'bibliotheque.html' },
+        { icon: '📜', label: 'Historique', href: 'historique.html' },
+        { icon: '💡', label: 'Proposer', href: 'proposer.html' },
+      ],
+      admin: [
+        { icon: '➕', label: 'Ajouter chanson', href: 'ajouter-chanson.html' },
+        { icon: '📋', label: 'Propositions', href: 'propositions.html', badge: true },
+        { icon: '📅', label: 'Événements', href: 'evenements.html' },
+        { icon: '👤', label: 'Désigner prép.', href: 'designateur.html' },
+        { icon: '✅', label: 'Valider programme', href: 'validation-programme.html' },
+        { icon: '👥', label: 'Comptes', href: 'comptes.html' },
+        { icon: '📊', label: 'Statistiques', href: 'statistiques.html' },
+      ],
+      preparateur: [
+        { icon: '🎼', label: 'Préparer culte', href: 'preparation-culte.html' },
+      ]
+    };
+
+    // ---- Particules ----
+    function createParticles() {
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 22; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left   = Math.random() * 100 + '%';
+        p.style.width  = (Math.random() * 2 + 1) + 'px';
+        p.style.height = p.style.width;
+        p.style.animationDuration  = (Math.random() * 14 + 10) + 's';
+        p.style.animationDelay     = (Math.random() * 12) + 's';
+        p.style.opacity = Math.random() * 0.4;
+        container.appendChild(p);
+      }
+    }
+
+    // ---- Utilitaire : rôle badge ----
+    function getRoleBadgeClass(role) {
+      if (role === 'admin')       return 'role-admin';
+      if (role === 'preparateur') return 'role-preparateur';
+      return 'role-membre';
+    }
+    function getRoleLabel(role) {
+      if (role === 'admin')       return '✦ Administrateur';
+      if (role === 'preparateur') return '✧ Préparateur';
+      return '· Membre';
+    }
+
+    // ---- Construire les accès rapides ----
+    function buildQuickAccess(role, propositionsCount) {
+      const grid = document.getElementById('quickAccessGrid');
+      grid.innerHTML = '';
+
+      let items = [...QUICK_ACCESS.all];
+      if (role === 'admin')       items = [...items, ...QUICK_ACCESS.admin];
+      if (role === 'preparateur') items = [...items, ...QUICK_ACCESS.preparateur];
+
+      items.forEach(item => {
+        const a = document.createElement('a');
+        a.className = 'qa-card';
+        a.href = item.href;
+        if (item.badge && propositionsCount > 0) {
+          a.innerHTML = `
+            <span class="qa-badge">${propositionsCount}</span>
+            <span class="qa-icon">${item.icon}</span>
+            <span class="qa-label">${item.label}</span>`;
+        } else {
+          a.innerHTML = `
+            <span class="qa-icon">${item.icon}</span>
+            <span class="qa-label">${item.label}</span>`;
+        }
+        grid.appendChild(a);
+      });
+    }
+
+    // ---- Afficher le prochain culte ----
+    function displayProchainCulte(culte) {
+      const body = document.getElementById('prochainCulteBody');
+      if (!culte) {
+        body.innerHTML = '<div class="no-culte">Aucun culte à venir pour le moment.</div>';
+        return;
+      }
+      const date = new Date(culte.date_culte);
+      const jour = date.getDate().toString().padStart(2,'0');
+      const mois = date.toLocaleDateString('fr-FR', { month: 'short' }).toUpperCase();
+
+      const statutClass = {
+        en_preparation: 'statut-preparation',
+        valide:         'statut-valide',
+        archive:        'statut-archive'
+      }[culte.statut] || 'statut-preparation';
+
+      const statutLabel = {
+        en_preparation: 'En préparation',
+        valide:         'Validé',
+        archive:        'Archivé'
+      }[culte.statut] || culte.statut;
+
+      body.innerHTML = `
+        <div class="culte-card">
+          <div class="culte-date-block">
+            <div class="culte-date-day">${jour}</div>
+            <div class="culte-date-month">${mois}</div>
+          </div>
+          <div class="culte-info">
+            <div class="culte-theme">${culte.theme || 'Thème à définir'}</div>
+            <div class="culte-meta">
+              <span class="culte-statut ${statutClass}">${statutLabel}</span>
+            </div>
+            <div class="culte-chansons-count">
+              Programme en cours de préparation
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // ---- Activité récente ----
+    function displayActivity(chansons, cultes) {
+      const list = document.getElementById('activityList');
+      const items = [];
+
+      // Dernières chansons ajoutées
+      if (chansons && chansons.length > 0) {
+        chansons.slice(0, 3).forEach(c => {
+          const d = new Date(c.created_at);
+          const diff = Math.floor((Date.now() - d) / 86400000);
+          const timeStr = diff === 0 ? 'Aujourd\'hui' : diff === 1 ? 'Hier' : `Il y a ${diff} jours`;
+          items.push({
+            dot: 'dot-or',
+            text: `Chanson ajoutée : <strong>${c.titre}</strong>`,
+            time: timeStr
+          });
+        });
+      }
+
+      // Derniers cultes
+      if (cultes && cultes.length > 0) {
+        cultes.slice(0, 2).forEach(c => {
+          const d = new Date(c.created_at);
+          const diff = Math.floor((Date.now() - d) / 86400000);
+          const timeStr = diff === 0 ? 'Aujourd\'hui' : diff === 1 ? 'Hier' : `Il y a ${diff} jours`;
+          items.push({
+            dot: 'dot-violet',
+            text: `Culte créé : <strong>${c.theme || 'Sans thème'}</strong>`,
+            time: timeStr
+          });
+        });
+      }
+
+      if (items.length === 0) {
+        list.innerHTML = '<div class="no-culte">Aucune activité récente.</div>';
+        return;
+      }
+
+      list.innerHTML = items.map(item => `
+        <div class="activity-item">
+          <div class="activity-dot ${item.dot}"></div>
+          <div class="activity-content">
+            <div class="activity-text">${item.text}</div>
+            <div class="activity-time">${item.time}</div>
+          </div>
+        </div>`).join('');
+    }
+
+    // ---- Propositions en attente (admin) ----
+    async function loadPropositions(role) {
+      if (role !== 'admin') return 0;
+      const section = document.getElementById('propositionsSection');
+      section.style.display = 'block';
+
+      const { data, error } = await sb
+        .from('propositions')
+        .select('*')
+        .eq('statut', 'en_attente')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      const body = document.getElementById('propositionsBody');
+
+      if (error || !data || data.length === 0) {
+        body.innerHTML = '<div class="no-culte">Aucune proposition en attente. ✓</div>';
+        return 0;
+      }
+
+      body.innerHTML = data.map(p => `
+        <div class="proposition-item">
+          <div>
+            <div class="proposition-titre">${p.titre}</div>
+            <div class="proposition-artiste">${p.artiste || ''} · ${p.langue || ''}</div>
+          </div>
+          <a href="propositions.html" class="btn-voir">Voir</a>
+        </div>`).join('');
+
+      return data.length;
+    }
+
+    // ---- INITIALISATION ----
+    async function init() {
+      createParticles();
+
+      // Verset du jour aléatoire
+      const v = VERSETS[Math.floor(Math.random() * VERSETS.length)];
+      document.getElementById('versetTexte').textContent = v.texte;
+      document.getElementById('versetRef').textContent   = v.ref;
+
+      // 1. Vérifier la session
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // 2. Charger le profil
+      const { data: profil, error: profErr } = await sb
+        .from('profils')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profErr || !profil) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // 3. Vérifier actif
+      if (!profil.actif) {
+        document.getElementById('loadingOverlay').classList.add('hidden');
+        document.getElementById('waitingScreen').classList.remove('hidden');
+        // Mettre le nom dans la navbar quand même
+        document.getElementById('navUserName').textContent = profil.nom || session.user.email.split('@')[0];
+        document.getElementById('navUserRole').textContent = 'En attente';
+        document.getElementById('navUserRole').className = 'user-role-badge';
+        return;
+      }
+
+      const role = profil.role || 'membre';
+      const nom  = profil.nom || session.user.email.split('@')[0];
+
+      // 4. Mettre à jour la navbar
+      document.getElementById('navUserName').textContent = nom;
+      const roleEl = document.getElementById('navUserRole');
+      roleEl.textContent = getRoleLabel(role);
+      roleEl.className = `user-role-badge ${getRoleBadgeClass(role)}`;
+
+      // Avatar
+      if (profil.photo_url) {
+        const img = document.createElement('img');
+        img.src = profil.photo_url;
+        img.className = 'user-avatar';
+        img.alt = nom;
+        document.getElementById('navAvatar').replaceWith(img);
+      } else {
+        document.getElementById('navAvatar').textContent = nom.charAt(0).toUpperCase();
+      }
+
+      // Afficher les éléments nav admin
+      if (role === 'admin') {
+        document.querySelectorAll('[data-role-required="admin"]').forEach(el => {
+          el.style.display = 'block';
+        });
+      }
+
+      // 5. Titre du dashboard
+      const heure = new Date().getHours();
+      let salut = heure < 12 ? 'Bon matin' : heure < 18 ? 'Bon après-midi' : 'Bonsoir';
+      document.getElementById('dashboardTitle').textContent = `${salut}, ${nom}`;
+
+      const subtitles = {
+        admin:        'Que l\'Éternel bénisse votre service aujourd\'hui.',
+        preparateur:  'La préparation du culte vous a été confiée.',
+        membre:       'Louez l\'Éternel avec tout votre être.'
+      };
+      document.getElementById('dashboardSub').textContent = subtitles[role] || subtitles.membre;
+
+      // 6. Charger les données en parallèle
+      const [
+        { data: chansons },
+        { data: themes },
+        { data: cultes },
+        { data: membres },
+        { data: chansonsTri },
+        { data: cultesTri }
+      ] = await Promise.all([
+        sb.from('chansons').select('id', { count: 'exact', head: true }),
+        sb.from('themes').select('id', { count: 'exact', head: true }),
+        sb.from('cultes').select('id', { count: 'exact', head: true }),
+        role === 'admin' ? sb.from('profils').select('id').eq('actif', true) : { data: null },
+        sb.from('chansons').select('id, titre, created_at').order('created_at', { ascending: false }).limit(3),
+        sb.from('cultes').select('id, theme, date_culte, statut, created_at').order('date_culte', { ascending: false }).limit(3),
+      ]);
+
+      // Stats
+      const { count: nbChansons } = await sb.from('chansons').select('*', { count: 'exact', head: true });
+      const { count: nbThemes }   = await sb.from('themes').select('*', { count: 'exact', head: true });
+      const { count: nbCultes }   = await sb.from('cultes').select('*', { count: 'exact', head: true });
+
+      document.getElementById('statChansons').textContent = nbChansons ?? '—';
+      document.getElementById('statThemes').textContent   = nbThemes   ?? '—';
+      document.getElementById('statCultes').textContent   = nbCultes   ?? '—';
+
+      if (role === 'admin' && membres) {
+        document.getElementById('statMembres').textContent = membres.length;
+      } else {
+        document.getElementById('statMembresCard').style.display = 'none';
+      }
+
+      // Prochain culte
+      const futurCultes = (cultesTri || []).filter(c => new Date(c.date_culte) >= new Date());
+      displayProchainCulte(futurCultes[0] || (cultesTri && cultesTri[0]) || null);
+
+      // Activité récente
+      displayActivity(chansonsTri, cultesTri);
+
+      // Propositions (admin)
+      const nbPropositions = await loadPropositions(role);
+
+      // Accès rapides
+      buildQuickAccess(role, nbPropositions);
+
+      // 7. Démasquer le contenu
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      document.getElementById('mainContent').classList.remove('hidden');
+    }
+
+    // ---- Déconnexion ----
+    document.getElementById('btnLogout').addEventListener('click', async () => {
+      await sb.auth.signOut();
+      window.location.href = 'index.html';
+    });
+
+    // ---- Lancer ----
+    init();
+  </script>
+
+</body>
+</html>
