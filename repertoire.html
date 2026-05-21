@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mélodie's Book — Répertoire</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400;1,600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="dashboard-body">
+
+  <!-- LOADING -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-logo">✦ Mélodie's Book</div>
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a class="navbar-brand" href="dashboard.html">
+      <div class="navbar-logo">♪</div>
+      <span class="navbar-title">Mélodie's Book</span>
+    </a>
+    <ul class="navbar-nav">
+      <li><a href="dashboard.html"><span class="nav-icon">🏠</span> Accueil</a></li>
+      <li><a href="repertoire.html" class="active"><span class="nav-icon">🎵</span> Répertoire</a></li>
+      <li><a href="themes.html"><span class="nav-icon">📖</span> Thèmes</a></li>
+      <li><a href="historique.html"><span class="nav-icon">📜</span> Historique</a></li>
+      <li><a href="bibliotheque.html"><span class="nav-icon">📚</span> Bibliothèque</a></li>
+      <li data-role-required="admin"><a href="comptes.html"><span class="nav-icon">👥</span> Comptes</a></li>
+      <li data-role-required="admin"><a href="statistiques.html"><span class="nav-icon">📊</span> Stats</a></li>
+    </ul>
+    <div class="navbar-user">
+      <div class="user-info">
+        <span class="user-name" id="navUserName">—</span>
+        <span class="user-role-badge" id="navUserRole">—</span>
+      </div>
+      <div class="user-avatar-placeholder" id="navAvatar">?</div>
+      <button class="btn-logout" id="btnLogout">⬡ Quitter</button>
+    </div>
+  </nav>
+
+  <!-- CONTENU PRINCIPAL -->
+  <main class="main-content hidden" id="mainContent">
+
+    <!-- EN-TÊTE -->
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="page-header-icon">🎵</div>
+        <div>
+          <h1 class="page-title">Répertoire</h1>
+          <p class="page-subtitle">Bibliothèque des chansons de la chorale</p>
+        </div>
+      </div>
+      <div class="page-header-actions" id="adminActions" style="display:none;">
+        <a href="ajouter-chanson.html" class="btn-primary">
+          <span>➕</span> Ajouter une chanson
+        </a>
+      </div>
+    </div>
+
+    <!-- BARRE DE RECHERCHE ET FILTRES -->
+    <div class="repertoire-controls">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Rechercher par titre, numéro…" class="search-input" />
+        <button class="search-clear hidden" id="searchClear">✕</button>
+      </div>
+
+      <div class="filtres-row">
+        <div class="filtre-group">
+          <label class="filtre-label">Rubrique</label>
+          <select class="filtre-select" id="filtreRubrique">
+            <option value="">Toutes</option>
+            <option value="Adoration">Adoration</option>
+            <option value="Louange">Louange</option>
+            <option value="Prélude">Prélude</option>
+            <option value="Offrande">Offrande</option>
+            <option value="Méditation">Méditation</option>
+            <option value="Envoi">Envoi</option>
+          </select>
+        </div>
+        <div class="filtre-group">
+          <label class="filtre-label">Langue</label>
+          <select class="filtre-select" id="filtreLangue">
+            <option value="">Toutes</option>
+            <option value="Français">Français</option>
+            <option value="Anglais">Anglais</option>
+            <option value="Fon">Fon</option>
+            <option value="Yoruba">Yoruba</option>
+            <option value="Autre">Autre</option>
+          </select>
+        </div>
+        <div class="filtre-group">
+          <label class="filtre-label">Style</label>
+          <select class="filtre-select" id="filtreStyle">
+            <option value="">Tous</option>
+            <option value="Gospel">Gospel</option>
+            <option value="Contemporain">Contemporain</option>
+            <option value="Traditionnel">Traditionnel</option>
+            <option value="Classique">Classique</option>
+          </select>
+        </div>
+        <div class="filtre-group">
+          <label class="filtre-label">Vue</label>
+          <div class="vue-toggle">
+            <button class="vue-btn active" id="vueGrille" title="Grille">⊞</button>
+            <button class="vue-btn" id="vueListe" title="Liste">☰</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPTEUR -->
+    <div class="repertoire-info">
+      <span class="repertoire-count" id="repertoireCount">Chargement…</span>
+      <div class="repertoire-tri">
+        <label class="filtre-label">Trier par</label>
+        <select class="filtre-select" id="triSelect">
+          <option value="numero">Numéro</option>
+          <option value="titre">Titre A→Z</option>
+          <option value="rubrique">Rubrique</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- GRILLE DES CHANSONS -->
+    <div class="chansons-grille" id="chansonsList">
+      <!-- Généré dynamiquement -->
+    </div>
+
+    <!-- ÉTAT VIDE -->
+    <div class="empty-state hidden" id="emptyState">
+      <div class="empty-icon">🎼</div>
+      <div class="empty-title">Aucune chanson trouvée</div>
+      <div class="empty-text">Modifiez vos filtres ou ajoutez une nouvelle chanson.</div>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="pagination" id="pagination"></div>
+
+  </main>
+
+  <script>
+    const SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const RUBRIQUES_COLORS = {
+      'Adoration':  { bg: 'rgba(201,168,76,0.12)',  border: 'rgba(201,168,76,0.4)',  text: '#F0D98A' },
+      'Louange':    { bg: 'rgba(91,163,201,0.12)',  border: 'rgba(91,163,201,0.4)',  text: '#7ECFF0' },
+      'Prélude':    { bg: 'rgba(156,126,204,0.12)', border: 'rgba(156,126,204,0.4)', text: '#C5B3E8' },
+      'Offrande':   { bg: 'rgba(91,170,125,0.12)',  border: 'rgba(91,170,125,0.4)',  text: '#6EC99A' },
+      'Méditation': { bg: 'rgba(200,120,80,0.12)',  border: 'rgba(200,120,80,0.4)',  text: '#F0A882' },
+      'Envoi':      { bg: 'rgba(180,180,60,0.12)',  border: 'rgba(180,180,60,0.4)',  text: '#E0E070' },
+    };
+
+    const RUBRIQUES_ICONS = {
+      'Adoration': '🙏', 'Louange': '🎶', 'Prélude': '🌅',
+      'Offrande': '🕊️', 'Méditation': '✨', 'Envoi': '🚀'
+    };
+
+    let allChansons = [];
+    let filteredChansons = [];
+    let currentVue = 'grille';
+    let currentPage = 1;
+    const PER_PAGE = 12;
+    let userRole = 'membre';
+
+    function getRoleBadgeClass(role) {
+      if (role === 'admin') return 'role-admin';
+      if (role === 'preparateur') return 'role-preparateur';
+      return 'role-membre';
+    }
+    function getRoleLabel(role) {
+      if (role === 'admin') return '✦ Administrateur';
+      if (role === 'preparateur') return '✧ Préparateur';
+      return '· Membre';
+    }
+
+    function renderChansons() {
+      const list = document.getElementById('chansonsList');
+      const empty = document.getElementById('emptyState');
+
+      if (filteredChansons.length === 0) {
+        list.innerHTML = '';
+        empty.classList.remove('hidden');
+        document.getElementById('pagination').innerHTML = '';
+        document.getElementById('repertoireCount').textContent = 'Aucune chanson trouvée';
+        return;
+      }
+
+      empty.classList.add('hidden');
+      document.getElementById('repertoireCount').textContent =
+        `${filteredChansons.length} chanson${filteredChansons.length > 1 ? 's' : ''}`;
+
+      const start = (currentPage - 1) * PER_PAGE;
+      const pageItems = filteredChansons.slice(start, start + PER_PAGE);
+
+      if (currentVue === 'grille') {
+        list.className = 'chansons-grille';
+        list.innerHTML = pageItems.map(c => renderCarteGrille(c)).join('');
+      } else {
+        list.className = 'chansons-liste';
+        list.innerHTML = pageItems.map(c => renderCarteListe(c)).join('');
+      }
+
+      renderPagination();
+    }
+
+    function renderCarteGrille(c) {
+      const rc = RUBRIQUES_COLORS[c.rubrique] || RUBRIQUES_COLORS['Adoration'];
+      const icon = RUBRIQUES_ICONS[c.rubrique] || '🎵';
+      const adminBtns = userRole === 'admin' ? `
+        <div class="carte-admin-btns">
+          <a href="modifier-chanson.html?id=${c.id}" class="btn-edit" title="Modifier">✏️</a>
+        </div>` : '';
+      return `
+        <a href="chanson.html?id=${c.id}" class="carte-chanson" style="--rc-bg:${rc.bg};--rc-border:${rc.border};">
+          ${adminBtns}
+          <div class="carte-numero">${c.numero ? '#' + c.numero : '—'}</div>
+          <div class="carte-icon">${icon}</div>
+          <div class="carte-titre">${c.titre}</div>
+          <div class="carte-meta">
+            <span class="carte-rubrique" style="color:${rc.text};border-color:${rc.border};background:${rc.bg};">
+              ${c.rubrique || '—'}
+            </span>
+            <span class="carte-langue">${c.langue || '—'}</span>
+          </div>
+          ${c.audio_url ? '<div class="carte-audio-badge">🎧</div>' : ''}
+          ${c.partition_url ? '<div class="carte-partition-badge">📄</div>' : ''}
+        </a>`;
+    }
+
+    function renderCarteListe(c) {
+      const rc = RUBRIQUES_COLORS[c.rubrique] || RUBRIQUES_COLORS['Adoration'];
+      const icon = RUBRIQUES_ICONS[c.rubrique] || '🎵';
+      const adminBtns = userRole === 'admin' ? `
+        <a href="modifier-chanson.html?id=${c.id}" class="btn-edit-liste" title="Modifier">✏️</a>` : '';
+      return `
+        <a href="chanson.html?id=${c.id}" class="carte-liste">
+          <div class="liste-numero">${c.numero ? '#' + c.numero : '—'}</div>
+          <div class="liste-icon">${icon}</div>
+          <div class="liste-info">
+            <div class="liste-titre">${c.titre}</div>
+            <div class="liste-meta">
+              <span class="carte-rubrique" style="color:${rc.text};border-color:${rc.border};background:${rc.bg};">
+                ${c.rubrique || '—'}
+              </span>
+              <span class="carte-langue">${c.langue || '—'}</span>
+              ${c.style ? `<span class="carte-langue">${c.style}</span>` : ''}
+            </div>
+          </div>
+          <div class="liste-badges">
+            ${c.audio_url ? '<span class="carte-audio-badge">🎧</span>' : ''}
+            ${c.partition_url ? '<span class="carte-partition-badge">📄</span>' : ''}
+          </div>
+          ${adminBtns}
+        </a>`;
+    }
+
+    function renderPagination() {
+      const total = Math.ceil(filteredChansons.length / PER_PAGE);
+      const pg = document.getElementById('pagination');
+      if (total <= 1) { pg.innerHTML = ''; return; }
+
+      let html = '';
+      if (currentPage > 1) html += `<button class="pg-btn" onclick="goPage(${currentPage - 1})">←</button>`;
+      for (let i = 1; i <= total; i++) {
+        html += `<button class="pg-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+      }
+      if (currentPage < total) html += `<button class="pg-btn" onclick="goPage(${currentPage + 1})">→</button>`;
+      pg.innerHTML = html;
+    }
+
+    function goPage(n) {
+      currentPage = n;
+      renderChansons();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function applyFiltres() {
+      const search  = document.getElementById('searchInput').value.toLowerCase().trim();
+      const rubrique = document.getElementById('filtreRubrique').value;
+      const langue   = document.getElementById('filtreLangue').value;
+      const style    = document.getElementById('filtreStyle').value;
+      const tri      = document.getElementById('triSelect').value;
+
+      const clearBtn = document.getElementById('searchClear');
+      clearBtn.classList.toggle('hidden', !search);
+
+      filteredChansons = allChansons.filter(c => {
+        const matchSearch = !search ||
+          (c.titre && c.titre.toLowerCase().includes(search)) ||
+          (c.numero && String(c.numero).includes(search));
+        const matchRubrique = !rubrique || c.rubrique === rubrique;
+        const matchLangue   = !langue   || c.langue   === langue;
+        const matchStyle    = !style    || c.style    === style;
+        return matchSearch && matchRubrique && matchLangue && matchStyle;
+      });
+
+      filteredChansons.sort((a, b) => {
+        if (tri === 'numero') return (a.numero || 9999) - (b.numero || 9999);
+        if (tri === 'titre')  return (a.titre || '').localeCompare(b.titre || '');
+        if (tri === 'rubrique') return (a.rubrique || '').localeCompare(b.rubrique || '');
+        return 0;
+      });
+
+      currentPage = 1;
+      renderChansons();
+    }
+
+    async function init() {
+      // Session
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+
+      // Profil
+      const { data: profil } = await sb.from('profils').select('*').eq('id', session.user.id).single();
+      if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
+
+      userRole = profil.role || 'membre';
+      const nom = profil.nom || session.user.email.split('@')[0];
+
+      // Navbar
+      document.getElementById('navUserName').textContent = nom;
+      const roleEl = document.getElementById('navUserRole');
+      roleEl.textContent = getRoleLabel(userRole);
+      roleEl.className = `user-role-badge ${getRoleBadgeClass(userRole)}`;
+
+      if (profil.photo_url) {
+        const img = document.createElement('img');
+        img.src = profil.photo_url; img.className = 'user-avatar'; img.alt = nom;
+        document.getElementById('navAvatar').replaceWith(img);
+      } else {
+        document.getElementById('navAvatar').textContent = nom.charAt(0).toUpperCase();
+      }
+
+      if (userRole === 'admin') {
+        document.querySelectorAll('[data-role-required="admin"]').forEach(el => el.style.display = 'block');
+        document.getElementById('adminActions').style.display = 'flex';
+      }
+
+      // Charger les chansons
+      const { data: chansons, error } = await sb
+        .from('chansons')
+        .select('*')
+        .order('numero', { ascending: true });
+
+      allChansons = chansons || [];
+      filteredChansons = [...allChansons];
+
+      applyFiltres();
+
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      document.getElementById('mainContent').classList.remove('hidden');
+    }
+
+    // Events
+    document.getElementById('searchInput').addEventListener('input', applyFiltres);
+    document.getElementById('searchClear').addEventListener('click', () => {
+      document.getElementById('searchInput').value = '';
+      applyFiltres();
+    });
+    document.getElementById('filtreRubrique').addEventListener('change', applyFiltres);
+    document.getElementById('filtreLangue').addEventListener('change', applyFiltres);
+    document.getElementById('filtreStyle').addEventListener('change', applyFiltres);
+    document.getElementById('triSelect').addEventListener('change', applyFiltres);
+
+    document.getElementById('vueGrille').addEventListener('click', () => {
+      currentVue = 'grille';
+      document.getElementById('vueGrille').classList.add('active');
+      document.getElementById('vueListe').classList.remove('active');
+      renderChansons();
+    });
+    document.getElementById('vueListe').addEventListener('click', () => {
+      currentVue = 'liste';
+      document.getElementById('vueListe').classList.add('active');
+      document.getElementById('vueGrille').classList.remove('active');
+      renderChansons();
+    });
+
+    document.getElementById('btnLogout').addEventListener('click', async () => {
+      await sb.auth.signOut();
+      window.location.href = 'index.html';
+    });
+
+    init();
+  </script>
+
+</body>  
+</html>
+              
