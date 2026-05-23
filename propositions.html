@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Propositions — Mélodie's Book</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="page-propositions">
+
+  <!-- LOADER -->
+  <div id="loader" class="loader-overlay">
+    <div class="loader-cross">
+      <div class="loader-bar loader-bar-h"></div>
+      <div class="loader-bar loader-bar-v"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="dashboard.html" class="navbar-brand">
+      <span class="navbar-logo">♪</span>
+      <span class="navbar-title">Mélodie's Book</span>
+    </a>
+    <div class="navbar-links" id="navLinks">
+      <a href="dashboard.html">Accueil</a>
+      <a href="repertoire.html">Répertoire</a>
+      <a href="themes.html">Thèmes</a>
+      <a href="bibliotheque.html">Bibliothèque</a>
+      <a href="historique.html">Historique</a>
+      <a href="proposer.html">Proposer</a>
+    </div>
+    <div class="navbar-user" id="navUser">
+      <img id="userAvatar" src="" alt="Avatar" class="avatar-sm" />
+      <span id="userName"></span>
+      <button class="btn-logout" id="btnLogout">Déconnexion</button>
+    </div>
+    <button class="navbar-toggle" id="navToggle" aria-label="Menu">&#9776;</button>
+  </nav>
+
+  <!-- HERO -->
+  <header class="pp-hero">
+    <div class="pp-hero-bg"></div>
+    <div class="pp-hero-content">
+      <div class="pp-badge-admin">⚙ Administration</div>
+      <h1 class="pp-title">Propositions</h1>
+      <p class="pp-subtitle">Examinez et traitez les suggestions de chansons des membres</p>
+    </div>
+    <!-- Compteurs statut -->
+    <div class="pp-hero-stats" id="ppHeroStats">
+      <div class="pp-hero-stat">
+        <span class="pp-hero-stat-num" id="nbEnAttente">—</span>
+        <span class="pp-hero-stat-label">En attente</span>
+      </div>
+      <div class="pp-hero-stat-sep"></div>
+      <div class="pp-hero-stat">
+        <span class="pp-hero-stat-num pp-num-accepte" id="nbAccepte">—</span>
+        <span class="pp-hero-stat-label">Acceptées</span>
+      </div>
+      <div class="pp-hero-stat-sep"></div>
+      <div class="pp-hero-stat">
+        <span class="pp-hero-stat-num pp-num-refuse" id="nbRefuse">—</span>
+        <span class="pp-hero-stat-label">Refusées</span>
+      </div>
+    </div>
+    <div class="pp-hero-ornement"></div>
+  </header>
+
+  <!-- CONTENU -->
+  <main class="pp-main">
+
+    <!-- FILTRES -->
+    <div class="pp-filters">
+      <div class="pp-filter-tabs" id="ppFilterTabs">
+        <button class="pp-tab active" data-statut="en_attente">
+          ⏳ En attente
+          <span class="pp-tab-badge" id="tabBadgeAttente">0</span>
+        </button>
+        <button class="pp-tab" data-statut="accepte">✅ Acceptées</button>
+        <button class="pp-tab" data-statut="refuse">❌ Refusées</button>
+        <button class="pp-tab" data-statut="all">Toutes</button>
+      </div>
+      <div class="pp-search-wrapper">
+        <span class="pp-search-icon">🔍</span>
+        <input type="text" id="ppSearch" class="pp-search-input" placeholder="Rechercher…" />
+      </div>
+    </div>
+
+    <!-- LAYOUT PRINCIPAL -->
+    <div class="pp-layout">
+
+      <!-- LISTE -->
+      <section class="pp-list-section">
+        <div class="pp-count" id="ppCount">Chargement…</div>
+        <div class="pp-list" id="ppList">
+          <div class="pp-skeleton"></div>
+          <div class="pp-skeleton"></div>
+          <div class="pp-skeleton"></div>
+        </div>
+      </section>
+
+      <!-- PANNEAU DÉTAIL -->
+      <aside class="pp-detail-aside">
+        <div class="pp-detail-card" id="ppDetailCard">
+          <div class="pp-detail-idle" id="ppDetailIdle">
+            <div class="pp-detail-idle-icon">📋</div>
+            <p>Sélectionnez une proposition pour voir ses détails et la traiter.</p>
+          </div>
+          <div class="pp-detail-body" id="ppDetailBody" style="display:none;"></div>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- MODAL AJOUTER AU RÉPERTOIRE -->
+  <div id="modalAjouter" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-success-icon">🎵</div>
+      <h3>Ajouter au répertoire ?</h3>
+      <p>La proposition sera acceptée et la chanson ajoutée directement au répertoire avec les informations fournies.</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="fermerModalAjouter()">Annuler</button>
+        <button class="btn-primary" id="btnConfirmerAjouter">
+          <span>✦</span> Accepter & Ajouter
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL REFUS -->
+  <div id="modalRefuser" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-danger">
+      <div class="modal-danger-icon">✕</div>
+      <h3>Refuser cette proposition ?</h3>
+      <p>La proposition sera marquée comme refusée. Le membre en sera informé lors de sa prochaine visite.</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="fermerModalRefuser()">Annuler</button>
+        <button class="btn-danger" id="btnConfirmerRefuser">Refuser</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ─── SUPABASE ───────────────────────────────────────────────────
+    const SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    let currentUser = null;
+    let propositions = [];
+    let filtreStatut = 'en_attente';
+    let propositionSelectionnee = null;
+
+    // ─── INIT ────────────────────────────────────────────────────────
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      currentUser = session.user;
+
+      const { data: profil } = await sb.from('profils')
+        .select('*').eq('id', currentUser.id).single();
+
+      if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
+      if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
+
+      document.getElementById('userAvatar').src = profil.photo_url || '';
+      document.getElementById('userName').textContent = profil.nom || profil.email;
+
+      await chargerPropositions();
+      hideLoader();
+    }
+
+    // ─── LOADER / TOAST ──────────────────────────────────────────────
+    function hideLoader() {
+      document.getElementById('loader').style.opacity = '0';
+      setTimeout(() => document.getElementById('loader').style.display = 'none', 400);
+    }
+
+    function showToast(msg, type = 'info') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast toast-${type} show`;
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    // ─── CHARGEMENT ──────────────────────────────────────────────────
+    async function chargerPropositions() {
+      const { data, error } = await sb.from('propositions')
+        .select('*, profils(nom, email, photo_url)')
+        .order('created_at', { ascending: false });
+
+      if (error) { showToast('Erreur de chargement.', 'error'); return; }
+      propositions = data || [];
+      mettreAJourCompteurs();
+      appliquerFiltres();
+    }
+
+    function mettreAJourCompteurs() {
+      const enAttente = propositions.filter(p => p.statut === 'en_attente').length;
+      const accepte   = propositions.filter(p => p.statut === 'accepte').length;
+      const refuse    = propositions.filter(p => p.statut === 'refuse').length;
+
+      document.getElementById('nbEnAttente').textContent = enAttente;
+      document.getElementById('nbAccepte').textContent   = accepte;
+      document.getElementById('nbRefuse').textContent    = refuse;
+      document.getElementById('tabBadgeAttente').textContent = enAttente;
+      document.getElementById('tabBadgeAttente').style.display = enAttente > 0 ? 'inline' : 'none';
+    }
+
+    // ─── FILTRES + RECHERCHE ─────────────────────────────────────────
+    function appliquerFiltres() {
+      const q = document.getElementById('ppSearch').value.toLowerCase().trim();
+      let liste = filtreStatut === 'all'
+        ? propositions
+        : propositions.filter(p => p.statut === filtreStatut);
+
+      if (q) {
+        liste = liste.filter(p =>
+          p.titre.toLowerCase().includes(q) ||
+          (p.artiste || '').toLowerCase().includes(q) ||
+          (p.commentaire || '').toLowerCase().includes(q)
+        );
+      }
+
+      renderListe(liste);
+    }
+
+    // Tabs
+    document.getElementById('ppFilterTabs').addEventListener('click', (e) => {
+      const tab = e.target.closest('.pp-tab');
+      if (!tab) return;
+      document.querySelectorAll('.pp-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      filtreStatut = tab.dataset.statut;
+      propositionSelectionnee = null;
+      resetDetail();
+      appliquerFiltres();
+    });
+
+    document.getElementById('ppSearch').addEventListener('input', appliquerFiltres);
+
+    // ─── RENDER LISTE ────────────────────────────────────────────────
+    function renderListe(liste) {
+      const container = document.getElementById('ppList');
+      const count = document.getElementById('ppCount');
+      count.textContent = `${liste.length} proposition${liste.length !== 1 ? 's' : ''}`;
+
+      if (liste.length === 0) {
+        container.innerHTML = `<div class="pp-empty">Aucune proposition dans cette catégorie.</div>`;
+        return;
+      }
+
+      container.innerHTML = liste.map(p => {
+        const auteur = p.profils?.nom || p.profils?.email || 'Membre inconnu';
+        const date = new Date(p.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+        const actif = propositionSelectionnee?.id === p.id ? ' pp-item-active' : '';
+        return `
+        <div class="pp-item${actif}" data-id="${p.id}" onclick="selectionnerProposition('${p.id}')">
+          <div class="pp-item-left">
+            <div class="pp-item-titre">${escHtml(p.titre)}</div>
+            <div class="pp-item-meta">
+              ${p.artiste ? `<span>${escHtml(p.artiste)}</span> · ` : ''}
+              <span>${escHtml(p.langue || '')}</span> ·
+              <span>${escHtml(p.rubrique || '')}</span>
+            </div>
+            <div class="pp-item-auteur">
+              ${p.profils?.photo_url ? `<img src="${p.profils.photo_url}" class="pp-avatar" alt="" />` : '<span class="pp-avatar-fallback">👤</span>'}
+              <span>${escHtml(auteur)}</span> · <span>${date}</span>
+            </div>
+          </div>
+          <span class="pp-badge pp-badge-${p.statut}">${labelStatut(p.statut)}</span>
+        </div>`;
+      }).join('');
+    }
+
+    // ─── SÉLECTION ───────────────────────────────────────────────────
+    function selectionnerProposition(id) {
+      propositionSelectionnee = propositions.find(p => p.id === id);
+      // Mettre à jour l'item actif visuellement
+      document.querySelectorAll('.pp-item').forEach(el => {
+        el.classList.toggle('pp-item-active', el.dataset.id === id);
+      });
+      afficherDetail(propositionSelectionnee);
+    }
+
+    function resetDetail() {
+      document.getElementById('ppDetailIdle').style.display = 'flex';
+      document.getElementById('ppDetailBody').style.display = 'none';
+    }
+
+    function afficherDetail(p) {
+      document.getElementById('ppDetailIdle').style.display = 'none';
+      const body = document.getElementById('ppDetailBody');
+      body.style.display = 'block';
+
+      const auteur = p.profils?.nom || p.profils?.email || 'Membre inconnu';
+      const date = new Date(p.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+      const actionsHtml = p.statut === 'en_attente' ? `
+        <div class="pp-detail-actions">
+          <button class="btn-danger" onclick="ouvrirModalRefuser()">❌ Refuser</button>
+          <button class="btn-primary" onclick="ouvrirModalAjouter()">✦ Accepter & Ajouter</button>
+        </div>` : `
+        <div class="pp-detail-statut-final pp-statut-${p.statut}">
+          ${p.statut === 'accepte' ? '✅ Cette proposition a été acceptée.' : '❌ Cette proposition a été refusée.'}
+        </div>`;
+
+      body.innerHTML = `
+        <div class="pp-detail-header">
+          <h2 class="pp-detail-titre">${escHtml(p.titre)}</h2>
+          <span class="pp-badge pp-badge-${p.statut}">${labelStatut(p.statut)}</span>
+        </div>
+
+        <div class="pp-detail-infos">
+          <div class="pp-detail-row">
+            <span class="pp-detail-label">Artiste</span>
+            <span class="pp-detail-val">${escHtml(p.artiste || '—')}</span>
+          </div>
+          <div class="pp-detail-row">
+            <span class="pp-detail-label">Langue</span>
+            <span class="pp-detail-val">${escHtml(p.langue || '—')}</span>
+          </div>
+          <div class="pp-detail-row">
+            <span class="pp-detail-label">Rubrique</span>
+            <span class="pp-detail-val">${escHtml(p.rubrique || '—')}</span>
+          </div>
+          <div class="pp-detail-row">
+            <span class="pp-detail-label">Proposé par</span>
+            <span class="pp-detail-val pp-detail-auteur">
+              ${p.profils?.photo_url ? `<img src="${p.profils.photo_url}" class="pp-avatar" alt="" />` : '<span class="pp-avatar-fallback">👤</span>'}
+              ${escHtml(auteur)}
+            </span>
+          </div>
+          <div class="pp-detail-row">
+            <span class="pp-detail-label">Date</span>
+            <span class="pp-detail-val">${date}</span>
+          </div>
+        </div>
+
+        ${p.commentaire ? `
+        <div class="pp-detail-commentaire">
+          <div class="pp-detail-label">Commentaire du membre</div>
+          <blockquote class="pp-blockquote">${escHtml(p.commentaire)}</blockquote>
+        </div>` : ''}
+
+        ${actionsHtml}
+      `;
+    }
+
+    // ─── MODAL AJOUTER ───────────────────────────────────────────────
+    function ouvrirModalAjouter() {
+      document.getElementById('modalAjouter').style.display = 'flex';
+    }
+    function fermerModalAjouter() {
+      document.getElementById('modalAjouter').style.display = 'none';
+    }
+    document.getElementById('modalAjouter').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('modalAjouter')) fermerModalAjouter();
+    });
+
+    document.getElementById('btnConfirmerAjouter').addEventListener('click', async () => {
+      if (!propositionSelectionnee) return;
+      const p = propositionSelectionnee;
+
+      // 1. Marquer la proposition comme acceptée
+      const { error: errProp } = await sb.from('propositions')
+        .update({ statut: 'accepte' }).eq('id', p.id);
+      if (errProp) { showToast('Erreur lors de la mise à jour.', 'error'); return; }
+
+      // 2. Ajouter la chanson au répertoire
+      const { error: errChanson } = await sb.from('chansons').insert({
+        titre: p.titre,
+        langue: p.langue,
+        rubrique: p.rubrique,
+        style: null,
+        paroles: null,
+        partition_url: null,
+        audio_url: null
+      });
+      if (errChanson) { showToast('Proposition acceptée, mais erreur à l\'ajout de la chanson.', 'error'); }
+      else { showToast('Proposition acceptée et chanson ajoutée au répertoire !', 'success'); }
+
+      fermerModalAjouter();
+      await chargerPropositions();
+      resetDetail();
+      propositionSelectionnee = null;
+    });
+
+    // ─── MODAL REFUSER ───────────────────────────────────────────────
+    function ouvrirModalRefuser() {
+      document.getElementById('modalRefuser').style.display = 'flex';
+    }
+    function fermerModalRefuser() {
+      document.getElementById('modalRefuser').style.display = 'none';
+    }
+    document.getElementById('modalRefuser').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('modalRefuser')) fermerModalRefuser();
+    });
+
+    document.getElementById('btnConfirmerRefuser').addEventListener('click', async () => {
+      if (!propositionSelectionnee) return;
+
+      const { error } = await sb.from('propositions')
+        .update({ statut: 'refuse' }).eq('id', propositionSelectionnee.id);
+
+      if (error) { showToast('Erreur lors du refus.', 'error'); return; }
+
+      showToast('Proposition refusée.', 'success');
+      fermerModalRefuser();
+      await chargerPropositions();
+      resetDetail();
+      propositionSelectionnee = null;
+    });
+
+    // ─── LOGOUT + NAV ────────────────────────────────────────────────
+    document.getElementById('btnLogout').addEventListener('click', async () => {
+      await sb.auth.signOut();
+      window.location.href = 'index.html';
+    });
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('open');
+    });
+
+    // ─── UTILS ───────────────────────────────────────────────────────
+    function labelStatut(s) {
+      return { en_attente: '⏳ En attente', accepte: '✅ Acceptée', refuse: '❌ Refusée' }[s] || s;
+    }
+
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    init();
+  </script>
+</body>
+</html>
