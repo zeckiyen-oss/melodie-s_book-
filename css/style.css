@@ -4526,3 +4526,496 @@ body.page-login {
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(192,57,43,0.4);
 }
+/* ============================================================
+   PROPOSITIONS.HTML — CSS
+   À coller à la fin de css/style.css
+   ============================================================ */
+
+/* ── HERO ────────────────────────────────────────────────── */
+.pp-hero {
+  position: relative;
+  padding: 3.5rem 2rem 5rem;
+  background: linear-gradient(160deg, #0D1B2A 0%, #1A2E45 60%, #0D1B2A 100%);
+  overflow: hidden;
+  text-align: center;
+}
+
+.pp-hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 60% at 25% 55%, rgba(201,168,76,0.09) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 78% 35%, rgba(201,168,76,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.pp-hero-content { position: relative; }
+
+.pp-badge-admin {
+  display: inline-block;
+  padding: 0.3rem 1rem;
+  border: 1px solid rgba(201,168,76,0.4);
+  border-radius: 20px;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #C9A84C;
+  margin-bottom: 1rem;
+}
+
+.pp-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(1.7rem, 4.5vw, 2.8rem);
+  font-weight: 700;
+  color: #FAF6ED;
+  margin: 0 0 0.6rem;
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 20px rgba(201,168,76,0.2);
+}
+
+.pp-subtitle {
+  font-family: 'Lato', sans-serif;
+  color: rgba(250,246,237,0.6);
+  font-size: 0.95rem;
+  font-weight: 300;
+  margin: 0;
+}
+
+/* Compteurs dans le hero */
+.pp-hero-stats {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin-top: 2rem;
+  background: rgba(13,27,42,0.45);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 14px;
+  padding: 1rem 2rem;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+  backdrop-filter: blur(6px);
+}
+
+.pp-hero-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.pp-hero-stat-num {
+  font-family: 'Cinzel', serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #F0D98A;
+}
+
+.pp-num-accepte { color: #7ecfaf; }
+.pp-num-refuse  { color: #e09696; }
+
+.pp-hero-stat-label {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.72rem;
+  color: rgba(250,246,237,0.5);
+  letter-spacing: 0.04em;
+}
+
+.pp-hero-stat-sep {
+  width: 1px;
+  height: 40px;
+  background: rgba(201,168,76,0.2);
+  margin: 0 1rem;
+}
+
+.pp-hero-ornement {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #C9A84C 30%, #F0D98A 50%, #C9A84C 70%, transparent);
+}
+
+/* ── MAIN + FILTRES ──────────────────────────────────────── */
+.pp-main {
+  padding: 2rem 1.5rem 4rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pp-filters {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.pp-filter-tabs {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.pp-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 20px;
+  background: transparent;
+  color: rgba(250,246,237,0.6);
+  font-family: 'Lato', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.pp-tab:hover {
+  border-color: rgba(201,168,76,0.4);
+  color: #FAF6ED;
+}
+
+.pp-tab.active {
+  background: linear-gradient(135deg, rgba(201,168,76,0.2), rgba(201,168,76,0.1));
+  border-color: #C9A84C;
+  color: #F0D98A;
+}
+
+.pp-tab-badge {
+  background: #C9A84C;
+  color: #0D1B2A;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.pp-search-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 320px;
+  margin-left: auto;
+}
+
+.pp-search-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.pp-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(26,46,69,0.8);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 8px;
+  padding: 0.6rem 1rem 0.6rem 2.3rem;
+  color: #FAF6ED;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.88rem;
+  transition: border-color 0.2s;
+}
+
+.pp-search-input::placeholder { color: rgba(250,246,237,0.3); }
+.pp-search-input:focus {
+  outline: none;
+  border-color: #C9A84C;
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.12);
+}
+
+/* ── LAYOUT ──────────────────────────────────────────────── */
+.pp-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .pp-layout { grid-template-columns: 1fr; }
+}
+
+/* ── LISTE ───────────────────────────────────────────────── */
+.pp-count {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.8rem;
+  color: rgba(250,246,237,0.4);
+  margin-bottom: 0.9rem;
+  letter-spacing: 0.04em;
+}
+
+.pp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.pp-empty {
+  text-align: center;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.9rem;
+  color: rgba(250,246,237,0.35);
+  font-style: italic;
+  padding: 3rem 0;
+}
+
+/* ── ITEM PROPOSITION ────────────────────────────────────── */
+.pp-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: linear-gradient(145deg, #1A2E45, #152438);
+  border: 1px solid rgba(201,168,76,0.15);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.pp-item:hover {
+  border-color: rgba(201,168,76,0.35);
+  transform: translateX(3px);
+}
+
+.pp-item-active {
+  border-color: #C9A84C !important;
+  background: linear-gradient(145deg, #1f3550, #1a2e45) !important;
+  box-shadow: 0 0 0 1px rgba(201,168,76,0.3), 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.pp-item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.pp-item-titre {
+  font-family: 'Cinzel', serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #FAF6ED;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pp-item-meta {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.78rem;
+  color: rgba(250,246,237,0.5);
+}
+
+.pp-item-auteur {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.75rem;
+  color: rgba(250,246,237,0.4);
+  margin-top: 0.1rem;
+}
+
+.pp-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(201,168,76,0.3);
+}
+
+.pp-avatar-fallback {
+  font-size: 0.85rem;
+  opacity: 0.5;
+}
+
+/* Badges */
+.pp-badge {
+  flex-shrink: 0;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.pp-badge-en_attente { background: rgba(201,168,76,0.15); color: #F0D98A; border: 1px solid rgba(201,168,76,0.3); }
+.pp-badge-accepte    { background: rgba(76,175,130,0.15); color: #7ecfaf; border: 1px solid rgba(76,175,130,0.3); }
+.pp-badge-refuse     { background: rgba(224,108,108,0.15); color: #e09696; border: 1px solid rgba(224,108,108,0.3); }
+
+/* Skeleton */
+.pp-skeleton {
+  height: 90px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #1A2E45 25%, #1f3550 50%, #1A2E45 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+/* ── DETAIL ASIDE ────────────────────────────────────────── */
+.pp-detail-aside {
+  position: sticky;
+  top: 1.5rem;
+}
+
+.pp-detail-card {
+  background: linear-gradient(145deg, #1A2E45, #152438);
+  border: 1px solid rgba(201,168,76,0.22);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+  min-height: 300px;
+}
+
+.pp-detail-idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  min-height: 300px;
+}
+
+.pp-detail-idle-icon {
+  font-size: 2rem;
+  opacity: 0.35;
+}
+
+.pp-detail-idle p {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.87rem;
+  color: rgba(250,246,237,0.45);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* Contenu détail */
+.pp-detail-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.pp-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.pp-detail-titre {
+  font-family: 'Cinzel', serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #FAF6ED;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.pp-detail-infos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: rgba(13,27,42,0.35);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.pp-detail-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.pp-detail-label {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #C9A84C;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  min-width: 90px;
+}
+
+.pp-detail-val {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.87rem;
+  color: #FAF6ED;
+}
+
+.pp-detail-auteur {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pp-detail-commentaire {
+  border-left: 3px solid rgba(201,168,76,0.35);
+  padding-left: 1rem;
+}
+
+.pp-blockquote {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 0.87rem;
+  color: rgba(250,246,237,0.7);
+  line-height: 1.6;
+  margin: 0.5rem 0 0;
+}
+
+.pp-detail-actions {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(201,168,76,0.1);
+}
+
+.pp-detail-actions .btn-danger,
+.pp-detail-actions .btn-primary {
+  flex: 1;
+  justify-content: center;
+  min-width: 100px;
+}
+
+.pp-detail-statut-final {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 0.9rem;
+  border-radius: 10px;
+  margin-top: 0.5rem;
+}
+
+.pp-statut-accepte {
+  background: rgba(76,175,130,0.12);
+  color: #7ecfaf;
+  border: 1px solid rgba(76,175,130,0.25);
+}
+
+.pp-statut-refuse {
+  background: rgba(224,108,108,0.12);
+  color: #e09696;
+  border: 1px solid rgba(224,108,108,0.25);
+}
