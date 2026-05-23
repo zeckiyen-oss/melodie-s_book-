@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bibliothèque — Mélodie's Book</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/bibliotheque.css" />
+</head>
+<body class="page-bibliotheque">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="dashboard.html" class="nav-logo">
+      <span class="nav-logo-icon">♪</span>
+      <span class="nav-logo-text">Mélodie's Book</span>
+    </a>
+    <div class="nav-links">
+      <a href="repertoire.html" class="nav-link">Répertoire</a>
+      <a href="themes.html" class="nav-link">Thèmes</a>
+      <a href="bibliotheque.html" class="nav-link active">Bibliothèque</a>
+    </div>
+    <div class="nav-user">
+      <img id="navAvatar" src="" alt="" class="nav-avatar" />
+      <span id="navNom" class="nav-nom"></span>
+      <button class="btn-deconnexion" id="btnDeconnexion">Quitter</button>
+    </div>
+  </nav>
+
+  <!-- LOADER -->
+  <div id="loader" class="page-loader">
+    <div class="loader-cross">✝</div>
+    <p class="loader-text">Chargement…</p>
+  </div>
+
+  <!-- MAIN -->
+  <main class="biblio-main" id="mainContent" style="display:none">
+
+    <!-- En-tête -->
+    <div class="biblio-header">
+      <div class="biblio-header-left">
+        <div class="biblio-header-icon">📚</div>
+        <div>
+          <h1 class="biblio-titre">Bibliothèque</h1>
+          <p class="biblio-sous-titre">Partitions et enregistrements audio de la chorale</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats rapides -->
+    <div class="biblio-stats" id="biblioStats">
+      <div class="stat-pill" id="statTotal">
+        <span class="stat-num">—</span>
+        <span class="stat-label">chansons</span>
+      </div>
+      <div class="stat-pill" id="statPartitions">
+        <span class="stat-num">—</span>
+        <span class="stat-label">partitions</span>
+      </div>
+      <div class="stat-pill" id="statAudios">
+        <span class="stat-num">—</span>
+        <span class="stat-label">audios</span>
+      </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="biblio-filtres">
+      <!-- Recherche -->
+      <div class="filtre-recherche">
+        <span>🔍</span>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Rechercher par titre…"
+          oninput="filtrer()"
+        />
+      </div>
+
+      <!-- Filtre média -->
+      <div class="filtre-tabs" id="filtreTabs">
+        <button class="ftab ftab-actif" data-filtre="tous" onclick="setFiltreMedia('tous', this)">Tout</button>
+        <button class="ftab" data-filtre="partition" onclick="setFiltreMedia('partition', this)">📄 Partitions</button>
+        <button class="ftab" data-filtre="audio" onclick="setFiltreMedia('audio', this)">🎵 Audios</button>
+        <button class="ftab" data-filtre="complet" onclick="setFiltreMedia('complet', this)">✦ Complets</button>
+      </div>
+
+      <!-- Filtre rubrique -->
+      <select id="filtreRubrique" class="filtre-select" onchange="filtrer()">
+        <option value="">Toutes rubriques</option>
+        <option value="Adoration">Adoration</option>
+        <option value="Louange">Louange</option>
+        <option value="Prélude">Prélude</option>
+        <option value="Offrande">Offrande</option>
+        <option value="Méditation">Méditation</option>
+        <option value="Envoi">Envoi</option>
+      </select>
+    </div>
+
+    <!-- Compteur résultats -->
+    <div class="biblio-compteur" id="biblioCompteur"></div>
+
+    <!-- ── VUE PAR RUBRIQUE ── -->
+    <div id="vueRubrique" class="vue-rubrique">
+      <!-- injecté via JS -->
+    </div>
+
+    <!-- État vide -->
+    <div class="biblio-vide" id="biblioVide" style="display:none">
+      <div class="vide-icon">📭</div>
+      <p class="vide-titre">Aucune ressource trouvée</p>
+      <p class="vide-desc">Modifiez vos filtres ou ajoutez des partitions/audios aux chansons.</p>
+      <a href="ajouter-chanson.html" class="btn-ajouter-vide" id="btnAjouterVide" style="display:none">
+        + Ajouter une chanson
+      </a>
+    </div>
+
+    <!-- ── LECTEUR AUDIO FLOTTANT ── -->
+    <div class="lecteur-flottant" id="lecteurFlottant" style="display:none">
+      <div class="lecteur-inner">
+        <div class="lecteur-info">
+          <span class="lecteur-titre" id="lecteurTitre">—</span>
+          <span class="lecteur-rubrique" id="lecteurRubrique">—</span>
+        </div>
+        <audio id="lecteurAudio" controls>
+          Votre navigateur ne supporte pas l'audio.
+        </audio>
+        <button class="lecteur-fermer" onclick="fermerLecteur()">✕</button>
+      </div>
+    </div>
+
+    <!-- Verset -->
+    <div class="verset-bloc">
+      <p class="verset-texte">« Louez-le avec des instruments à cordes et des flûtes ! Louez-le avec des cymbales sonores ! »</p>
+      <p class="verset-ref">— Psaume 150 : 4-5</p>
+    </div>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  const SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  let toutesChansons = [];
+  let filtreMedia = 'tous';
+  let isAdmin = false;
+
+  const ORDRE_RUBRIQUES = ['Prélude','Adoration','Louange','Méditation','Offrande','Envoi'];
+
+  function showToast(msg, type = 'info') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast toast-${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // ── INIT ──
+  async function initPage() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'index.html'; return; }
+
+    const { data: profil } = await sb
+      .from('profils').select('*').eq('id', session.user.id).single();
+    if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
+
+    isAdmin = profil.role === 'admin';
+    document.getElementById('navAvatar').src = profil.photo_url || '';
+    document.getElementById('navNom').textContent = profil.nom || profil.email;
+
+    if (isAdmin) {
+      document.getElementById('btnAjouterVide').style.display = 'inline-block';
+    }
+
+    await chargerChansons();
+
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+  }
+
+  // ── CHARGER CHANSONS ──
+  async function chargerChansons() {
+    const { data, error } = await sb
+      .from('chansons')
+      .select('id, numero, titre, rubrique, langue, style, audio_url, partition_url')
+      .order('rubrique')
+      .order('titre');
+
+    if (error) { showToast('Erreur de chargement', 'error'); return; }
+
+    toutesChansons = data || [];
+
+    // Stats
+    const avecPartition = toutesChansons.filter(c => c.partition_url).length;
+    const avecAudio     = toutesChansons.filter(c => c.audio_url).length;
+
+    document.querySelector('#statTotal .stat-num').textContent    = toutesChansons.length;
+    document.querySelector('#statPartitions .stat-num').textContent = avecPartition;
+    document.querySelector('#statAudios .stat-num').textContent   = avecAudio;
+
+    filtrer();
+  }
+
+  // ── FILTRE MÉDIA (tabs) ──
+  function setFiltreMedia(val, btn) {
+    filtreMedia = val;
+    document.querySelectorAll('.ftab').forEach(b => b.classList.remove('ftab-actif'));
+    btn.classList.add('ftab-actif');
+    filtrer();
+  }
+
+  // ── FILTRER ──
+  function filtrer() {
+    const q        = document.getElementById('searchInput').value.toLowerCase().trim();
+    const rubrique = document.getElementById('filtreRubrique').value;
+
+    let liste = toutesChansons.filter(c => {
+      // Filtre texte
+      if (q && !c.titre.toLowerCase().includes(q)) return false;
+      // Filtre rubrique
+      if (rubrique && c.rubrique !== rubrique) return false;
+      // Filtre média
+      if (filtreMedia === 'partition') return !!c.partition_url;
+      if (filtreMedia === 'audio')     return !!c.audio_url;
+      if (filtreMedia === 'complet')   return !!c.partition_url && !!c.audio_url;
+      return true;
+    });
+
+    afficher(liste);
+  }
+
+  // ── AFFICHER PAR RUBRIQUE ──
+  function afficher(liste) {
+    const vue   = document.getElementById('vueRubrique');
+    const vide  = document.getElementById('biblioVide');
+    const cpt   = document.getElementById('biblioCompteur');
+
+    cpt.textContent = `${liste.length} résultat${liste.length > 1 ? 's' : ''}`;
+
+    if (liste.length === 0) {
+      vue.style.display  = 'none';
+      vide.style.display = 'flex';
+      return;
+    }
+
+    vue.style.display  = 'block';
+    vide.style.display = 'none';
+
+    // Grouper par rubrique
+    const groupes = {};
+    liste.forEach(c => {
+      const r = c.rubrique || 'Autre';
+      if (!groupes[r]) groupes[r] = [];
+      groupes[r].push(c);
+    });
+
+    const ordre = [...ORDRE_RUBRIQUES, 'Autre'];
+
+    vue.innerHTML = ordre
+      .filter(r => groupes[r])
+      .map(r => `
+        <section class="rubrique-section">
+          <div class="rubrique-section-header">
+            <span class="rubrique-section-nom">${r}</span>
+            <span class="rubrique-section-nb">${groupes[r].length}</span>
+          </div>
+          <div class="biblio-liste">
+            ${groupes[r].map(c => renderChanson(c)).join('')}
+          </div>
+        </section>
+      `).join('');
+  }
+
+  // ── RENDU D'UNE CHANSON ──
+  function renderChanson(c) {
+    const hasPartition = !!c.partition_url;
+    const hasAudio     = !!c.audio_url;
+
+    return `
+      <div class="biblio-item">
+        <div class="biblio-item-left">
+          ${c.numero ? `<span class="item-num">#${c.numero}</span>` : ''}
+          <div class="item-info">
+            <a href="chanson.html?id=${c.id}" class="item-titre">${c.titre}</a>
+            <span class="item-langue">${c.langue || ''} ${c.style ? '· ' + c.style : ''}</span>
+          </div>
+        </div>
+        <div class="biblio-item-right">
+          ${hasAudio ? `
+            <button class="btn-media btn-play"
+              onclick="lireAudio('${c.audio_url}', '${c.titre.replace(/'/g,"\\'")}', '${c.rubrique || ''}')"
+              title="Écouter">
+              ▶ Écouter
+            </button>
+          ` : `<span class="media-absent" title="Pas d'audio">🎵 —</span>`}
+
+          ${hasPartition ? `
+            <a href="${c.partition_url}" target="_blank"
+              class="btn-media btn-partition" title="Voir la partition">
+              📄 Partition
+            </a>
+          ` : `<span class="media-absent" title="Pas de partition">📄 —</span>`}
+
+          <div class="item-dots ${hasPartition && hasAudio ? 'dots-complet' : hasPartition || hasAudio ? 'dots-partiel' : 'dots-vide'}"
+            title="${hasPartition && hasAudio ? 'Complet' : hasPartition ? 'Partition uniquement' : hasAudio ? 'Audio uniquement' : 'Aucun média'}">
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ── LECTEUR AUDIO FLOTTANT ──
+  function lireAudio(url, titre, rubrique) {
+    const lecteur = document.getElementById('lecteurFlottant');
+    const audio   = document.getElementById('lecteurAudio');
+    document.getElementById('lecteurTitre').textContent   = titre;
+    document.getElementById('lecteurRubrique').textContent = rubrique;
+    audio.src = url;
+    lecteur.style.display = 'block';
+    audio.play().catch(() => {});
+  }
+
+  function fermerLecteur() {
+    const audio = document.getElementById('lecteurAudio');
+    audio.pause();
+    audio.src = '';
+    document.getElementById('lecteurFlottant').style.display = 'none';
+  }
+
+  // ── DÉCONNEXION ──
+  document.getElementById('btnDeconnexion').addEventListener('click', async () => {
+    await sb.auth.signOut();
+    window.location.href = 'index.html';
+  });
+
+  initPage();
+  </script>
+
+</body>
+  </html>
+                                                                 
