@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Proposer une chanson — Mélodie's Book</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="page-proposer">
+
+  <!-- LOADER -->
+  <div id="loader" class="loader-overlay">
+    <div class="loader-cross">
+      <div class="loader-bar loader-bar-h"></div>
+      <div class="loader-bar loader-bar-v"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="dashboard.html" class="navbar-brand">
+      <span class="navbar-logo">♪</span>
+      <span class="navbar-title">Mélodie's Book</span>
+    </a>
+    <div class="navbar-links" id="navLinks">
+      <a href="dashboard.html">Accueil</a>
+      <a href="repertoire.html">Répertoire</a>
+      <a href="themes.html">Thèmes</a>
+      <a href="bibliotheque.html">Bibliothèque</a>
+      <a href="historique.html">Historique</a>
+      <a href="proposer.html" class="active">Proposer</a>
+    </div>
+    <div class="navbar-user" id="navUser">
+      <img id="userAvatar" src="" alt="Avatar" class="avatar-sm" />
+      <span id="userName"></span>
+      <button class="btn-logout" id="btnLogout">Déconnexion</button>
+    </div>
+    <button class="navbar-toggle" id="navToggle" aria-label="Menu">&#9776;</button>
+  </nav>
+
+  <!-- HERO HEADER -->
+  <header class="proposer-hero">
+    <div class="proposer-hero-bg"></div>
+    <div class="proposer-hero-content">
+      <div class="proposer-verset">
+        <span class="verset-croix">✦</span>
+        <em>« Chantez au Seigneur un cantique nouveau »</em>
+        <span class="verset-ref">— Psaume 96:1</span>
+      </div>
+      <h1 class="proposer-title">Proposer une Chanson</h1>
+      <p class="proposer-subtitle">Enrichissez notre répertoire en partageant vos découvertes musicales</p>
+    </div>
+    <div class="proposer-hero-ornement"></div>
+  </header>
+
+  <!-- CONTENU PRINCIPAL -->
+  <main class="proposer-main">
+    <div class="proposer-layout">
+
+      <!-- FORMULAIRE -->
+      <section class="proposer-form-section">
+        <div class="form-card">
+          <div class="form-card-header">
+            <span class="form-card-icon">🎵</span>
+            <h2>Informations de la chanson</h2>
+          </div>
+
+          <div class="form-body">
+
+            <!-- Titre -->
+            <div class="form-group">
+              <label for="titre" class="form-label">
+                Titre de la chanson <span class="required">*</span>
+              </label>
+              <input type="text" id="titre" class="form-input" placeholder="Ex: Amazing Grace" required />
+            </div>
+
+            <!-- Artiste -->
+            <div class="form-group">
+              <label for="artiste" class="form-label">
+                Artiste / Auteur
+              </label>
+              <input type="text" id="artiste" class="form-input" placeholder="Ex: John Newton" />
+            </div>
+
+            <!-- Ligne : Langue + Rubrique -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="langue" class="form-label">
+                  Langue <span class="required">*</span>
+                </label>
+                <div class="select-wrapper">
+                  <select id="langue" class="form-select" required>
+                    <option value="">— Choisir —</option>
+                    <option value="Français">🇫🇷 Français</option>
+                    <option value="Anglais">🇬🇧 Anglais</option>
+                    <option value="Lingala">🎵 Lingala</option>
+                    <option value="Swahili">🎵 Swahili</option>
+                    <option value="Autre">✦ Autre</option>
+                  </select>
+                  <span class="select-arrow">▾</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="rubrique" class="form-label">
+                  Rubrique <span class="required">*</span>
+                </label>
+                <div class="select-wrapper">
+                  <select id="rubrique" class="form-select" required>
+                    <option value="">— Choisir —</option>
+                    <option value="Adoration">🙏 Adoration</option>
+                    <option value="Louange">🎉 Louange</option>
+                    <option value="Prélude">🌅 Prélude</option>
+                    <option value="Offrande">💛 Offrande</option>
+                    <option value="Méditation">🕊️ Méditation</option>
+                    <option value="Envoi">🌟 Envoi</option>
+                  </select>
+                  <span class="select-arrow">▾</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Commentaire -->
+            <div class="form-group">
+              <label for="commentaire" class="form-label">
+                Commentaire / Contexte d'utilisation
+              </label>
+              <textarea id="commentaire" class="form-textarea" rows="4"
+                placeholder="Pourquoi proposez-vous cette chanson ? Dans quel contexte la voyez-vous utilisée ?"></textarea>
+              <div class="form-hint">Précisez si vous avez une partition ou un enregistrement disponible.</div>
+            </div>
+
+            <!-- Bouton soumettre -->
+            <div class="form-actions">
+              <button class="btn-secondary" type="button" onclick="window.history.back()">
+                ← Annuler
+              </button>
+              <button class="btn-primary btn-submit" id="btnSoumettre" type="button">
+                <span class="btn-icon">✦</span>
+                Soumettre la proposition
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- PANNEAU LATÉRAL -->
+      <aside class="proposer-aside">
+
+        <!-- Infos -->
+        <div class="aside-card aside-info">
+          <h3 class="aside-card-title">
+            <span>ℹ️</span> Comment ça marche ?
+          </h3>
+          <ol class="aside-steps">
+            <li>
+              <span class="step-num">1</span>
+              <div>
+                <strong>Vous proposez</strong>
+                <p>Remplissez le formulaire avec les informations de la chanson.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-num">2</span>
+              <div>
+                <strong>L'admin examine</strong>
+                <p>Votre proposition est soumise à l'examen de l'administrateur.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-num">3</span>
+              <div>
+                <strong>Ajout au répertoire</strong>
+                <p>Si acceptée, la chanson intègre notre bibliothèque musicale.</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+
+        <!-- Mes propositions -->
+        <div class="aside-card aside-mes-props">
+          <h3 class="aside-card-title">
+            <span>📋</span> Mes propositions
+          </h3>
+          <div id="mesPropositions" class="mes-props-list">
+            <div class="props-loading">Chargement…</div>
+          </div>
+        </div>
+
+        <!-- Verset décoratif -->
+        <div class="aside-verset">
+          <Playfair>
+            <em>« Que la parole de Christ habite parmi vous en abondance, en toute sagesse. Enseignez-vous et exhortez-vous les uns les autres par des psaumes, des hymnes et des cantiques spirituels. »</em>
+          </Playfair>
+          <span class="aside-verset-ref">Colossiens 3:16</span>
+        </div>
+
+      </aside>
+    </div>
+  </main>
+
+  <!-- MODAL CONFIRMATION -->
+  <div id="modalConfirm" class="modal-overlay" style="display:none;">
+    <div class="modal-box modal-success">
+      <div class="modal-success-icon">✦</div>
+      <h3>Proposition envoyée !</h3>
+      <p>Votre proposition a bien été soumise. L'administrateur l'examinera prochainement.</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal()">Faire une autre proposition</button>
+        <a href="repertoire.html" class="btn-primary">Voir le répertoire</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ─── SUPABASE ───────────────────────────────────────────────────
+    const SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    let currentUser = null;
+    let currentProfil = null;
+
+    // ─── INIT ────────────────────────────────────────────────────────
+    async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+
+      currentUser = session.user;
+
+      const { data: profil } = await sb.from('profils')
+        .select('*').eq('id', currentUser.id).single();
+
+      if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
+      currentProfil = profil;
+
+      // Affichage navbar
+      document.getElementById('userAvatar').src = profil.photo_url || '';
+      document.getElementById('userName').textContent = profil.nom || profil.email;
+
+      hideLoader();
+      chargerMesPropositions();
+    }
+
+    // ─── LOADER ──────────────────────────────────────────────────────
+    function hideLoader() {
+      document.getElementById('loader').style.opacity = '0';
+      setTimeout(() => document.getElementById('loader').style.display = 'none', 400);
+    }
+
+    // ─── TOAST ───────────────────────────────────────────────────────
+    function showToast(msg, type = 'info') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `toast toast-${type} show`;
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    // ─── MES PROPOSITIONS ────────────────────────────────────────────
+    async function chargerMesPropositions() {
+      const { data, error } = await sb.from('propositions')
+        .select('*')
+        .eq('propose_par', currentUser.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      const container = document.getElementById('mesPropositions');
+
+      if (error || !data || data.length === 0) {
+        container.innerHTML = `<p class="props-empty">Vous n'avez pas encore fait de proposition.</p>`;
+        return;
+      }
+
+      container.innerHTML = data.map(p => `
+        <div class="prop-item prop-${p.statut}">
+          <div class="prop-item-info">
+            <span class="prop-item-titre">${p.titre}</span>
+            <span class="prop-item-artiste">${p.artiste || '—'}</span>
+          </div>
+          <span class="prop-badge prop-badge-${p.statut}">${labelStatut(p.statut)}</span>
+        </div>
+      `).join('');
+    }
+
+    function labelStatut(s) {
+      return { en_attente: '⏳ En attente', accepte: '✅ Accepté', refuse: '❌ Refusé' }[s] || s;
+    }
+
+    // ─── SOUMISSION ──────────────────────────────────────────────────
+    document.getElementById('btnSoumettre').addEventListener('click', async () => {
+      const titre = document.getElementById('titre').value.trim();
+      const artiste = document.getElementById('artiste').value.trim();
+      const langue = document.getElementById('langue').value;
+      const rubrique = document.getElementById('rubrique').value;
+      const commentaire = document.getElementById('commentaire').value.trim();
+
+      if (!titre) { showToast('Le titre est obligatoire.', 'error'); return; }
+      if (!langue) { showToast('Veuillez choisir une langue.', 'error'); return; }
+      if (!rubrique) { showToast('Veuillez choisir une rubrique.', 'error'); return; }
+
+      const btn = document.getElementById('btnSoumettre');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="btn-icon spinner">↻</span> Envoi…';
+
+      const { error } = await sb.from('propositions').insert({
+        titre,
+        artiste: artiste || null,
+        langue,
+        rubrique,
+        commentaire: commentaire || null,
+        statut: 'en_attente',
+        propose_par: currentUser.id
+      });
+
+      btn.disabled = false;
+      btn.innerHTML = '<span class="btn-icon">✦</span> Soumettre la proposition';
+
+      if (error) {
+        showToast('Erreur lors de l'envoi. Réessayez.', 'error');
+        console.error(error);
+        return;
+      }
+
+      // Réinitialiser le formulaire
+      ['titre','artiste','commentaire'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('langue').value = '';
+      document.getElementById('rubrique').value = '';
+
+      // Afficher modal
+      document.getElementById('modalConfirm').style.display = 'flex';
+      chargerMesPropositions();
+    });
+
+    // ─── MODAL ───────────────────────────────────────────────────────
+    function closeModal() {
+      document.getElementById('modalConfirm').style.display = 'none';
+    }
+    document.getElementById('modalConfirm').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('modalConfirm')) closeModal();
+    });
+
+    // ─── LOGOUT ──────────────────────────────────────────────────────
+    document.getElementById('btnLogout').addEventListener('click', async () => {
+      await sb.auth.signOut();
+      window.location.href = 'index.html';
+    });
+
+    // ─── NAV TOGGLE ──────────────────────────────────────────────────
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('open');
+    });
+
+    // ─── LANCEMENT ───────────────────────────────────────────────────
+    init();
+  </script>
+</body>
+        </html>
+                                                
