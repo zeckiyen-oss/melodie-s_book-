@@ -5019,3 +5019,422 @@ body.page-login {
   color: #e09696;
   border: 1px solid rgba(224,108,108,0.25);
 }
+/* ============================================================
+   EVENEMENTS.HTML — CSS
+   À coller à la fin de css/style.css
+   ============================================================ */
+
+/* ── HERO ────────────────────────────────────────────────── */
+.ev-hero {
+  position: relative;
+  padding: 4rem 2rem 3rem;
+  background: linear-gradient(160deg, #0D1B2A 0%, #1A2E45 60%, #0D1B2A 100%);
+  overflow: hidden;
+  text-align: center;
+}
+
+.ev-hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 55% at 20% 55%, rgba(201,168,76,0.09) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 80% 35%, rgba(201,168,76,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.ev-hero-content { position: relative; }
+
+.ev-badge-admin {
+  display: inline-block;
+  padding: 0.3rem 1rem;
+  border: 1px solid rgba(201,168,76,0.4);
+  border-radius: 20px;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #C9A84C;
+  margin-bottom: 1rem;
+}
+
+.ev-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(1.7rem, 4.5vw, 2.8rem);
+  font-weight: 700;
+  color: #FAF6ED;
+  margin: 0 0 0.6rem;
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 20px rgba(201,168,76,0.2);
+}
+
+.ev-subtitle {
+  font-family: 'Lato', sans-serif;
+  color: rgba(250,246,237,0.6);
+  font-size: 0.95rem;
+  font-weight: 300;
+  margin: 0;
+}
+
+.ev-hero-ornement {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #C9A84C 30%, #F0D98A 50%, #C9A84C 70%, transparent);
+}
+
+/* ── LAYOUT ──────────────────────────────────────────────── */
+.ev-main {
+  padding: 2rem 1.5rem 4rem;
+  max-width: 1150px;
+  margin: 0 auto;
+}
+
+.ev-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 920px) {
+  .ev-layout { grid-template-columns: 1fr; }
+}
+
+/* ── TOOLBAR ─────────────────────────────────────────────── */
+.ev-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.ev-filter-tabs {
+  display: flex;
+  gap: 0.4rem;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.ev-tab {
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 20px;
+  background: transparent;
+  color: rgba(250,246,237,0.55);
+  font-family: 'Lato', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.ev-tab:hover {
+  border-color: rgba(201,168,76,0.4);
+  color: #FAF6ED;
+}
+
+.ev-tab.active {
+  background: linear-gradient(135deg, rgba(201,168,76,0.2), rgba(201,168,76,0.08));
+  border-color: #C9A84C;
+  color: #F0D98A;
+}
+
+/* ── COMPTEUR ────────────────────────────────────────────── */
+.ev-count {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.8rem;
+  color: rgba(250,246,237,0.4);
+  margin-bottom: 1rem;
+  letter-spacing: 0.04em;
+}
+
+/* ── LISTE ÉVÉNEMENTS ────────────────────────────────────── */
+.ev-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.ev-empty {
+  text-align: center;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.9rem;
+  color: rgba(250,246,237,0.35);
+  font-style: italic;
+  padding: 3rem 0;
+}
+
+/* ── ITEM ÉVÉNEMENT ──────────────────────────────────────── */
+.ev-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(145deg, #1A2E45, #152438);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.ev-item:hover {
+  border-color: rgba(201,168,76,0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+.ev-item-passe {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+/* Mini calendrier gauche */
+.ev-item-cal {
+  flex-shrink: 0;
+  width: 52px;
+  height: 56px;
+  background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.06));
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.ev-cal-jour {
+  font-family: 'Cinzel', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #F0D98A;
+  line-height: 1;
+}
+
+.ev-cal-mois {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #C9A84C;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Contenu central */
+.ev-item-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ev-item-titre {
+  font-family: 'Cinzel', serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #FAF6ED;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ev-item-desc {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.78rem;
+  color: rgba(250,246,237,0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ev-item-date-full {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.75rem;
+  color: #C9A84C;
+  font-style: italic;
+}
+
+/* Droite : countdown + actions */
+.ev-item-right {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.ev-countdown {
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #F0D98A;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: 10px;
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+}
+
+.ev-passe-badge {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.72rem;
+  color: rgba(250,246,237,0.35);
+  font-style: italic;
+}
+
+.ev-item-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+/* Skeleton */
+.ev-skeleton {
+  height: 88px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #1A2E45 25%, #1f3550 50%, #1A2E45 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+/* ── FORMULAIRE ASIDE ────────────────────────────────────── */
+.ev-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  position: sticky;
+  top: 1.5rem;
+}
+
+.ev-form-card {
+  background: linear-gradient(145deg, #1A2E45, #152438);
+  border: 1px solid rgba(201,168,76,0.22);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+}
+
+.ev-form-idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+}
+
+.ev-form-idle-icon {
+  font-size: 2rem;
+  opacity: 0.4;
+}
+
+.ev-form-idle p {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.87rem;
+  color: rgba(250,246,237,0.45);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.ev-form-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.ev-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ev-form-header h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #F0D98A;
+  margin: 0;
+}
+
+.ev-form-close {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(250,246,237,0.15);
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(250,246,237,0.5);
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.ev-form-close:hover {
+  background: rgba(224,108,108,0.15);
+  color: #e09696;
+  border-color: rgba(224,108,108,0.3);
+}
+
+/* Date input styling */
+input[type="date"].form-input {
+  color-scheme: dark;
+}
+
+.ev-form-actions {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: flex-end;
+  margin-top: 0.3rem;
+}
+
+/* ── PROCHAIN ÉVÉNEMENT ──────────────────────────────────── */
+.ev-prochain {
+  background: linear-gradient(145deg, rgba(201,168,76,0.12), rgba(201,168,76,0.05));
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 14px;
+  padding: 1.4rem 1.3rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ev-prochain-label {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #C9A84C;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ev-prochain-titre {
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #FAF6ED;
+  margin-top: 0.2rem;
+}
+
+.ev-prochain-date {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.8rem;
+  color: rgba(250,246,237,0.55);
+  font-style: italic;
+}
+
+.ev-prochain-countdown {
+  font-family: 'Cinzel', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #F0D98A;
+  margin-top: 0.4rem;
+  text-shadow: 0 0 20px rgba(201,168,76,0.4);
+   }
+   
