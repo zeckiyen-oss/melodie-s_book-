@@ -5438,3 +5438,487 @@ input[type="date"].form-input {
   text-shadow: 0 0 20px rgba(201,168,76,0.4);
    }
    
+/* ============================================================
+   DESIGNATEUR.HTML — CSS
+   À coller à la fin de css/style.css
+   ============================================================ */
+
+/* ── HERO ────────────────────────────────────────────────── */
+.ds-hero {
+  position: relative;
+  padding: 4rem 2rem 3.5rem;
+  background: linear-gradient(160deg, #0D1B2A 0%, #1A2E45 60%, #0D1B2A 100%);
+  overflow: hidden;
+  text-align: center;
+}
+
+.ds-hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 55% at 20% 55%, rgba(201,168,76,0.09) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 80% 35%, rgba(201,168,76,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.ds-hero-content { position: relative; }
+
+.ds-badge-admin {
+  display: inline-block;
+  padding: 0.3rem 1rem;
+  border: 1px solid rgba(201,168,76,0.4);
+  border-radius: 20px;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #C9A84C;
+  margin-bottom: 1rem;
+}
+
+.ds-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  font-weight: 700;
+  color: #FAF6ED;
+  margin: 0 0 0.6rem;
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 20px rgba(201,168,76,0.2);
+}
+
+.ds-subtitle {
+  font-family: 'Lato', sans-serif;
+  color: rgba(250,246,237,0.6);
+  font-size: 0.95rem;
+  font-weight: 300;
+  margin: 0 0 1.2rem;
+}
+
+.ds-verset {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(13,27,42,0.4);
+  border: 1px solid rgba(201,168,76,0.18);
+  border-radius: 10px;
+  padding: 0.7rem 1.4rem;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.ds-verset em {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.85rem;
+  color: rgba(250,246,237,0.7);
+}
+
+.ds-verset span {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.72rem;
+  color: #C9A84C;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.ds-hero-ornement {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #C9A84C 30%, #F0D98A 50%, #C9A84C 70%, transparent);
+}
+
+/* ── LAYOUT ──────────────────────────────────────────────── */
+.ds-main {
+  padding: 2rem 1.5rem 4rem;
+  max-width: 1150px;
+  margin: 0 auto;
+}
+
+.ds-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 920px) {
+  .ds-layout { grid-template-columns: 1fr; }
+}
+
+/* ── SECTION TITLE ───────────────────────────────────────── */
+.ds-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.ds-section-icon { font-size: 1.2rem; }
+
+.ds-section-title h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #F0D98A;
+  margin: 0;
+  flex: 1;
+}
+
+.ds-btn-creer { white-space: nowrap; }
+
+/* ── LISTE CULTES ────────────────────────────────────────── */
+.ds-cultes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.ds-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  background: rgba(26,46,69,0.4);
+  border: 1px dashed rgba(201,168,76,0.2);
+  border-radius: 14px;
+}
+
+.ds-empty span { font-size: 2rem; opacity: 0.4; }
+
+.ds-empty p {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.87rem;
+  color: rgba(250,246,237,0.45);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ── CARD CULTE ──────────────────────────────────────────── */
+.ds-culte-card {
+  background: linear-gradient(145deg, #1A2E45, #152438);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: 16px;
+  padding: 1.3rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ds-culte-card:hover {
+  border-color: rgba(201,168,76,0.45);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+}
+
+.ds-culte-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.ds-culte-theme {
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #FAF6ED;
+  line-height: 1.3;
+}
+
+.ds-culte-countdown {
+  flex-shrink: 0;
+  font-family: 'Cinzel', serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #F0D98A;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: 10px;
+  padding: 0.2rem 0.65rem;
+  white-space: nowrap;
+}
+
+.ds-countdown-passe {
+  color: rgba(250,246,237,0.35);
+  background: rgba(250,246,237,0.05);
+  border-color: rgba(250,246,237,0.1);
+}
+
+.ds-culte-date {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.82rem;
+  color: rgba(250,246,237,0.55);
+}
+
+.ds-culte-preparateur {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  background: rgba(13,27,42,0.4);
+  border-radius: 10px;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.83rem;
+  color: rgba(250,246,237,0.75);
+}
+
+.ds-culte-preparateur strong { color: #FAF6ED; }
+
+.ds-prep-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(201,168,76,0.35);
+}
+
+.ds-prep-avatar-fallback {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C9A84C, #F0D98A);
+  color: #0D1B2A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.ds-no-prep {
+  color: #e09696;
+  font-style: italic;
+  font-size: 0.82rem;
+}
+
+.ds-culte-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(201,168,76,0.1);
+}
+
+.ds-btn-sm {
+  padding: 0.45rem 0.85rem !important;
+  font-size: 0.78rem !important;
+  flex: 1;
+  justify-content: center;
+  min-width: 80px;
+}
+
+.ds-btn-danger {
+  border-color: rgba(224,108,108,0.3) !important;
+  color: #e09696 !important;
+}
+
+.ds-btn-danger:hover {
+  background: rgba(224,108,108,0.1) !important;
+  border-color: rgba(224,108,108,0.5) !important;
+}
+
+/* ── FORMULAIRE CULTE ────────────────────────────────────── */
+.ds-form-card {
+  background: linear-gradient(145deg, #1A2E45, #152438);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+}
+
+.ds-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ds-form-header h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #F0D98A;
+  margin: 0;
+}
+
+.ds-form-actions {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: flex-end;
+  margin-top: 0.3rem;
+}
+
+/* Skeleton */
+.ds-skeleton {
+  height: 180px;
+  border-radius: 16px;
+  background: linear-gradient(90deg, #1A2E45 25%, #1f3550 50%, #1A2E45 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+/* ── ASIDE ───────────────────────────────────────────────── */
+.ds-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  position: sticky;
+  top: 1.5rem;
+}
+
+.ds-aside-card {
+  background: linear-gradient(145deg, #1A2E45, #152438);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 14px;
+  padding: 1.3rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.ds-aside-title {
+  font-family: 'Cinzel', serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #F0D98A;
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Liste membres */
+.ds-membres-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201,168,76,0.3) transparent;
+}
+
+.ds-loading, .ds-empty-sm {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.82rem;
+  color: rgba(250,246,237,0.4);
+  text-align: center;
+  padding: 0.5rem 0;
+  font-style: italic;
+}
+
+.ds-membre-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  background: rgba(13,27,42,0.4);
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.ds-membre-item:hover { background: rgba(13,27,42,0.65); }
+
+.ds-membre-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(201,168,76,0.3);
+  flex-shrink: 0;
+}
+
+.ds-membre-avatar-fallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C9A84C, #F0D98A);
+  color: #0D1B2A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.ds-membre-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.ds-membre-nom {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: #FAF6ED;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ds-membre-email {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.72rem;
+  color: rgba(250,246,237,0.4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Badges rôle */
+.ds-role-badge {
+  flex-shrink: 0;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.18rem 0.5rem;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.ds-role-admin        { background: rgba(201,168,76,0.15); color: #F0D98A; border: 1px solid rgba(201,168,76,0.3); }
+.ds-role-preparateur  { background: rgba(76,175,130,0.15); color: #7ecfaf; border: 1px solid rgba(76,175,130,0.3); }
+.ds-role-membre       { background: rgba(250,246,237,0.07); color: rgba(250,246,237,0.55); border: 1px solid rgba(250,246,237,0.12); }
+
+/* Liste info rôle */
+.ds-info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.ds-info-list li {
+  font-family: 'Lato', sans-serif;
+  font-size: 0.82rem;
+  color: rgba(250,246,237,0.6);
+  line-height: 1.45;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.ds-info-list li::before {
+  content: '✦';
+  position: absolute;
+  left: 0;
+  color: #C9A84C;
+  font-size: 0.6rem;
+  top: 0.15rem;
+   }
+     
