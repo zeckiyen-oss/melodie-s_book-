@@ -53,7 +53,6 @@
       <h1 class="cp-title">Gestion des Comptes</h1>
       <p class="cp-subtitle">Validez les inscriptions, gérez les rôles et les accès des membres</p>
     </div>
-    <!-- Compteurs -->
     <div class="cp-hero-stats">
       <div class="cp-stat">
         <span class="cp-stat-num" id="nbTotal">—</span>
@@ -126,6 +125,17 @@
       <div class="modal-action-icon" id="modalActionIcon">👤</div>
       <h3 id="modalActionTitle">Confirmer</h3>
       <p id="modalActionMsg">Confirmez-vous cette action ?</p>
+
+      <!-- SÉLECTEUR RÔLE — visible uniquement à la validation -->
+      <div id="modalRoleWrap" style="display:none; margin-top:1.2rem;">
+        <label style="font-family:'Cinzel',serif; font-size:0.78rem; color:#C9A84C; letter-spacing:0.08em; text-transform:uppercase; display:block; margin-bottom:0.5rem;">Attribuer un rôle</label>
+        <select id="modalRoleSelect" style="width:100%; background:#0D1B2A; border:1px solid rgba(201,168,76,0.4); border-radius:8px; color:#FAF6ED; padding:0.6rem 0.8rem; font-family:'Lato',sans-serif; font-size:0.9rem; cursor:pointer;">
+          <option value="membre">♪ Membre</option>
+          <option value="preparateur">🕊️ Préparateur</option>
+          <option value="admin">⚙ Admin</option>
+        </select>
+      </div>
+
       <div class="modal-actions">
         <button class="btn-secondary" onclick="fermerModalAction()">Annuler</button>
         <button class="btn-primary" id="btnConfirmerAction">Confirmer</button>
@@ -144,7 +154,7 @@
     let membres = [];
     let filtre = 'attente';
     let membreSelectionne = null;
-    let actionEnCours = null; // { type, membre, data }
+    let actionEnCours = null;
 
     // ─── INIT ────────────────────────────────────────────────────────
     async function init() {
@@ -297,11 +307,9 @@
       const estMoi = m.id === currentUser.id;
       const roleLabel = { admin: '⚙ Admin', preparateur: '🕊️ Préparateur', membre: '♪ Membre' }[m.role] || m.role;
 
-      // Section actions
       let actionsHtml = '';
 
       if (!m.actif) {
-        // Compte en attente : valider ou rejeter
         actionsHtml = '<div class="cp-actions-section">' +
           '<div class="cp-actions-title">Actions</div>' +
           '<div class="cp-actions-grid">' +
@@ -316,7 +324,6 @@
           '</div>' +
         '</div>';
       } else if (!estMoi) {
-        // Compte actif : changer rôle, désactiver
         const roles = ['membre', 'preparateur', 'admin'];
         const roleOptions = roles.map(r => {
           const labels = { admin: '⚙ Admin', preparateur: '🕊️ Préparateur', membre: '♪ Membre' };
@@ -373,9 +380,12 @@
     const actionConfigs = {
       valider: {
         icon: '✅', titre: 'Valider ce compte ?',
-        msg: (m) => m.nom + ' pourra accéder à Mélodie\'s Book avec le rôle Membre.',
+        msg: (m) => m.nom + ' pourra accéder à Mélodie\'s Book. Choisissez son rôle ci-dessous.',
         btnClass: 'btn-primary', btnLabel: 'Valider',
-        exec: async (m) => sb.from('profils').update({ actif: true, role: 'membre' }).eq('id', m.id)
+        exec: async (m) => {
+          const role = document.getElementById('modalRoleSelect').value;
+          return sb.from('profils').update({ actif: true, role: role }).eq('id', m.id);
+        }
       },
       rejeter: {
         icon: '🗑️', titre: 'Rejeter ce compte ?',
@@ -385,7 +395,7 @@
       },
       desactiver: {
         icon: '🔒', titre: 'Désactiver ce compte ?',
-        msg: (m) => m.nom + ' ne pourra plus accéder à l\'application.',
+        msg: (m) => (m.nom || m.email) + ' ne pourra plus accéder à l\'application.',
         btnClass: 'btn-danger', btnLabel: 'Désactiver',
         exec: async (m) => sb.from('profils').update({ actif: false }).eq('id', m.id)
       },
@@ -410,6 +420,13 @@
       document.getElementById('modalActionIcon').textContent = config.icon;
       document.getElementById('modalActionTitle').textContent = config.titre;
       document.getElementById('modalActionMsg').textContent = config.msg(membreSelectionne, data);
+
+      // Afficher le sélecteur de rôle uniquement pour la validation
+      const roleWrap = document.getElementById('modalRoleWrap');
+      roleWrap.style.display = (type === 'valider') ? 'block' : 'none';
+      if (type === 'valider') {
+        document.getElementById('modalRoleSelect').value = 'membre'; // défaut : membre
+      }
 
       const btn = document.getElementById('btnConfirmerAction');
       btn.className = config.btnClass;
@@ -448,12 +465,10 @@
       };
       showToast(msgs[type] || 'Action effectuée.', 'success');
 
-      // Si rejeté, fermer le détail
       if (type === 'rejeter') { resetDetail(); membreSelectionne = null; }
 
       await chargerMembres();
 
-      // Rafraîchir le détail si le membre existe encore
       if (membreSelectionne && type !== 'rejeter') {
         membreSelectionne = membres.find(m => m.id === membreSelectionne.id);
         if (membreSelectionne) afficherDetail(membreSelectionne);
@@ -477,5 +492,4 @@
     init();
   </script>
 </body>
-        </html>
-          
+</html>
