@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Préparation du culte — Mélodie's Book</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="prep-page">
+
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <span class="navbar-logo">♪</span>
+      <span class="navbar-title">Mélodie's Book</span>
+    </div>
+    <div class="navbar-links" id="navLinks"></div>
+    <div class="navbar-user" id="navUser"></div>
+  </nav>
+
+  <div class="page-loader" id="pageLoader">
+    <div class="loader-cross">✦</div>
+    <p>Chargement…</p>
+  </div>
+
+  <main class="prep-main" id="prepMain" style="display:none;">
+
+    <header class="prep-header" id="prepHeader">
+      <div class="prep-header-left">
+        <div class="prep-header-icon">⛪</div>
+        <div>
+          <h1 class="prep-title" id="prepTitre">Chargement…</h1>
+          <p class="prep-meta" id="prepMeta"></p>
+        </div>
+      </div>
+      <div class="prep-header-actions">
+        <button class="btn-gold" id="btnSauvegarder" onclick="sauvegarder()">💾 Sauvegarder</button>
+        <button class="btn-outline-gold" id="btnPdf" onclick="genererPDF()">📄 Télécharger PDF</button>
+      </div>
+    </header>
+
+    <div class="prep-verset-section">
+      <label class="prep-section-label">📖 Verset du culte</label>
+      <textarea class="prep-verset-input" id="versetCulte" rows="2" placeholder="Ex : Psaumes 150:6 — Que tout ce qui respire loue l'Éternel !"></textarea>
+    </div>
+
+    <div class="prep-layout">
+
+      <section class="prep-programme-col">
+        <div class="prep-col-header">
+          <h2 class="prep-col-title">📋 Programme du culte</h2>
+          <span class="prep-col-hint">Organisé par rubrique</span>
+        </div>
+        <div class="prog-list" id="progList">
+          <p class="prep-empty">Aucune chanson dans ce programme pour l'instant.</p>
+        </div>
+        <div class="prep-add-section">
+          <h3 class="prep-add-title">➕ Ajouter une chanson</h3>
+          <div class="prep-add-row">
+            <select class="prep-select" id="selectRubrique">
+              <option value="">— Rubrique —</option>
+              <option value="Prélude">Prélude</option>
+              <option value="Adoration">Adoration</option>
+              <option value="Louange">Louange</option>
+              <option value="Offrande">Offrande</option>
+              <option value="Méditation">Méditation</option>
+              <option value="Envoi">Envoi</option>
+            </select>
+            <select class="prep-select prep-select-chanson" id="selectChanson">
+              <option value="">— Chanson —</option>
+            </select>
+            <button class="btn-gold btn-sm" onclick="ajouterChanson()">Ajouter</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="prep-tonalites-col">
+        <div class="prep-col-header">
+          <h2 class="prep-col-title">🎵 Tonalités de répétition</h2>
+          <span class="prep-col-hint">Renseigner après chaque répétition</span>
+        </div>
+        <div class="tonal-list" id="tonalList">
+          <p class="prep-empty">Les tonalités apparaîtront ici une fois les chansons ajoutées.</p>
+        </div>
+      </section>
+
+    </div>
+
+    <div class="prep-notes-section">
+      <label class="prep-section-label">📝 Notes du préparateur</label>
+      <textarea class="prep-notes-input" id="notesPrep" rows="4" placeholder="Instructions, remarques, points à travailler en répétition…"></textarea>
+    </div>
+
+  </main>
+
+  <div class="modal-overlay" id="modalSuppr" style="display:none;">
+    <div class="modal-box">
+      <h3 class="modal-title">Retirer cette chanson ?</h3>
+      <p class="modal-desc" id="modalSupprDesc"></p>
+      <div class="modal-actions">
+        <button class="btn-outline-gold" onclick="closeModal()">Annuler</button>
+        <button class="btn-danger" id="btnConfirmSuppr">Retirer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    var SUPA_URL = "https://tjqicfxkxhlciebmswqu.supabase.co";
+    var SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ";
+    var sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+    var culteId = null;
+    var culteData = null;
+    var profilUser = null;
+    var programme = [];
+    var toutesChansons = [];
+    var pendingSupprIdx = null;
+    var NOTES_GAMMES = ["Do","Do#/Ré♭","Ré","Ré#/Mi♭","Mi","Fa","Fa#/Sol♭","Sol","Sol#/La♭","La","La#/Si♭","Si"];
+    var RUBRIQUES_ORDER = ["Prélude","Adoration","Louange","Offrande","Méditation","Envoi"];
+
+    function escHtml(str) {
+      if (str == null) return "";
+      return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
+    function showToast(msg, type) {
+      type = type || "info";
+      var tc = document.getElementById("toastContainer");
+      var t = document.createElement("div");
+      t.className = "toast toast-" + type;
+      t.textContent = msg;
+      tc.appendChild(t);
+      setTimeout(function() { t.classList.add("toast-show"); }, 10);
+      setTimeout(function() {
+        t.classList.remove("toast-show");
+        setTimeout(function() { if (tc.contains(t)) tc.removeChild(t); }, 400);
+      }, 3500);
+    }
+
+    function hideLoader() {
+      document.getElementById("pageLoader").style.display = "none";
+      document.getElementById("prepMain").style.display = "block";
+    }
+
+    function formatDate(d) {
+      if (!d) return "";
+      var p = d.split("-");
+      return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : d;
+    }
+
+    function closeModal() {
+      document.getElementById("modalSuppr").style.display = "none";
+      pendingSupprIdx = null;
+    }
+
+    async function authGuard() {
+      var r = await sb.auth.getSession();
+      if (!r.data.session) { window.location.href = "index.html"; return null; }
+      var user = r.data.session.user;
+      var p = await sb.from("profils").select("*").eq("id", user.id).single();
+      if (!p.data || !p.data.actif) { window.location.href = "index.html"; return null; }
+      if (p.data.role !== "preparateur" && p.data.role !== "admin") {
+        showToast("Accès réservé au préparateur ou à l'admin.", "error");
+        setTimeout(function() { window.location.href = "dashboard.html"; }, 2000);
+        return null;
+      }
+      return p.data;
+    }
+
+    function buildNavbar(profil) {
+      var links = [
+        { href:"dashboard.html", label:"Tableau de bord" },
+        { href:"repertoire.html", label:"Répertoire" },
+        { href:"bibliotheque.html", label:"Bibliothèque" },
+        { href:"proposer.html", label:"Proposer" }
+      ];
+      if (profil.role === "admin") {
+        links.push({ href:"statistiques.html", label:"Statistiques" });
+        links.push({ href:"comptes.html", label:"Comptes" });
+      }
+      links.push({ href:"preparation-culte.html", label:"Préparation", active:true });
+      var html = "";
+      links.forEach(function(l) {
+        html += "<a href=\"" + l.href + "\" class=\"nav-link" + (l.active ? " active" : "") + "\">" + l.label + "</a>";
+      });
+      document.getElementById("navLinks").innerHTML = html;
+      document.getElementById("navUser").innerHTML =
+        "<span class=\"nav-username\">" + escHtml(profil.nom || profil.email) + "</span>"
+        + "<button class=\"nav-logout\" onclick=\"logout()\">Déconnexion</button>";
+    }
+
+    async function logout() { await sb.auth.signOut(); window.location.href = "index.html"; }
+
+    async function chargerCulte() {
+      var params = new URLSearchParams(window.location.search);
+      culteId = params.get("id");
+      var res;
+      if (culteId) {
+        res = await sb.from("cultes").select("*").eq("id", culteId).single();
+      } else {
+        res = await sb.from("cultes").select("*").eq("statut","en_preparation").eq("preparateur_id", profilUser.id).order("date_culte",{ascending:true}).limit(1).single();
+        if ((res.error || !res.data) && profilUser.role === "admin") {
+          res = await sb.from("cultes").select("*").eq("statut","en_preparation").order("date_culte",{ascending:true}).limit(1).single();
+        }
+      }
+      if (res.error || !res.data) {
+        document.getElementById("prepTitre").textContent = "Aucun culte en préparation";
+        document.getElementById("prepMeta").textContent = "Créez un culte via la page Désignateur.";
+        hideLoader();
+        return false;
+      }
+      culteData = res.data;
+      culteId = culteData.id;
+      document.getElementById("prepTitre").textContent = culteData.theme || ("Culte du " + formatDate(culteData.date_culte));
+      document.getElementById("prepMeta").textContent = "📅 " + formatDate(culteData.date_culte) + "   |   Statut : En préparation";
+      if (culteData.notes) {
+        try {
+          var meta = JSON.parse(culteData.notes);
+          document.getElementById("versetCulte").value = meta.verset || "";
+          document.getElementById("notesPrep").value = meta.notes || "";
+        } catch(e) {
+          document.getElementById("notesPrep").value = culteData.notes || "";
+        }
+      }
+      return true;
+    }
+
+    async function chargerProgramme() {
+      var res = await sb.from("programme_culte")
+        .select("id,chanson_id,rubrique,ordre,tonalite,tonalite_libre,chansons(id,titre,numero)")
+        .eq("culte_id", culteId)
+        .order("ordre",{ascending:true});
+      programme = (res.data || []).map(function(p) {
+        return {
+          id: p.id,
+          chanson_id: p.chanson_id,
+          rubrique: p.rubrique,
+          ordre: p.ordre,
+          titre: p.chansons ? p.chansons.titre : "N/A",
+          numero: p.chansons ? p.chansons.numero : "",
+          tonalite: p.tonalite || "",
+          tonalite_libre: p.tonalite_libre || ""
+        };
+      });
+      renderProgramme();
+      renderTonalites();
+    }
+
+    async function chargerChansons() {
+      var res = await sb.from("chansons").select("id,titre,numero,rubrique").order("titre",{ascending:true});
+      toutesChansons = res.data || [];
+      var sel = document.getElementById("selectChanson");
+      sel.innerHTML = "<option value=\"\">— Chanson —</option>";
+      toutesChansons.forEach(function(c) {
+        var opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = (c.numero ? "#" + c.numero + " — " : "") + c.titre;
+        sel.appendChild(opt);
+      });
+    }
+
+    function groupByRubrique() {
+      var grouped = {};
+      programme.forEach(function(p, idx) {
+        if (!grouped[p.rubrique]) grouped[p.rubrique] = [];
+        grouped[p.rubrique].push({ item:p, idx:idx });
+      });
+      var ordered = RUBRIQUES_ORDER.filter(function(r) { return grouped[r]; });
+      Object.keys(grouped).forEach(function(r) { if (ordered.indexOf(r) === -1) ordered.push(r); });
+      return { grouped:grouped, ordered:ordered };
+    }
+
+    function renderProgramme() {
+      var container = document.getElementById("progList");
+      if (programme.length === 0) {
+        container.innerHTML = "<p class=\"prep-empty\">Aucune chanson dans ce programme pour l'instant.</p>";
+        return;
+      }
+      var g = groupByRubrique();
+      var html = "";
+      g.ordered.forEach(function(rubrique) {
+        html += "<div class=\"prog-rubrique-group\">"
+          + "<div class=\"prog-rubrique-label\">" + escHtml(rubrique) + "</div>";
+        g.grouped[rubrique].forEach(function(entry) {
+          var p = entry.item; var idx = entry.idx;
+          html += "<div class=\"prog-item\" data-idx=\"" + idx + "\">"
+            + "<div class=\"prog-item-drag\">⠿</div>"
+            + "<div class=\"prog-item-info\">"
+            + "<span class=\"prog-item-num\">" + (p.numero ? "#" + escHtml(String(p.numero)) : "") + "</span>"
+            + "<span class=\"prog-item-titre\">" + escHtml(p.titre) + "</span>"
+            + "</div>"
+            + "<button class=\"prog-item-del\" onclick=\"demanderSuppression(" + idx + ", this.getAttribute('data-titre'))\" data-titre=\"" + escHtml(p.titre) + "\" title=\"Retirer\">✕</button>"
+            + "</div>";
+        });
+        html += "</div>";
+      });
+      container.innerHTML = html;
+    }
+
+    function renderTonalites() {
+      var container = document.getElementById("tonalList");
+      if (programme.length === 0) {
+        container.innerHTML = "<p class=\"prep-empty\">Les tonalités apparaîtront ici une fois les chansons ajoutées.</p>";
+        return;
+      }
+      var g = groupByRubrique();
+      var html = "";
+      g.ordered.forEach(function(rubrique) {
+        html += "<div class=\"tonal-group\"><div class=\"tonal-rubrique-label\">" + escHtml(rubrique) + "</div>";
+        g.grouped[rubrique].forEach(function(entry) {
+          var p = entry.item; var idx = entry.idx;
+          var optionsHtml = "<option value=\"\">— Tonalité —</option>";
+          NOTES_GAMMES.forEach(function(note) {
+            optionsHtml += "<option value=\"" + escHtml(note) + "\"" + (p.tonalite === note ? " selected" : "") + ">" + escHtml(note) + "</option>";
+          });
+          optionsHtml += "<option value=\"autre\"" + (p.tonalite === "autre" ? " selected" : "") + ">Autre…</option>";
+          var showLibre = (p.tonalite === "autre") ? "" : " style=\"display:none\"";
+          html += "<div class=\"tonal-item\" data-idx=\"" + idx + "\">"
+            + "<div class=\"tonal-item-titre\">"
+            + "<span class=\"tonal-num\">" + (p.numero ? "#" + escHtml(String(p.numero)) : "") + "</span>"
+            + "<span class=\"tonal-titre\">" + escHtml(p.titre) + "</span>"
+            + "</div>"
+            + "<div class=\"tonal-item-inputs\">"
+            + "<select class=\"tonal-select\" onchange=\"changerTonalite(" + idx + ", this.value)\">" + optionsHtml + "</select>"
+            + "<input class=\"tonal-libre\" id=\"tonalLibre_" + idx + "\" type=\"text\" placeholder=\"Ex : Do#, Ré♭…\" value=\"" + escHtml(p.tonalite_libre) + "\" onchange=\"changerTonaliteLibre(" + idx + ", this.value)\"" + showLibre + " />"
+            + "</div>"
+            + "</div>";
+        });
+        html += "</div>";
+      });
+      container.innerHTML = html;
+    }
+
+    async function ajouterChanson() {
+      var rubrique = document.getElementById("selectRubrique").value;
+      var chansonId = document.getElementById("selectChanson").value;
+      if (!rubrique) { showToast("Choisissez une rubrique.", "error"); return; }
+      if (!chansonId) { showToast("Choisissez une chanson.", "error"); return; }
+      if (programme.some(function(p) { return p.chanson_id === chansonId; })) {
+        showToast("Cette chanson est déjà dans le programme.", "error"); return;
+      }
+      var chanson = toutesChansons.find(function(c) { return c.id === chansonId; });
+      var res = await sb.from("programme_culte").insert({
+        culte_id: culteId, chanson_id: chansonId, rubrique: rubrique,
+        ordre: programme.length + 1, tonalite: "", tonalite_libre: ""
+      }).select().single();
+      if (res.error) { showToast("Erreur lors de l'ajout.", "error"); return; }
+      programme.push({
+        id: res.data.id, chanson_id: chansonId, rubrique: rubrique,
+        ordre: programme.length + 1,
+        titre: chanson ? chanson.titre : "N/A",
+        numero: chanson ? chanson.numero : "",
+        tonalite: "", tonalite_libre: ""
+      });
+      document.getElementById("selectRubrique").value = "";
+      document.getElementById("selectChanson").value = "";
+      renderProgramme(); renderTonalites();
+      showToast("Chanson ajoutée au programme.", "success");
+    }
+
+    function demanderSuppression(idx, titre) {
+      pendingSupprIdx = idx;
+      document.getElementById("modalSupprDesc").textContent = "Retirer " + titre + " du programme ?";
+      document.getElementById("btnConfirmSuppr").onclick = function() { supprimerChanson(idx); };
+      document.getElementById("modalSuppr").style.display = "flex";
+    }
+
+    async function supprimerChanson(idx) {
+      closeModal();
+      var item = programme[idx];
+      if (!item) return;
+      var res = await sb.from("programme_culte").delete().eq("id", item.id);
+      if (res.error) { showToast("Erreur lors de la suppression.", "error"); return; }
+      programme.splice(idx, 1);
+      renderProgramme(); renderTonalites();
+      showToast("Chanson retirée du programme.", "info");
+    }
+
+    function changerTonalite(idx, valeur) {
+      programme[idx].tonalite = valeur;
+      var inputLibre = document.getElementById("tonalLibre_" + idx);
+      if (inputLibre) inputLibre.style.display = (valeur === "autre") ? "block" : "none";
+    }
+
+    function changerTonaliteLibre(idx, valeur) {
+      programme[idx].tonalite_libre = valeur;
+    }
+
+    function lireTonalitesDuDOM() {
+      document.querySelectorAll(".tonal-item").forEach(function(el) {
+        var idx = parseInt(el.getAttribute("data-idx"));
+        if (isNaN(idx) || !programme[idx]) return;
+        var sel = el.querySelector(".tonal-select");
+        var inp = el.querySelector(".tonal-libre");
+        if (sel) programme[idx].tonalite = sel.value;
+        if (inp) programme[idx].tonalite_libre = inp.value;
+      });
+    }
+
+    async function sauvegarder() {
+      lireTonalitesDuDOM();
+      var btn = document.getElementById("btnSauvegarder");
+      btn.disabled = true; btn.textContent = "⏳ Sauvegarde…";
+      try {
+        var promises = programme.map(function(p) {
+          return sb.from("programme_culte").update({
+            tonalite: p.tonalite, tonalite_libre: p.tonalite_libre,
+            rubrique: p.rubrique, ordre: p.ordre
+          }).eq("id", p.id);
+        });
+        var meta = JSON.stringify({
+          verset: document.getElementById("versetCulte").value,
+          notes: document.getElementById("notesPrep").value
+        });
+        promises.push(sb.from("cultes").update({ notes: meta }).eq("id", culteId));
+        await Promise.all(promises);
+        showToast("Programme sauvegardé avec succès.", "success");
+      } catch(err) {
+        showToast("Erreur lors de la sauvegarde.", "error");
+      }
+      btn.disabled = false; btn.textContent = "💾 Sauvegarder";
+    }
+
+    function getTonaliteAffichee(p) {
+      if (!p.tonalite || p.tonalite === "") return "";
+      if (p.tonalite === "autre") return p.tonalite_libre || "";
+      return p.tonalite;
+    }
+
+    function genererPDF() {
+      lireTonalitesDuDOM();
+      var verset = document.getElementById("versetCulte").value;
+      var notes = document.getElementById("notesPrep").value;
+      var g = groupByRubrique();
+      var dateFormatee = formatDate(culteData.date_culte);
+      var theme = culteData.theme || "Culte";
+
+      var contenu = "";
+      g.ordered.forEach(function(rubrique) {
+        var chansons = g.grouped[rubrique];
+        chansons.forEach(function(entry, i) {
+          var c = entry.item;
+          var ton = getTonaliteAffichee(c);
+          if (i === 0) {
+            contenu += "<div class=\"pdf-rubrique-header\">"
+              + "<span class=\"pdf-rubrique-name\">" + escHtml(rubrique) + "</span>"
+              + (ton ? "<span class=\"pdf-rubrique-tonalite\">Tonalité : " + escHtml(ton) + "</span>" : "")
+              + "</div>";
+          } else if (ton) {
+            contenu += "<div class=\"pdf-rubrique-header pdf-rub-sub\">"
+              + "<span class=\"pdf-rubrique-name\" style=\"opacity:0\">-</span>"
+              + "<span class=\"pdf-rubrique-tonalite\">Tonalité : " + escHtml(ton) + "</span>"
+              + "</div>";
+          }
+          contenu += "<div class=\"pdf-chanson-row\">"
+            + (c.numero ? "<span class=\"pdf-chanson-num\">#" + escHtml(String(c.numero)) + "</span>" : "")
+            + "<span class=\"pdf-chanson-titre\">" + escHtml(c.titre) + "</span>"
+            + "</div>";
+        });
+      });
+
+      var versetBlock = verset
+        ? "<div class=\"pdf-verset\">\u201C\u00A0" + escHtml(verset).replace(/\n/g,"<br>") + "\u00A0\u201D</div>" : "";
+      var notesBlock = notes
+        ? "<div class=\"pdf-notes\"><div class=\"pdf-notes-title\">Notes du préparateur</div><p>" + escHtml(notes).replace(/\n/g,"<br>") + "</p></div>" : "";
+
+      var pdfWin = window.open("","_blank");
+      if (!pdfWin) { showToast("Autorisez les popups pour générer le PDF.", "error"); return; }
+
+      var css = "* { margin:0; padding:0; box-sizing:border-box; }"
+        + "body { font-family:'Lato',sans-serif; background:#fff; color:#1A1A2E; padding:2cm 2.5cm; font-size:11pt; }"
+        + ".pdf-header { text-align:center; border-bottom:2px solid #C9A84C; padding-bottom:1rem; margin-bottom:1.5rem; }"
+        + ".pdf-church { font-family:'Cinzel',serif; font-size:9pt; color:#C9A84C; letter-spacing:0.15em; text-transform:uppercase; margin-bottom:0.3rem; }"
+        + ".pdf-titre { font-family:'Cinzel',serif; font-size:20pt; font-weight:700; color:#0D1B2A; margin-bottom:0.3rem; }"
+        + ".pdf-date { font-size:10pt; color:#555; margin-bottom:0.5rem; }"
+        + ".pdf-verset { font-family:'Playfair Display',serif; font-style:italic; font-size:10pt; color:#4A4A6A; text-align:center; border-left:3px solid #C9A84C; padding:0.5rem 1rem; margin-bottom:1.5rem; background:#FAF6ED; }"
+        + ".pdf-programme-title { font-family:'Cinzel',serif; font-size:10pt; font-weight:600; color:#C9A84C; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.8rem; }"
+        + ".pdf-rubrique-header { display:flex; align-items:center; gap:1rem; background:#0D1B2A; color:#F0D98A; padding:0.4rem 0.8rem; border-radius:4px 4px 0 0; margin-top:1.2rem; }"
+        + ".pdf-rub-sub { background:#1A2E45; border-radius:0; margin-top:0; }"
+        + ".pdf-rubrique-name { font-family:'Cinzel',serif; font-size:10pt; font-weight:700; flex:1; }"
+        + ".pdf-rubrique-tonalite { font-size:9.5pt; color:#F0D98A; font-style:italic; background:rgba(201,168,76,0.15); padding:0.15rem 0.6rem; border-radius:20px; }"
+        + ".pdf-chanson-row { display:flex; align-items:center; gap:0.7rem; padding:0.5rem 0.8rem; border:1px solid #E0D8C8; border-top:none; background:#FFFDF8; }"
+        + ".pdf-chanson-num { font-family:'Cinzel',serif; font-size:9pt; color:#C9A84C; font-weight:600; min-width:2.5rem; }"
+        + ".pdf-chanson-titre { font-size:11pt; color:#1A1A2E; }"
+        + ".pdf-notes { margin-top:2rem; padding:1rem; border:1px dashed #C9A84C; border-radius:6px; background:#FAF6ED; }"
+        + ".pdf-notes-title { font-family:'Cinzel',serif; font-size:9pt; color:#C9A84C; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.5rem; font-weight:600; }"
+        + ".pdf-footer { text-align:center; margin-top:2rem; font-size:8pt; color:#999; border-top:1px solid #eee; padding-top:0.7rem; }"
+        + ".print-btn { position:fixed; bottom:1.5rem; right:1.5rem; background:#C9A84C; color:#0D1B2A; border:none; padding:0.7rem 1.5rem; font-family:'Cinzel',serif; font-weight:600; border-radius:8px; cursor:pointer; font-size:11pt; box-shadow:0 4px 16px rgba(0,0,0,0.2); }"
+        + "@media print { .print-btn { display:none; } body { padding:1.5cm 2cm; } }";
+
+      var html = "<!DOCTYPE html><html lang=\"fr\"><head>"
+        + "<meta charset=\"UTF-8\">"
+        + "<title>Programme — " + escHtml(theme) + "</title>"
+        + "<link href=\"https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&family=Playfair+Display:ital@1&display=swap\" rel=\"stylesheet\">"
+        + "<style>" + css + "</style></head><body>"
+        + "<div class=\"pdf-header\">"
+        + "<div class=\"pdf-church\">Mélodie\u2019s Book \u2014 Programme de Culte</div>"
+        + "<div class=\"pdf-titre\">" + escHtml(theme) + "</div>"
+        + "<div class=\"pdf-date\">\uD83D\uDCC5 " + escHtml(dateFormatee) + "</div>"
+        + "</div>"
+        + versetBlock
+        + "<div class=\"pdf-programme-title\">Programme</div>"
+        + contenu
+        + notesBlock
+        + "<div class=\"pdf-footer\">Document généré par Mélodie\u2019s Book \u00B7 " + escHtml(dateFormatee) + "</div>"
+        + "<button class=\"print-btn\" onclick=\"window.print()\">\uD83D\uDDB8\uFE0F Imprimer / Enregistrer PDF</button>"
+        + "</body></html>";
+
+      pdfWin.document.write(html);
+      pdfWin.document.close();
+    }
+
+    (async function init() {
+      profilUser = await authGuard();
+      if (!profilUser) return;
+      buildNavbar(profilUser);
+      var ok = await chargerCulte();
+      if (!ok) return;
+      await Promise.all([chargerProgramme(), chargerChansons()]);
+      hideLoader();
+    })();
+  </script>
+</body>
+</html>
