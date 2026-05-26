@@ -8080,3 +8080,55 @@ input[type="date"].form-input {
   .tonal-item-inputs { flex-direction: column; }
   .tonal-select, .tonal-libre { width: 100%; flex: none; }
 }
+/* ============================================================
+   CORRECTIF NAVBAR RESPONSIVE FINAL
+   ============================================================ */
+
+.navbar {
+  height: auto !important;
+  min-height: 60px;
+  flex-wrap: wrap;
+  padding: 0.6rem 1rem;
+  gap: 0.5rem;
+}
+
+@media (max-width: 767px) {
+
+  .navbar-links,
+  .navbar-nav {
+    display: flex !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.3rem;
+    width: 100%;
+    order: 10;
+    padding: 0.4rem 0;
+    border-top: 1px solid rgba(201,168,76,0.12);
+    scrollbar-width: none;
+  }
+
+  .navbar-links::-webkit-scrollbar,
+  .navbar-nav::-webkit-scrollbar { display: none; }
+
+  .navbar-links a,
+  .navbar-nav a {
+    font-size: 0.75rem !important;
+    padding: 0.35rem 0.7rem !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .navbar-brand, .nav-logo { flex: 1; }
+
+  .user-name, .nav-nom, .nav-username { display: none; }
+
+  .btn-logout, .nav-logout, .btn-deconnexion {
+    font-size: 0.7rem !important;
+    padding: 0.28rem 0.55rem !important;
+    white-space: nowrap;
+  }
+
+  .navbar-title, .nav-logo-text { font-size: 0.9rem; }
+  .user-avatar, .nav-avatar { width: 28px; height: 28px; }
+  .navbar-toggle { display: none !important; }
+}
