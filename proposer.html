@@ -84,9 +84,7 @@
 
             <!-- Artiste -->
             <div class="form-group">
-              <label for="artiste" class="form-label">
-                Artiste / Auteur
-              </label>
+              <label for="artiste" class="form-label">Artiste / Auteur</label>
               <input type="text" id="artiste" class="form-input" placeholder="Ex: John Newton" />
             </div>
 
@@ -128,17 +126,34 @@
               </div>
             </div>
 
+            <!-- PAROLES -->
+            <div class="form-group">
+              <label for="paroles" class="form-label">
+                Paroles de la chanson
+                <span style="font-weight:400; font-style:italic; text-transform:none; font-size:0.75rem; color:#78909C; margin-left:4px;">(optionnel)</span>
+              </label>
+              <textarea id="paroles" class="form-textarea prop-paroles-input" rows="8"
+                placeholder="Collez ou tapez les paroles ici...
+
+Couplet 1 :
+...
+
+Refrain :
+..."></textarea>
+              <div class="form-hint">Séparez les couplets et refrains par une ligne vide.</div>
+            </div>
+
             <!-- Commentaire -->
             <div class="form-group">
               <label for="commentaire" class="form-label">
                 Commentaire / Contexte d'utilisation
               </label>
-              <textarea id="commentaire" class="form-textarea" rows="4"
+              <textarea id="commentaire" class="form-textarea" rows="3"
                 placeholder="Pourquoi proposez-vous cette chanson ? Dans quel contexte la voyez-vous utilisée ?"></textarea>
               <div class="form-hint">Précisez si vous avez une partition ou un enregistrement disponible.</div>
             </div>
 
-            <!-- Bouton soumettre -->
+            <!-- Boutons -->
             <div class="form-actions">
               <button class="btn-secondary" type="button" onclick="window.history.back()">
                 ← Annuler
@@ -156,7 +171,6 @@
       <!-- PANNEAU LATÉRAL -->
       <aside class="proposer-aside">
 
-        <!-- Infos -->
         <div class="aside-card aside-info">
           <h3 class="aside-card-title">
             <span>ℹ️</span> Comment ça marche ?
@@ -196,11 +210,8 @@
           </div>
         </div>
 
-        <!-- Verset décoratif -->
         <div class="aside-verset">
-          <Playfair>
-            <em>« Que la parole de Christ habite parmi vous en abondance, en toute sagesse. Enseignez-vous et exhortez-vous les uns les autres par des psaumes, des hymnes et des cantiques spirituels. »</em>
-          </Playfair>
+          <em>« Que la parole de Christ habite parmi vous en abondance, en toute sagesse. Enseignez-vous et exhortez-vous les uns les autres par des psaumes, des hymnes et des cantiques spirituels. »</em>
           <span class="aside-verset-ref">Colossiens 3:16</span>
         </div>
 
@@ -222,101 +233,95 @@
   </div>
 
   <script>
-    // ─── SUPABASE ───────────────────────────────────────────────────
-    const SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+    var SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+    var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+    var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-    let currentUser = null;
-    let currentProfil = null;
+    var currentUser = null;
+    var currentProfil = null;
 
     // ─── INIT ────────────────────────────────────────────────────────
     async function init() {
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.href = 'index.html'; return; }
+      var r = await sb.auth.getSession();
+      if (!r.data.session) { window.location.href = 'index.html'; return; }
+      currentUser = r.data.session.user;
 
-      currentUser = session.user;
+      var p = await sb.from('profils').select('*').eq('id', currentUser.id).single();
+      if (!p.data || !p.data.actif) { window.location.href = 'index.html'; return; }
+      currentProfil = p.data;
 
-      const { data: profil } = await sb.from('profils')
-        .select('*').eq('id', currentUser.id).single();
-
-      if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
-      currentProfil = profil;
-
-      // Affichage navbar
-      document.getElementById('userAvatar').src = profil.photo_url || '';
-      document.getElementById('userName').textContent = profil.nom || profil.email;
+      document.getElementById('userAvatar').src = currentProfil.photo_url || '';
+      document.getElementById('userName').textContent = currentProfil.nom || currentProfil.email;
 
       hideLoader();
       chargerMesPropositions();
     }
 
-    // ─── LOADER ──────────────────────────────────────────────────────
     function hideLoader() {
       document.getElementById('loader').style.opacity = '0';
-      setTimeout(() => document.getElementById('loader').style.display = 'none', 400);
+      setTimeout(function() { document.getElementById('loader').style.display = 'none'; }, 400);
     }
 
-    // ─── TOAST ───────────────────────────────────────────────────────
-    function showToast(msg, type = 'info') {
-      const t = document.getElementById('toast');
+    function showToast(msg, type) {
+      type = type || 'info';
+      var t = document.getElementById('toast');
       t.textContent = msg;
-      t.className = `toast toast-${type} show`;
-      setTimeout(() => t.classList.remove('show'), 3500);
+      t.className = 'toast toast-' + type + ' show';
+      setTimeout(function() { t.classList.remove('show'); }, 3500);
     }
 
     // ─── MES PROPOSITIONS ────────────────────────────────────────────
     async function chargerMesPropositions() {
-      const { data, error } = await sb.from('propositions')
+      var res = await sb.from('propositions')
         .select('*')
         .eq('propose_par', currentUser.id)
         .order('created_at', { ascending: false })
         .limit(5);
 
-      const container = document.getElementById('mesPropositions');
+      var container = document.getElementById('mesPropositions');
 
-      if (error || !data || data.length === 0) {
-        container.innerHTML = `<p class="props-empty">Vous n'avez pas encore fait de proposition.</p>`;
+      if (res.error || !res.data || res.data.length === 0) {
+        container.innerHTML = '<p class="props-empty">Vous n\'avez pas encore fait de proposition.</p>';
         return;
       }
 
-      container.innerHTML = data.map(p => `
-        <div class="prop-item prop-${p.statut}">
-          <div class="prop-item-info">
-            <span class="prop-item-titre">${p.titre}</span>
-            <span class="prop-item-artiste">${p.artiste || '—'}</span>
-          </div>
-          <span class="prop-badge prop-badge-${p.statut}">${labelStatut(p.statut)}</span>
-        </div>
-      `).join('');
-    }
-
-    function labelStatut(s) {
-      return { en_attente: '⏳ En attente', accepte: '✅ Accepté', refuse: '❌ Refusé' }[s] || s;
+      var html = '';
+      res.data.forEach(function(p) {
+        var labels = { en_attente: '⏳ En attente', accepte: '✅ Accepté', refuse: '❌ Refusé' };
+        html += '<div class="prop-item prop-' + p.statut + '">'
+          + '<div class="prop-item-info">'
+          + '<span class="prop-item-titre">' + escHtml(p.titre) + '</span>'
+          + '<span class="prop-item-artiste">' + escHtml(p.artiste || '—') + '</span>'
+          + '</div>'
+          + '<span class="prop-badge prop-badge-' + p.statut + '">' + (labels[p.statut] || p.statut) + '</span>'
+          + '</div>';
+      });
+      container.innerHTML = html;
     }
 
     // ─── SOUMISSION ──────────────────────────────────────────────────
-    document.getElementById('btnSoumettre').addEventListener('click', async () => {
-      const titre = document.getElementById('titre').value.trim();
-      const artiste = document.getElementById('artiste').value.trim();
-      const langue = document.getElementById('langue').value;
-      const rubrique = document.getElementById('rubrique').value;
-      const commentaire = document.getElementById('commentaire').value.trim();
+    document.getElementById('btnSoumettre').addEventListener('click', async function() {
+      var titre = document.getElementById('titre').value.trim();
+      var artiste = document.getElementById('artiste').value.trim();
+      var langue = document.getElementById('langue').value;
+      var rubrique = document.getElementById('rubrique').value;
+      var paroles = document.getElementById('paroles').value.trim();
+      var commentaire = document.getElementById('commentaire').value.trim();
 
       if (!titre) { showToast('Le titre est obligatoire.', 'error'); return; }
       if (!langue) { showToast('Veuillez choisir une langue.', 'error'); return; }
       if (!rubrique) { showToast('Veuillez choisir une rubrique.', 'error'); return; }
 
-      const btn = document.getElementById('btnSoumettre');
+      var btn = document.getElementById('btnSoumettre');
       btn.disabled = true;
-      btn.innerHTML = '<span class="btn-icon spinner">↻</span> Envoi…';
+      btn.innerHTML = '<span class="btn-icon">↻</span> Envoi…';
 
-      const { error } = await sb.from('propositions').insert({
-        titre,
+      var res = await sb.from('propositions').insert({
+        titre: titre,
         artiste: artiste || null,
-        langue,
-        rubrique,
+        langue: langue,
+        rubrique: rubrique,
+        paroles: paroles || null,
         commentaire: commentaire || null,
         statut: 'en_attente',
         propose_par: currentUser.id
@@ -325,18 +330,20 @@
       btn.disabled = false;
       btn.innerHTML = '<span class="btn-icon">✦</span> Soumettre la proposition';
 
-      if (error) {
-        showToast('Erreur lors de l'envoi. Réessayez.', 'error');
-        console.error(error);
+      if (res.error) {
+        showToast('Erreur lors de l\'envoi. Réessayez.', 'error');
+        console.error(res.error);
         return;
       }
 
-      // Réinitialiser le formulaire
-      ['titre','artiste','commentaire'].forEach(id => document.getElementById(id).value = '');
+      // Réinitialiser
+      document.getElementById('titre').value = '';
+      document.getElementById('artiste').value = '';
       document.getElementById('langue').value = '';
       document.getElementById('rubrique').value = '';
+      document.getElementById('paroles').value = '';
+      document.getElementById('commentaire').value = '';
 
-      // Afficher modal
       document.getElementById('modalConfirm').style.display = 'flex';
       chargerMesPropositions();
     });
@@ -345,24 +352,44 @@
     function closeModal() {
       document.getElementById('modalConfirm').style.display = 'none';
     }
-    document.getElementById('modalConfirm').addEventListener('click', (e) => {
+
+    document.getElementById('modalConfirm').addEventListener('click', function(e) {
       if (e.target === document.getElementById('modalConfirm')) closeModal();
     });
 
-    // ─── LOGOUT ──────────────────────────────────────────────────────
-    document.getElementById('btnLogout').addEventListener('click', async () => {
+    // ─── LOGOUT + NAV ────────────────────────────────────────────────
+    document.getElementById('btnLogout').addEventListener('click', async function() {
       await sb.auth.signOut();
       window.location.href = 'index.html';
     });
 
-    // ─── NAV TOGGLE ──────────────────────────────────────────────────
-    document.getElementById('navToggle').addEventListener('click', () => {
+    document.getElementById('navToggle').addEventListener('click', function() {
       document.getElementById('navLinks').classList.toggle('open');
     });
 
-    // ─── LANCEMENT ───────────────────────────────────────────────────
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
     init();
   </script>
+
+  <style>
+    /* Champ paroles spécifique */
+    .prop-paroles-input {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.92rem;
+      line-height: 1.8;
+      min-height: 200px;
+      resize: vertical;
+    }
+    .prop-paroles-input::placeholder {
+      font-family: 'Lato', sans-serif;
+      font-size: 0.85rem;
+      color: rgba(250,246,237,0.25);
+    }
+  </style>
+
 </body>
-        </html>
-                                                
+</html>
