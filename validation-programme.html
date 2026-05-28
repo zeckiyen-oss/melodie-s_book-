@@ -131,25 +131,23 @@
   </div>
 
   <script>
-    // ─── SUPABASE ───────────────────────────────────────────────────
-    const SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+    var SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+    var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+    var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-    let currentUser = null;
-    let cultes = [];
-    let filtreStatut = 'en_preparation';
-    let culteSelectionne = null;
+    var currentUser = null;
+    var cultes = [];
+    var filtreStatut = 'en_preparation';
+    var culteSelectionne = null;
 
     // ─── INIT ────────────────────────────────────────────────────────
     async function init() {
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.href = 'index.html'; return; }
-      currentUser = session.user;
+      var sessionRes = await sb.auth.getSession();
+      if (!sessionRes.data.session) { window.location.href = 'index.html'; return; }
+      currentUser = sessionRes.data.session.user;
 
-      const { data: profil } = await sb.from('profils')
-        .select('*').eq('id', currentUser.id).single();
+      var profilRes = await sb.from('profils').select('*').eq('id', currentUser.id).single();
+      var profil = profilRes.data;
 
       if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
       if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
@@ -164,28 +162,28 @@
     // ─── LOADER / TOAST ──────────────────────────────────────────────
     function hideLoader() {
       document.getElementById('loader').style.opacity = '0';
-      setTimeout(() => document.getElementById('loader').style.display = 'none', 400);
+      setTimeout(function() { document.getElementById('loader').style.display = 'none'; }, 400);
     }
 
-    function showToast(msg, type = 'info') {
-      const t = document.getElementById('toast');
+    function showToast(msg, type) {
+      type = type || 'info';
+      var t = document.getElementById('toast');
       t.textContent = msg;
-      t.className = `toast toast-${type} show`;
-      setTimeout(() => t.classList.remove('show'), 3500);
+      t.className = 'toast toast-' + type + ' show';
+      setTimeout(function() { t.classList.remove('show'); }, 3500);
     }
 
     // ─── CHARGEMENT ──────────────────────────────────────────────────
     async function chargerCultes() {
-      const { data, error } = await sb.from('cultes')
+      var res = await sb.from('cultes')
         .select('*, profils(nom, email, photo_url)')
         .order('date_culte', { ascending: false });
 
-      if (error) { showToast('Erreur de chargement.', 'error'); return; }
-      cultes = data || [];
+      if (res.error) { showToast('Erreur de chargement.', 'error'); return; }
+      cultes = res.data || [];
 
-      // Badge "à valider"
-      const nbPrep = cultes.filter(c => c.statut === 'en_preparation').length;
-      const badge = document.getElementById('tabBadgePrep');
+      var nbPrep = cultes.filter(function(c) { return c.statut === 'en_preparation'; }).length;
+      var badge = document.getElementById('tabBadgePrep');
       badge.textContent = nbPrep;
       badge.style.display = nbPrep > 0 ? 'inline' : 'none';
 
@@ -193,10 +191,10 @@
     }
 
     // ─── FILTRES TABS ────────────────────────────────────────────────
-    document.getElementById('vpTabs').addEventListener('click', (e) => {
-      const tab = e.target.closest('.vp-tab');
+    document.getElementById('vpTabs').addEventListener('click', function(e) {
+      var tab = e.target.closest('.vp-tab');
       if (!tab) return;
-      document.querySelectorAll('.vp-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.vp-tab').forEach(function(t) { t.classList.remove('active'); });
       tab.classList.add('active');
       filtreStatut = tab.dataset.statut;
       culteSelectionne = null;
@@ -205,56 +203,66 @@
     });
 
     function appliquerFiltre() {
-      const liste = cultes.filter(c => c.statut === filtreStatut);
+      var liste = cultes.filter(function(c) { return c.statut === filtreStatut; });
       renderCultes(liste);
     }
 
     // ─── RENDER LISTE ────────────────────────────────────────────────
     function renderCultes(liste) {
-      const container = document.getElementById('vpCultesList');
-      const count = document.getElementById('vpCount');
-      count.textContent = `${liste.length} culte${liste.length !== 1 ? 's' : ''}`;
+      var container = document.getElementById('vpCultesList');
+      var count = document.getElementById('vpCount');
+      count.textContent = liste.length + ' culte' + (liste.length !== 1 ? 's' : '');
 
       if (liste.length === 0) {
-        container.innerHTML = `<div class="vp-empty">Aucun culte dans cette catégorie.</div>`;
+        container.innerHTML = '<div class="vp-empty">Aucun culte dans cette catégorie.</div>';
         return;
       }
 
-      container.innerHTML = liste.map(c => {
-        const prep = c.profils;
-        const dateStr = new Date(c.date_culte).toLocaleDateString('fr-FR', {
+      var html = '';
+      liste.forEach(function(c) {
+        var prep = c.profils;
+        var dateStr = new Date(c.date_culte).toLocaleDateString('fr-FR', {
           day: 'numeric', month: 'long', year: 'numeric'
         });
-        const auj = new Date(); auj.setHours(0,0,0,0);
-        const diff = Math.ceil((new Date(c.date_culte) - auj) / 86400000);
-        const actif = culteSelectionne?.id === c.id ? ' vp-culte-active' : '';
+        var auj = new Date(); auj.setHours(0,0,0,0);
+        var diff = Math.ceil((new Date(c.date_culte) - auj) / 86400000);
+        var actif = culteSelectionne && culteSelectionne.id === c.id ? ' vp-culte-active' : '';
 
-        return `
-        <div class="vp-culte-item${actif}" data-id="${c.id}" onclick="selectionnerCulte('${c.id}')">
-          <div class="vp-culte-left">
-            <div class="vp-culte-theme">${escHtml(c.theme)}</div>
-            <div class="vp-culte-date">📅 ${dateStr}</div>
-            <div class="vp-culte-prep">
-              ${prep
-                ? `${prep.photo_url
-                    ? `<img src="${escHtml(prep.photo_url)}" class="vp-avatar" alt="" />`
-                    : `<span class="vp-avatar-fallback">${(prep.nom || prep.email || '?')[0].toUpperCase()}</span>`}
-                  <span>${escHtml(prep.nom || prep.email)}</span>`
-                : '<span class="vp-no-prep">Aucun préparateur</span>'}
-            </div>
-          </div>
-          <div class="vp-culte-right">
-            ${diff > 0 ? `<span class="vp-countdown">J-${diff}</span>` : diff === 0 ? '<span class="vp-countdown">Aujourd\'hui</span>' : ''}
-            <span class="vp-statut-dot vp-statut-${c.statut}"></span>
-          </div>
-        </div>`;
-      }).join('');
+        var prepHtml = '';
+        if (prep) {
+          var initiale = (prep.nom || prep.email || '?')[0].toUpperCase();
+          prepHtml = (prep.photo_url
+            ? '<img src="' + escHtml(prep.photo_url) + '" class="vp-avatar" alt="" />'
+            : '<span class="vp-avatar-fallback">' + initiale + '</span>')
+            + '<span>' + escHtml(prep.nom || prep.email) + '</span>';
+        } else {
+          prepHtml = '<span class="vp-no-prep">Aucun préparateur</span>';
+        }
+
+        var countdownHtml = '';
+        if (diff > 0) countdownHtml = '<span class="vp-countdown">J-' + diff + '</span>';
+        else if (diff === 0) countdownHtml = '<span class="vp-countdown">Aujourd\'hui</span>';
+
+        html += '<div class="vp-culte-item' + actif + '" data-id="' + c.id + '" onclick="selectionnerCulte(\'' + c.id + '\')">'
+          + '<div class="vp-culte-left">'
+          + '<div class="vp-culte-theme">' + escHtml(c.theme) + '</div>'
+          + '<div class="vp-culte-date">📅 ' + dateStr + '</div>'
+          + '<div class="vp-culte-prep">' + prepHtml + '</div>'
+          + '</div>'
+          + '<div class="vp-culte-right">'
+          + countdownHtml
+          + '<span class="vp-statut-dot vp-statut-' + c.statut + '"></span>'
+          + '</div>'
+          + '</div>';
+      });
+
+      container.innerHTML = html;
     }
 
     // ─── SÉLECTION CULTE ─────────────────────────────────────────────
     async function selectionnerCulte(id) {
-      culteSelectionne = cultes.find(c => c.id === id);
-      document.querySelectorAll('.vp-culte-item').forEach(el => {
+      culteSelectionne = cultes.find(function(c) { return c.id === id; });
+      document.querySelectorAll('.vp-culte-item').forEach(function(el) {
         el.classList.toggle('vp-culte-active', el.dataset.id === id);
       });
       await afficherDetailCulte(culteSelectionne);
@@ -267,118 +275,122 @@
 
     async function afficherDetailCulte(culte) {
       document.getElementById('vpDetailIdle').style.display = 'none';
-      const body = document.getElementById('vpDetailBody');
+      var body = document.getElementById('vpDetailBody');
       body.style.display = 'block';
-      body.innerHTML = `<div class="vp-loading-prog">Chargement du programme…</div>`;
+      body.innerHTML = '<div class="vp-loading-prog">Chargement du programme…</div>';
 
-      // Charger le programme
-      const { data: programme } = await sb.from('programme_culte')
-        .select('*, chansons(numero, titre, rubrique, langue)')
+      // ── CORRECTIF BUG : order explicite sur programme_culte ──
+      var progRes = await sb.from('programme_culte')
+        .select('id, ordre, rubrique, chansons(numero, titre, rubrique, langue)')
         .eq('culte_id', culte.id)
-        .order('ordre');
+        .order('ordre', { ascending: true });
 
-      const prep = culte.profils;
-      const dateStr = new Date(culte.date_culte).toLocaleDateString('fr-FR', {
+      if (progRes.error) {
+        body.innerHTML = '<p style="color:#e09696; padding:1rem; text-align:center;">Erreur lors du chargement du programme.</p>';
+        return;
+      }
+
+      var programme = progRes.data || [];
+      var prep = culte.profils;
+      var dateStr = new Date(culte.date_culte).toLocaleDateString('fr-FR', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
       });
 
-      const nbChansons = programme?.length || 0;
-      const rubriques = ['Prélude','Adoration','Louange','Offrande','Méditation','Envoi'];
+      var nbChansons = programme.length;
+      var rubriques = ['Prélude','Adoration','Louange','Offrande','Méditation','Envoi'];
 
       // Grouper par rubrique
-      const parRubrique = {};
-      rubriques.forEach(r => { parRubrique[r] = []; });
-      (programme || []).forEach(p => {
-        const r = p.rubrique || p.chansons?.rubrique || 'Autre';
+      var parRubrique = {};
+      rubriques.forEach(function(r) { parRubrique[r] = []; });
+      programme.forEach(function(p) {
+        var r = p.rubrique || (p.chansons && p.chansons.rubrique) || 'Autre';
         if (!parRubrique[r]) parRubrique[r] = [];
         parRubrique[r].push(p);
       });
 
-      const programmHtml = rubriques.map(rubrique => {
-        const items = parRubrique[rubrique] || [];
-        if (items.length === 0) return '';
-        return `
-        <div class="vp-rubrique-bloc">
-          <div class="vp-rubrique-title">${rubrique}</div>
-          ${items.map((item, i) => `
-            <div class="vp-chanson-item">
-              <span class="vp-chanson-ordre">${i + 1}</span>
-              <div class="vp-chanson-info">
-                <span class="vp-chanson-titre">${escHtml(item.chansons?.titre || '—')}</span>
-                ${item.chansons?.numero ? `<span class="vp-chanson-num">N°${item.chansons.numero}</span>` : ''}
-              </div>
-              <span class="vp-chanson-langue">${escHtml(item.chansons?.langue || '')}</span>
-            </div>`).join('')}
-        </div>`;
-      }).join('');
+      var programmeHtml = '';
+      rubriques.forEach(function(rubrique) {
+        var items = parRubrique[rubrique] || [];
+        if (items.length === 0) return;
+        programmeHtml += '<div class="vp-rubrique-bloc">'
+          + '<div class="vp-rubrique-title">' + escHtml(rubrique) + '</div>';
+        items.forEach(function(item, i) {
+          var ch = item.chansons || {};
+          programmeHtml += '<div class="vp-chanson-item">'
+            + '<span class="vp-chanson-ordre">' + (i + 1) + '</span>'
+            + '<div class="vp-chanson-info">'
+            + '<span class="vp-chanson-titre">' + escHtml(ch.titre || '—') + '</span>'
+            + (ch.numero ? '<span class="vp-chanson-num">N°' + escHtml(String(ch.numero)) + '</span>' : '')
+            + '</div>'
+            + '<span class="vp-chanson-langue">' + escHtml(ch.langue || '') + '</span>'
+            + '</div>';
+        });
+        programmeHtml += '</div>';
+      });
+
+      // ── CORRECTIF BUG : statut label sans objet littéral dans template ──
+      var statutLabel = '';
+      if (culte.statut === 'en_preparation') statutLabel = '🕊️ En préparation';
+      else if (culte.statut === 'valide') statutLabel = '✅ Validé';
+      else statutLabel = '📁 Archivé';
 
       // Actions selon statut
-      let actionsHtml = '';
+      var actionsHtml = '';
       if (culte.statut === 'en_preparation') {
-        actionsHtml = `
-        <div class="vp-detail-actions">
-          <button class="btn-secondary" onclick="ouvrirModalArchiver()">📁 Archiver</button>
-          <button class="btn-primary ${nbChansons === 0 ? 'btn-disabled' : ''}"
-            ${nbChansons === 0 ? 'disabled title="Le programme est vide"' : ''}
-            onclick="ouvrirModalValider()">
-            ✦ Valider le programme
-          </button>
-        </div>
-        ${nbChansons === 0 ? '<p class="vp-warning">⚠ Le programme est vide. Le préparateur doit d\'abord ajouter des chansons.</p>' : ''}`;
+        actionsHtml = '<div class="vp-detail-actions">'
+          + '<button class="btn-secondary" onclick="ouvrirModalArchiver()">📁 Archiver</button>'
+          + '<button class="btn-primary' + (nbChansons === 0 ? ' btn-disabled' : '') + '"'
+          + (nbChansons === 0 ? ' disabled title="Le programme est vide"' : '')
+          + ' onclick="ouvrirModalValider()">✦ Valider le programme</button>'
+          + '</div>'
+          + (nbChansons === 0 ? '<p class="vp-warning">⚠ Le programme est vide. Le préparateur doit d\'abord ajouter des chansons.</p>' : '');
       } else if (culte.statut === 'valide') {
-        actionsHtml = `
-        <div class="vp-detail-actions">
-          <button class="btn-secondary" onclick="ouvrirModalArchiver()">📁 Archiver</button>
-          <div class="vp-statut-final vp-statut-valide">✅ Programme validé</div>
-        </div>`;
+        actionsHtml = '<div class="vp-detail-actions">'
+          + '<button class="btn-secondary" onclick="ouvrirModalArchiver()">📁 Archiver</button>'
+          + '<div class="vp-statut-final vp-statut-valide">✅ Programme validé</div>'
+          + '</div>';
       } else {
-        actionsHtml = `<div class="vp-statut-final vp-statut-archive">📁 Culte archivé</div>`;
+        actionsHtml = '<div class="vp-statut-final vp-statut-archive">📁 Culte archivé</div>';
       }
 
-      body.innerHTML = `
-        <!-- En-tête culte -->
-        <div class="vp-detail-header">
-          <div>
-            <h2 class="vp-detail-theme">${escHtml(culte.theme)}</h2>
-            <div class="vp-detail-date">📅 ${dateStr}</div>
-          </div>
-          <span class="vp-statut-badge vp-statut-badge-${culte.statut}">
-            ${{ en_preparation: '🕊️ En préparation', valide: '✅ Validé', archive: '📁 Archivé' }[culte.statut]}
-          </span>
-        </div>
+      // Préparateur HTML
+      var prepHtml = '';
+      if (prep) {
+        var initiale = (prep.nom || prep.email || '?')[0].toUpperCase();
+        prepHtml = (prep.photo_url
+          ? '<img src="' + escHtml(prep.photo_url) + '" class="vp-prep-avatar" alt="" />'
+          : '<div class="vp-prep-avatar-fallback">' + initiale + '</div>')
+          + '<div>'
+          + '<div class="vp-prep-label">Préparé par</div>'
+          + '<div class="vp-prep-nom">' + escHtml(prep.nom || prep.email) + '</div>'
+          + '</div>';
+      } else {
+        prepHtml = '<span class="vp-no-prep">Aucun préparateur désigné</span>';
+      }
 
-        <!-- Préparateur -->
-        <div class="vp-detail-prep">
-          ${prep
-            ? `${prep.photo_url
-                ? `<img src="${escHtml(prep.photo_url)}" class="vp-prep-avatar" alt="" />`
-                : `<div class="vp-prep-avatar-fallback">${(prep.nom || prep.email || '?')[0].toUpperCase()}</div>`}
-              <div>
-                <div class="vp-prep-label">Préparé par</div>
-                <div class="vp-prep-nom">${escHtml(prep.nom || prep.email)}</div>
-              </div>`
-            : '<span class="vp-no-prep">Aucun préparateur désigné</span>'}
-          <span class="vp-nb-chansons">${nbChansons} chanson${nbChansons !== 1 ? 's' : ''}</span>
-        </div>
-
-        <!-- Programme -->
-        <div class="vp-programme">
-          <div class="vp-programme-title">Programme du culte</div>
-          ${nbChansons > 0
-            ? programmHtml
-            : '<div class="vp-programme-empty">Aucune chanson ajoutée pour l\'instant.</div>'}
-        </div>
-
-        <!-- Actions -->
-        ${actionsHtml}
-      `;
+      body.innerHTML = '<div class="vp-detail-header">'
+        + '<div>'
+        + '<h2 class="vp-detail-theme">' + escHtml(culte.theme) + '</h2>'
+        + '<div class="vp-detail-date">📅 ' + dateStr + '</div>'
+        + '</div>'
+        + '<span class="vp-statut-badge vp-statut-badge-' + culte.statut + '">' + statutLabel + '</span>'
+        + '</div>'
+        + '<div class="vp-detail-prep">'
+        + prepHtml
+        + '<span class="vp-nb-chansons">' + nbChansons + ' chanson' + (nbChansons !== 1 ? 's' : '') + '</span>'
+        + '</div>'
+        + '<div class="vp-programme">'
+        + '<div class="vp-programme-title">Programme du culte</div>'
+        + (nbChansons > 0 ? programmeHtml : '<div class="vp-programme-empty">Aucune chanson ajoutée pour l\'instant.</div>')
+        + '</div>'
+        + actionsHtml;
     }
 
     // ─── MODAL VALIDER ───────────────────────────────────────────────
     function ouvrirModalValider() {
       if (!culteSelectionne) return;
       document.getElementById('modalValiderMsg').textContent =
-        `Le programme du culte « ${culteSelectionne.theme} » sera validé et visible par toute la chorale.`;
+        'Le programme du culte "' + culteSelectionne.theme + '" sera validé et visible par toute la chorale.';
       document.getElementById('modalValider').style.display = 'flex';
     }
 
@@ -386,28 +398,24 @@
       document.getElementById('modalValider').style.display = 'none';
     }
 
-    document.getElementById('modalValider').addEventListener('click', (e) => {
+    document.getElementById('modalValider').addEventListener('click', function(e) {
       if (e.target === document.getElementById('modalValider')) fermerModalValider();
     });
 
-    document.getElementById('btnConfirmerValider').addEventListener('click', async () => {
+    document.getElementById('btnConfirmerValider').addEventListener('click', async function() {
       if (!culteSelectionne) return;
-      const btn = document.getElementById('btnConfirmerValider');
+      var btn = document.getElementById('btnConfirmerValider');
       btn.disabled = true;
 
-      const { error } = await sb.from('cultes')
-        .update({ statut: 'valide' })
-        .eq('id', culteSelectionne.id);
-
+      var res = await sb.from('cultes').update({ statut: 'valide' }).eq('id', culteSelectionne.id);
       btn.disabled = false;
       fermerModalValider();
 
-      if (error) { showToast('Erreur lors de la validation.', 'error'); return; }
+      if (res.error) { showToast('Erreur lors de la validation.', 'error'); return; }
 
       showToast('Programme validé avec succès !', 'success');
       await chargerCultes();
-      // Recharger le détail avec les nouvelles données
-      culteSelectionne = cultes.find(c => c.id === culteSelectionne.id);
+      culteSelectionne = cultes.find(function(c) { return c.id === culteSelectionne.id; });
       if (culteSelectionne) await afficherDetailCulte(culteSelectionne);
     });
 
@@ -420,23 +428,20 @@
       document.getElementById('modalArchiver').style.display = 'none';
     }
 
-    document.getElementById('modalArchiver').addEventListener('click', (e) => {
+    document.getElementById('modalArchiver').addEventListener('click', function(e) {
       if (e.target === document.getElementById('modalArchiver')) fermerModalArchiver();
     });
 
-    document.getElementById('btnConfirmerArchiver').addEventListener('click', async () => {
+    document.getElementById('btnConfirmerArchiver').addEventListener('click', async function() {
       if (!culteSelectionne) return;
-      const btn = document.getElementById('btnConfirmerArchiver');
+      var btn = document.getElementById('btnConfirmerArchiver');
       btn.disabled = true;
 
-      const { error } = await sb.from('cultes')
-        .update({ statut: 'archive' })
-        .eq('id', culteSelectionne.id);
-
+      var res = await sb.from('cultes').update({ statut: 'archive' }).eq('id', culteSelectionne.id);
       btn.disabled = false;
       fermerModalArchiver();
 
-      if (error) { showToast('Erreur lors de l\'archivage.', 'error'); return; }
+      if (res.error) { showToast('Erreur lors de l\'archivage.', 'error'); return; }
 
       showToast('Culte archivé.', 'success');
       resetDetail();
@@ -445,11 +450,12 @@
     });
 
     // ─── LOGOUT + NAV ────────────────────────────────────────────────
-    document.getElementById('btnLogout').addEventListener('click', async () => {
+    document.getElementById('btnLogout').addEventListener('click', async function() {
       await sb.auth.signOut();
       window.location.href = 'index.html';
     });
-    document.getElementById('navToggle').addEventListener('click', () => {
+
+    document.getElementById('navToggle').addEventListener('click', function() {
       document.getElementById('navLinks').classList.toggle('open');
     });
 
@@ -462,5 +468,4 @@
     init();
   </script>
 </body>
-    </html>
-    
+</html>
