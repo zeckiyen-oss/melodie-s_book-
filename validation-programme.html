@@ -12,7 +12,6 @@
 </head>
 <body class="page-validation">
 
-  <!-- LOADER -->
   <div id="loader" class="loader-overlay">
     <div class="loader-cross">
       <div class="loader-bar loader-bar-h"></div>
@@ -20,10 +19,8 @@
     </div>
   </div>
 
-  <!-- TOAST -->
   <div id="toast" class="toast" aria-live="polite"></div>
 
-  <!-- NAVBAR -->
   <nav class="navbar">
     <a href="dashboard.html" class="navbar-brand">
       <span class="navbar-logo">♪</span>
@@ -45,7 +42,6 @@
     <button class="navbar-toggle" id="navToggle" aria-label="Menu">&#9776;</button>
   </nav>
 
-  <!-- HERO -->
   <header class="vp-hero">
     <div class="vp-hero-bg"></div>
     <div class="vp-hero-content">
@@ -56,14 +52,9 @@
     <div class="vp-hero-ornement"></div>
   </header>
 
-  <!-- CONTENU -->
   <main class="vp-main">
     <div class="vp-layout">
-
-      <!-- COLONNE GAUCHE : liste des cultes à valider -->
       <section class="vp-left">
-
-        <!-- Tabs statut -->
         <div class="vp-tabs" id="vpTabs">
           <button class="vp-tab active" data-statut="en_preparation">
             🕊️ À valider
@@ -72,33 +63,23 @@
           <button class="vp-tab" data-statut="valide">✅ Validés</button>
           <button class="vp-tab" data-statut="archive">📁 Archivés</button>
         </div>
-
         <div class="vp-count" id="vpCount">Chargement…</div>
-
         <div class="vp-cultes-list" id="vpCultesList">
           <div class="vp-skeleton"></div>
           <div class="vp-skeleton"></div>
           <div class="vp-skeleton"></div>
         </div>
-
       </section>
 
-      <!-- COLONNE DROITE : détail du programme -->
       <aside class="vp-aside">
         <div class="vp-detail-card" id="vpDetailCard">
-
-          <!-- Idle -->
           <div class="vp-detail-idle" id="vpDetailIdle">
             <div class="vp-detail-idle-icon">🕊️</div>
             <p>Sélectionnez un culte pour examiner son programme.</p>
           </div>
-
-          <!-- Contenu détail -->
           <div class="vp-detail-body" id="vpDetailBody" style="display:none;"></div>
-
         </div>
       </aside>
-
     </div>
   </main>
 
@@ -107,12 +88,10 @@
     <div class="modal-box">
       <div class="modal-success-icon">✅</div>
       <h3>Valider ce programme ?</h3>
-      <p id="modalValiderMsg">Le programme sera marqué comme validé et visible par toute la chorale.</p>
+      <p id="modalValiderMsg">Le programme sera marqué comme validé.</p>
       <div class="modal-actions">
         <button class="btn-secondary" onclick="fermerModalValider()">Annuler</button>
-        <button class="btn-primary" id="btnConfirmerValider">
-          <span>✦</span> Valider le programme
-        </button>
+        <button class="btn-primary" id="btnConfirmerValider">✦ Valider le programme</button>
       </div>
     </div>
   </div>
@@ -122,7 +101,7 @@
     <div class="modal-box modal-danger">
       <div class="modal-danger-icon">📁</div>
       <h3>Archiver ce culte ?</h3>
-      <p>Le culte et son programme seront archivés. Ils resteront consultables dans l'historique.</p>
+      <p>Le culte sera archivé. Il restera consultable dans l'historique.</p>
       <div class="modal-actions">
         <button class="btn-secondary" onclick="fermerModalArchiver()">Annuler</button>
         <button class="btn-danger" id="btnConfirmerArchiver">Archiver</button>
@@ -139,6 +118,7 @@
     var cultes = [];
     var filtreStatut = 'en_preparation';
     var culteSelectionne = null;
+    var culteSelectionneId = null; // ← CORRECTIF : on mémorise l'ID séparément
 
     // ─── INIT ────────────────────────────────────────────────────────
     async function init() {
@@ -148,7 +128,6 @@
 
       var profilRes = await sb.from('profils').select('*').eq('id', currentUser.id).single();
       var profil = profilRes.data;
-
       if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
       if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
 
@@ -159,7 +138,6 @@
       hideLoader();
     }
 
-    // ─── LOADER / TOAST ──────────────────────────────────────────────
     function hideLoader() {
       document.getElementById('loader').style.opacity = '0';
       setTimeout(function() { document.getElementById('loader').style.display = 'none'; }, 400);
@@ -173,7 +151,7 @@
       setTimeout(function() { t.classList.remove('show'); }, 3500);
     }
 
-    // ─── CHARGEMENT ──────────────────────────────────────────────────
+    // ─── CHARGEMENT CULTES ───────────────────────────────────────────
     async function chargerCultes() {
       var res = await sb.from('cultes')
         .select('*, profils(nom, email, photo_url)')
@@ -198,6 +176,7 @@
       tab.classList.add('active');
       filtreStatut = tab.dataset.statut;
       culteSelectionne = null;
+      culteSelectionneId = null;
       resetDetail();
       appliquerFiltre();
     });
@@ -226,24 +205,20 @@
         });
         var auj = new Date(); auj.setHours(0,0,0,0);
         var diff = Math.ceil((new Date(c.date_culte) - auj) / 86400000);
-        var actif = culteSelectionne && culteSelectionne.id === c.id ? ' vp-culte-active' : '';
+        var actif = culteSelectionneId === c.id ? ' vp-culte-active' : '';
 
-        var prepHtml = '';
-        if (prep) {
-          var initiale = (prep.nom || prep.email || '?')[0].toUpperCase();
-          prepHtml = (prep.photo_url
-            ? '<img src="' + escHtml(prep.photo_url) + '" class="vp-avatar" alt="" />'
-            : '<span class="vp-avatar-fallback">' + initiale + '</span>')
-            + '<span>' + escHtml(prep.nom || prep.email) + '</span>';
-        } else {
-          prepHtml = '<span class="vp-no-prep">Aucun préparateur</span>';
-        }
+        var prepHtml = prep
+          ? ((prep.photo_url
+              ? '<img src="' + escHtml(prep.photo_url) + '" class="vp-avatar" alt="" />'
+              : '<span class="vp-avatar-fallback">' + (prep.nom || prep.email || '?')[0].toUpperCase() + '</span>')
+            + '<span>' + escHtml(prep.nom || prep.email) + '</span>')
+          : '<span class="vp-no-prep">Aucun préparateur</span>';
 
-        var countdownHtml = '';
-        if (diff > 0) countdownHtml = '<span class="vp-countdown">J-' + diff + '</span>';
-        else if (diff === 0) countdownHtml = '<span class="vp-countdown">Aujourd\'hui</span>';
+        var countdownHtml = diff > 0
+          ? '<span class="vp-countdown">J-' + diff + '</span>'
+          : (diff === 0 ? '<span class="vp-countdown">Aujourd\'hui</span>' : '');
 
-        html += '<div class="vp-culte-item' + actif + '" data-id="' + c.id + '" onclick="selectionnerCulte(\'' + c.id + '\')">'
+        html += '<div class="vp-culte-item' + actif + '" data-id="' + escHtml(c.id) + '" onclick="selectionnerCulte(\'' + escHtml(c.id) + '\')">'
           + '<div class="vp-culte-left">'
           + '<div class="vp-culte-theme">' + escHtml(c.theme) + '</div>'
           + '<div class="vp-culte-date">📅 ' + dateStr + '</div>'
@@ -262,10 +237,11 @@
     // ─── SÉLECTION CULTE ─────────────────────────────────────────────
     async function selectionnerCulte(id) {
       culteSelectionne = cultes.find(function(c) { return c.id === id; });
+      culteSelectionneId = id; // ← mémoriser l'ID
       document.querySelectorAll('.vp-culte-item').forEach(function(el) {
         el.classList.toggle('vp-culte-active', el.dataset.id === id);
       });
-      await afficherDetailCulte(culteSelectionne);
+      if (culteSelectionne) await afficherDetailCulte(culteSelectionne);
     }
 
     function resetDetail() {
@@ -273,33 +249,33 @@
       document.getElementById('vpDetailBody').style.display = 'none';
     }
 
+    // ─── AFFICHER DÉTAIL ─────────────────────────────────────────────
     async function afficherDetailCulte(culte) {
       document.getElementById('vpDetailIdle').style.display = 'none';
       var body = document.getElementById('vpDetailBody');
       body.style.display = 'block';
       body.innerHTML = '<div class="vp-loading-prog">Chargement du programme…</div>';
 
-      // ── CORRECTIF BUG : order explicite sur programme_culte ──
       var progRes = await sb.from('programme_culte')
         .select('id, ordre, rubrique, chansons(numero, titre, rubrique, langue)')
         .eq('culte_id', culte.id)
         .order('ordre', { ascending: true });
 
       if (progRes.error) {
-        body.innerHTML = '<p style="color:#e09696; padding:1rem; text-align:center;">Erreur lors du chargement du programme.</p>';
+        body.innerHTML = '<p style="color:#e09696;padding:1rem;text-align:center;">Erreur chargement programme.</p>';
         return;
       }
 
       var programme = progRes.data || [];
+      var nbChansons = programme.length;
       var prep = culte.profils;
+
       var dateStr = new Date(culte.date_culte).toLocaleDateString('fr-FR', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
       });
 
-      var nbChansons = programme.length;
-      var rubriques = ['Prélude','Adoration','Louange','Offrande','Méditation','Envoi'];
-
       // Grouper par rubrique
+      var rubriques = ['Prélude','Adoration','Louange','Offrande','Méditation','Envoi'];
       var parRubrique = {};
       rubriques.forEach(function(r) { parRubrique[r] = []; });
       programme.forEach(function(p) {
@@ -312,8 +288,7 @@
       rubriques.forEach(function(rubrique) {
         var items = parRubrique[rubrique] || [];
         if (items.length === 0) return;
-        programmeHtml += '<div class="vp-rubrique-bloc">'
-          + '<div class="vp-rubrique-title">' + escHtml(rubrique) + '</div>';
+        programmeHtml += '<div class="vp-rubrique-bloc"><div class="vp-rubrique-title">' + escHtml(rubrique) + '</div>';
         items.forEach(function(item, i) {
           var ch = item.chansons || {};
           programmeHtml += '<div class="vp-chanson-item">'
@@ -328,22 +303,20 @@
         programmeHtml += '</div>';
       });
 
-      // ── CORRECTIF BUG : statut label sans objet littéral dans template ──
-      var statutLabel = '';
-      if (culte.statut === 'en_preparation') statutLabel = '🕊️ En préparation';
-      else if (culte.statut === 'valide') statutLabel = '✅ Validé';
-      else statutLabel = '📁 Archivé';
+      // Statut label
+      var statutLabel = culte.statut === 'en_preparation' ? '🕊️ En préparation'
+        : culte.statut === 'valide' ? '✅ Validé' : '📁 Archivé';
 
-      // Actions selon statut
+      // Actions
       var actionsHtml = '';
       if (culte.statut === 'en_preparation') {
+        var btnValiderClass = 'btn-primary' + (nbChansons === 0 ? ' btn-disabled' : '');
+        var btnValiderAttr = nbChansons === 0 ? ' disabled' : '';
         actionsHtml = '<div class="vp-detail-actions">'
           + '<button class="btn-secondary" onclick="ouvrirModalArchiver()">📁 Archiver</button>'
-          + '<button class="btn-primary' + (nbChansons === 0 ? ' btn-disabled' : '') + '"'
-          + (nbChansons === 0 ? ' disabled title="Le programme est vide"' : '')
-          + ' onclick="ouvrirModalValider()">✦ Valider le programme</button>'
+          + '<button class="' + btnValiderClass + '"' + btnValiderAttr + ' onclick="ouvrirModalValider()">✦ Valider le programme</button>'
           + '</div>'
-          + (nbChansons === 0 ? '<p class="vp-warning">⚠ Le programme est vide. Le préparateur doit d\'abord ajouter des chansons.</p>' : '');
+          + (nbChansons === 0 ? '<p class="vp-warning">⚠ Programme vide. Le préparateur doit ajouter des chansons.</p>' : '');
       } else if (culte.statut === 'valide') {
         actionsHtml = '<div class="vp-detail-actions">'
           + '<button class="btn-secondary" onclick="ouvrirModalArchiver()">📁 Archiver</button>'
@@ -353,35 +326,24 @@
         actionsHtml = '<div class="vp-statut-final vp-statut-archive">📁 Culte archivé</div>';
       }
 
-      // Préparateur HTML
-      var prepHtml = '';
-      if (prep) {
-        var initiale = (prep.nom || prep.email || '?')[0].toUpperCase();
-        prepHtml = (prep.photo_url
-          ? '<img src="' + escHtml(prep.photo_url) + '" class="vp-prep-avatar" alt="" />'
-          : '<div class="vp-prep-avatar-fallback">' + initiale + '</div>')
-          + '<div>'
-          + '<div class="vp-prep-label">Préparé par</div>'
-          + '<div class="vp-prep-nom">' + escHtml(prep.nom || prep.email) + '</div>'
-          + '</div>';
-      } else {
-        prepHtml = '<span class="vp-no-prep">Aucun préparateur désigné</span>';
-      }
+      // Préparateur
+      var prepHtml = prep
+        ? ((prep.photo_url
+            ? '<img src="' + escHtml(prep.photo_url) + '" class="vp-prep-avatar" alt="" />'
+            : '<div class="vp-prep-avatar-fallback">' + (prep.nom || prep.email || '?')[0].toUpperCase() + '</div>')
+          + '<div><div class="vp-prep-label">Préparé par</div><div class="vp-prep-nom">' + escHtml(prep.nom || prep.email) + '</div></div>')
+        : '<span class="vp-no-prep">Aucun préparateur désigné</span>';
 
       body.innerHTML = '<div class="vp-detail-header">'
-        + '<div>'
-        + '<h2 class="vp-detail-theme">' + escHtml(culte.theme) + '</h2>'
-        + '<div class="vp-detail-date">📅 ' + dateStr + '</div>'
-        + '</div>'
+        + '<div><h2 class="vp-detail-theme">' + escHtml(culte.theme) + '</h2>'
+        + '<div class="vp-detail-date">📅 ' + dateStr + '</div></div>'
         + '<span class="vp-statut-badge vp-statut-badge-' + culte.statut + '">' + statutLabel + '</span>'
         + '</div>'
-        + '<div class="vp-detail-prep">'
-        + prepHtml
+        + '<div class="vp-detail-prep">' + prepHtml
         + '<span class="vp-nb-chansons">' + nbChansons + ' chanson' + (nbChansons !== 1 ? 's' : '') + '</span>'
         + '</div>'
-        + '<div class="vp-programme">'
-        + '<div class="vp-programme-title">Programme du culte</div>'
-        + (nbChansons > 0 ? programmeHtml : '<div class="vp-programme-empty">Aucune chanson ajoutée pour l\'instant.</div>')
+        + '<div class="vp-programme"><div class="vp-programme-title">Programme du culte</div>'
+        + (nbChansons > 0 ? programmeHtml : '<div class="vp-programme-empty">Aucune chanson pour l\'instant.</div>')
         + '</div>'
         + actionsHtml;
     }
@@ -404,23 +366,48 @@
 
     document.getElementById('btnConfirmerValider').addEventListener('click', async function() {
       if (!culteSelectionne) return;
+
       var btn = document.getElementById('btnConfirmerValider');
       btn.disabled = true;
+      btn.textContent = '⏳ Validation…';
 
-      var res = await sb.from('cultes').update({ statut: 'valide' }).eq('id', culteSelectionne.id);
+      // ── CORRECTIF PRINCIPAL : on sauvegarde l'ID AVANT de recharger ──
+      var idAValider = culteSelectionne.id;
+
+      var res = await sb.from('cultes').update({ statut: 'valide' }).eq('id', idAValider);
+
       btn.disabled = false;
+      btn.innerHTML = '<span>✦</span> Valider le programme';
       fermerModalValider();
 
-      if (res.error) { showToast('Erreur lors de la validation.', 'error'); return; }
+      if (res.error) {
+        showToast('Erreur lors de la validation.', 'error');
+        console.error(res.error);
+        return;
+      }
 
       showToast('Programme validé avec succès !', 'success');
+
+      // Recharger les cultes
       await chargerCultes();
-      culteSelectionne = cultes.find(function(c) { return c.id === culteSelectionne.id; });
-      if (culteSelectionne) await afficherDetailCulte(culteSelectionne);
+
+      // ── CORRECTIF : retrouver le culte avec l'ID sauvegardé, pas culteSelectionne ──
+      var culteApres = cultes.find(function(c) { return c.id === idAValider; });
+      if (culteApres) {
+        culteSelectionne = culteApres;
+        culteSelectionneId = idAValider;
+        await afficherDetailCulte(culteApres);
+      } else {
+        // Le culte n'est plus dans le filtre actif, on réinitialise
+        culteSelectionne = null;
+        culteSelectionneId = null;
+        resetDetail();
+      }
     });
 
     // ─── MODAL ARCHIVER ──────────────────────────────────────────────
     function ouvrirModalArchiver() {
+      if (!culteSelectionne) return;
       document.getElementById('modalArchiver').style.display = 'flex';
     }
 
@@ -434,18 +421,28 @@
 
     document.getElementById('btnConfirmerArchiver').addEventListener('click', async function() {
       if (!culteSelectionne) return;
+
       var btn = document.getElementById('btnConfirmerArchiver');
       btn.disabled = true;
+      btn.textContent = '⏳ Archivage…';
 
-      var res = await sb.from('cultes').update({ statut: 'archive' }).eq('id', culteSelectionne.id);
+      var idAArchiver = culteSelectionne.id; // ← sauvegarder l'ID
+
+      var res = await sb.from('cultes').update({ statut: 'archive' }).eq('id', idAArchiver);
+
       btn.disabled = false;
+      btn.textContent = 'Archiver';
       fermerModalArchiver();
 
-      if (res.error) { showToast('Erreur lors de l\'archivage.', 'error'); return; }
+      if (res.error) {
+        showToast('Erreur lors de l\'archivage.', 'error');
+        return;
+      }
 
       showToast('Culte archivé.', 'success');
-      resetDetail();
       culteSelectionne = null;
+      culteSelectionneId = null;
+      resetDetail();
       await chargerCultes();
     });
 
@@ -459,7 +456,6 @@
       document.getElementById('navLinks').classList.toggle('open');
     });
 
-    // ─── UTILS ───────────────────────────────────────────────────────
     function escHtml(str) {
       if (!str) return '';
       return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
