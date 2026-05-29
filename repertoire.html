@@ -70,7 +70,6 @@
         <input type="text" id="searchInput" placeholder="Rechercher par titre, numéro…" class="search-input" />
         <button class="search-clear hidden" id="searchClear">✕</button>
       </div>
-
       <div class="filtres-row">
         <div class="filtre-group">
           <label class="filtre-label">Rubrique</label>
@@ -128,10 +127,8 @@
       </div>
     </div>
 
-    <!-- GRILLE DES CHANSONS -->
-    <div class="chansons-grille" id="chansonsList">
-      <!-- Généré dynamiquement -->
-    </div>
+    <!-- LISTE CHANSONS -->
+    <div class="chansons-grille" id="chansonsList"></div>
 
     <!-- ÉTAT VIDE -->
     <div class="empty-state hidden" id="emptyState">
@@ -145,47 +142,241 @@
 
   </main>
 
-  <script>
-    const SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+  <!-- CSS CORRECTIF RÉPERTOIRE MOBILE -->
+  <style>
+    /* ── Grille responsive correcte ── */
+    .chansons-grille {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
 
-    const RUBRIQUES_COLORS = {
+    /* ── Carte chanson correcte ── */
+    .carte-chanson {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      padding: 1rem 0.9rem;
+      background: linear-gradient(145deg, rgba(26,46,69,0.85), rgba(13,27,42,0.95));
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 12px;
+      text-decoration: none;
+      color: #FAF6ED;
+      overflow: hidden;
+      min-height: 130px;
+      box-sizing: border-box;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .carte-chanson:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      border-color: rgba(201,168,76,0.45);
+    }
+
+    .carte-numero {
+      font-family: 'Cinzel', serif;
+      font-size: 0.68rem;
+      color: rgba(201,168,76,0.7);
+      letter-spacing: 0.08em;
+    }
+
+    .carte-icon {
+      font-size: 1.6rem;
+      line-height: 1;
+    }
+
+    .carte-titre {
+      font-family: 'Lato', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #FAF6ED;
+      line-height: 1.3;
+      flex: 1;
+      word-break: break-word;
+    }
+
+    .carte-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.2rem;
+    }
+
+    .carte-rubrique {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 10px;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+
+    .carte-langue {
+      font-size: 0.68rem;
+      color: rgba(250,246,237,0.5);
+      align-self: center;
+    }
+
+    .carte-audio-badge {
+      position: absolute;
+      top: 7px; right: 7px;
+      font-size: 0.75rem;
+    }
+
+    .carte-partition-badge {
+      position: absolute;
+      top: 7px; right: 26px;
+      font-size: 0.75rem;
+    }
+
+    .carte-admin-btns {
+      position: absolute;
+      bottom: 6px; right: 6px;
+      display: flex;
+      gap: 0.2rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .carte-chanson:hover .carte-admin-btns { opacity: 1; }
+
+    /* ── Vue liste correcte ── */
+    .chansons-liste {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .carte-liste {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.8rem 1rem;
+      background: linear-gradient(145deg, rgba(26,46,69,0.8), rgba(13,27,42,0.9));
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 10px;
+      text-decoration: none;
+      color: #FAF6ED;
+      box-sizing: border-box;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+
+    .carte-liste:hover {
+      border-color: rgba(201,168,76,0.4);
+      transform: translateX(3px);
+    }
+
+    .liste-numero {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      color: rgba(201,168,76,0.7);
+      min-width: 30px;
+      flex-shrink: 0;
+    }
+
+    .liste-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+    .liste-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .liste-titre {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #FAF6ED;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 0.2rem;
+    }
+
+    .liste-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      align-items: center;
+    }
+
+    .liste-badges {
+      display: flex;
+      gap: 0.3rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Filtres mobile ── */
+    @media (max-width: 600px) {
+      .chansons-grille {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.7rem;
+      }
+      .carte-chanson {
+        padding: 0.8rem 0.7rem;
+        min-height: 110px;
+      }
+      .carte-titre { font-size: 0.78rem; }
+      .filtres-row { flex-direction: column; gap: 0.6rem; }
+      .filtre-group { width: 100%; }
+      .filtre-select { width: 100%; }
+      .repertoire-info { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    }
+
+    @media (max-width: 380px) {
+      .chansons-grille { grid-template-columns: 1fr; }
+    }
+  </style>
+
+  <script>
+    var SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+    var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    var RUBRIQUES_COLORS = {
       'Adoration':  { bg: 'rgba(201,168,76,0.12)',  border: 'rgba(201,168,76,0.4)',  text: '#F0D98A' },
       'Louange':    { bg: 'rgba(91,163,201,0.12)',  border: 'rgba(91,163,201,0.4)',  text: '#7ECFF0' },
       'Prélude':    { bg: 'rgba(156,126,204,0.12)', border: 'rgba(156,126,204,0.4)', text: '#C5B3E8' },
       'Offrande':   { bg: 'rgba(91,170,125,0.12)',  border: 'rgba(91,170,125,0.4)',  text: '#6EC99A' },
       'Méditation': { bg: 'rgba(200,120,80,0.12)',  border: 'rgba(200,120,80,0.4)',  text: '#F0A882' },
-      'Envoi':      { bg: 'rgba(180,180,60,0.12)',  border: 'rgba(180,180,60,0.4)',  text: '#E0E070' },
+      'Envoi':      { bg: 'rgba(180,180,60,0.12)',  border: 'rgba(180,180,60,0.4)',  text: '#E0E070' }
     };
 
-    const RUBRIQUES_ICONS = {
+    var RUBRIQUES_ICONS = {
       'Adoration': '🙏', 'Louange': '🎶', 'Prélude': '🌅',
       'Offrande': '🕊️', 'Méditation': '✨', 'Envoi': '🚀'
     };
 
-    let allChansons = [];
-    let filteredChansons = [];
-    let currentVue = 'grille';
-    let currentPage = 1;
-    const PER_PAGE = 12;
-    let userRole = 'membre';
+    var allChansons = [];
+    var filteredChansons = [];
+    var currentVue = 'grille';
+    var currentPage = 1;
+    var PER_PAGE = 12;
+    var userRole = 'membre';
 
     function getRoleBadgeClass(role) {
       if (role === 'admin') return 'role-admin';
       if (role === 'preparateur') return 'role-preparateur';
       return 'role-membre';
     }
+
     function getRoleLabel(role) {
       if (role === 'admin') return '✦ Administrateur';
       if (role === 'preparateur') return '✧ Préparateur';
       return '· Membre';
     }
 
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
     function renderChansons() {
-      const list = document.getElementById('chansonsList');
-      const empty = document.getElementById('emptyState');
+      var list = document.getElementById('chansonsList');
+      var empty = document.getElementById('emptyState');
 
       if (filteredChansons.length === 0) {
         list.innerHTML = '';
@@ -197,84 +388,81 @@
 
       empty.classList.add('hidden');
       document.getElementById('repertoireCount').textContent =
-        `${filteredChansons.length} chanson${filteredChansons.length > 1 ? 's' : ''}`;
+        filteredChansons.length + ' chanson' + (filteredChansons.length > 1 ? 's' : '');
 
-      const start = (currentPage - 1) * PER_PAGE;
-      const pageItems = filteredChansons.slice(start, start + PER_PAGE);
+      var start = (currentPage - 1) * PER_PAGE;
+      var pageItems = filteredChansons.slice(start, start + PER_PAGE);
 
       if (currentVue === 'grille') {
         list.className = 'chansons-grille';
-        list.innerHTML = pageItems.map(c => renderCarteGrille(c)).join('');
+        var html = '';
+        pageItems.forEach(function(c) { html += renderCarteGrille(c); });
+        list.innerHTML = html;
       } else {
         list.className = 'chansons-liste';
-        list.innerHTML = pageItems.map(c => renderCarteListe(c)).join('');
+        var html = '';
+        pageItems.forEach(function(c) { html += renderCarteListe(c); });
+        list.innerHTML = html;
       }
 
       renderPagination();
     }
 
     function renderCarteGrille(c) {
-      const rc = RUBRIQUES_COLORS[c.rubrique] || RUBRIQUES_COLORS['Adoration'];
-      const icon = RUBRIQUES_ICONS[c.rubrique] || '🎵';
-      const adminBtns = userRole === 'admin' ? `
-        <div class="carte-admin-btns">
-          <a href="modifier-chanson.html?id=${c.id}" class="btn-edit" title="Modifier">✏️</a>
-        </div>` : '';
-      return `
-        <a href="chanson.html?id=${c.id}" class="carte-chanson" style="--rc-bg:${rc.bg};--rc-border:${rc.border};">
-          ${adminBtns}
-          <div class="carte-numero">${c.numero ? '#' + c.numero : '—'}</div>
-          <div class="carte-icon">${icon}</div>
-          <div class="carte-titre">${c.titre}</div>
-          <div class="carte-meta">
-            <span class="carte-rubrique" style="color:${rc.text};border-color:${rc.border};background:${rc.bg};">
-              ${c.rubrique || '—'}
-            </span>
-            <span class="carte-langue">${c.langue || '—'}</span>
-          </div>
-          ${c.audio_url ? '<div class="carte-audio-badge">🎧</div>' : ''}
-          ${c.partition_url ? '<div class="carte-partition-badge">📄</div>' : ''}
-        </a>`;
+      var rc = RUBRIQUES_COLORS[c.rubrique] || RUBRIQUES_COLORS['Adoration'];
+      var icon = RUBRIQUES_ICONS[c.rubrique] || '🎵';
+      var adminBtns = userRole === 'admin'
+        ? '<div class="carte-admin-btns"><a href="modifier-chanson.html?id=' + c.id + '" class="btn-edit" title="Modifier">✏️</a></div>'
+        : '';
+      return '<a href="chanson.html?id=' + c.id + '" class="carte-chanson">'
+        + adminBtns
+        + '<div class="carte-numero">' + (c.numero ? '#' + escHtml(String(c.numero)) : '—') + '</div>'
+        + '<div class="carte-icon">' + icon + '</div>'
+        + '<div class="carte-titre">' + escHtml(c.titre) + '</div>'
+        + '<div class="carte-meta">'
+        + '<span class="carte-rubrique" style="color:' + rc.text + ';border-color:' + rc.border + ';background:' + rc.bg + ';">' + escHtml(c.rubrique || '—') + '</span>'
+        + '<span class="carte-langue">' + escHtml(c.langue || '—') + '</span>'
+        + '</div>'
+        + (c.audio_url ? '<div class="carte-audio-badge">🎧</div>' : '')
+        + (c.partition_url ? '<div class="carte-partition-badge">📄</div>' : '')
+        + '</a>';
     }
 
     function renderCarteListe(c) {
-      const rc = RUBRIQUES_COLORS[c.rubrique] || RUBRIQUES_COLORS['Adoration'];
-      const icon = RUBRIQUES_ICONS[c.rubrique] || '🎵';
-      const adminBtns = userRole === 'admin' ? `
-        <a href="modifier-chanson.html?id=${c.id}" class="btn-edit-liste" title="Modifier">✏️</a>` : '';
-      return `
-        <a href="chanson.html?id=${c.id}" class="carte-liste">
-          <div class="liste-numero">${c.numero ? '#' + c.numero : '—'}</div>
-          <div class="liste-icon">${icon}</div>
-          <div class="liste-info">
-            <div class="liste-titre">${c.titre}</div>
-            <div class="liste-meta">
-              <span class="carte-rubrique" style="color:${rc.text};border-color:${rc.border};background:${rc.bg};">
-                ${c.rubrique || '—'}
-              </span>
-              <span class="carte-langue">${c.langue || '—'}</span>
-              ${c.style ? `<span class="carte-langue">${c.style}</span>` : ''}
-            </div>
-          </div>
-          <div class="liste-badges">
-            ${c.audio_url ? '<span class="carte-audio-badge">🎧</span>' : ''}
-            ${c.partition_url ? '<span class="carte-partition-badge">📄</span>' : ''}
-          </div>
-          ${adminBtns}
-        </a>`;
+      var rc = RUBRIQUES_COLORS[c.rubrique] || RUBRIQUES_COLORS['Adoration'];
+      var icon = RUBRIQUES_ICONS[c.rubrique] || '🎵';
+      var adminBtns = userRole === 'admin'
+        ? '<a href="modifier-chanson.html?id=' + c.id + '" class="btn-edit-liste" title="Modifier">✏️</a>'
+        : '';
+      return '<a href="chanson.html?id=' + c.id + '" class="carte-liste">'
+        + '<div class="liste-numero">' + (c.numero ? '#' + escHtml(String(c.numero)) : '—') + '</div>'
+        + '<div class="liste-icon">' + icon + '</div>'
+        + '<div class="liste-info">'
+        + '<div class="liste-titre">' + escHtml(c.titre) + '</div>'
+        + '<div class="liste-meta">'
+        + '<span class="carte-rubrique" style="color:' + rc.text + ';border-color:' + rc.border + ';background:' + rc.bg + ';">' + escHtml(c.rubrique || '—') + '</span>'
+        + '<span class="carte-langue">' + escHtml(c.langue || '—') + '</span>'
+        + (c.style ? '<span class="carte-langue">' + escHtml(c.style) + '</span>' : '')
+        + '</div>'
+        + '</div>'
+        + '<div class="liste-badges">'
+        + (c.audio_url ? '<span>🎧</span>' : '')
+        + (c.partition_url ? '<span>📄</span>' : '')
+        + '</div>'
+        + adminBtns
+        + '</a>';
     }
 
     function renderPagination() {
-      const total = Math.ceil(filteredChansons.length / PER_PAGE);
-      const pg = document.getElementById('pagination');
+      var total = Math.ceil(filteredChansons.length / PER_PAGE);
+      var pg = document.getElementById('pagination');
       if (total <= 1) { pg.innerHTML = ''; return; }
-
-      let html = '';
-      if (currentPage > 1) html += `<button class="pg-btn" onclick="goPage(${currentPage - 1})">←</button>`;
-      for (let i = 1; i <= total; i++) {
-        html += `<button class="pg-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+      var html = '';
+      if (currentPage > 1) html += '<button class="pg-btn" onclick="goPage(' + (currentPage - 1) + ')">←</button>';
+      for (var i = 1; i <= total; i++) {
+        html += '<button class="pg-btn ' + (i === currentPage ? 'active' : '') + '" onclick="goPage(' + i + ')">' + i + '</button>';
       }
-      if (currentPage < total) html += `<button class="pg-btn" onclick="goPage(${currentPage + 1})">→</button>`;
+      if (currentPage < total) html += '<button class="pg-btn" onclick="goPage(' + (currentPage + 1) + ')">→</button>';
       pg.innerHTML = html;
     }
 
@@ -285,28 +473,25 @@
     }
 
     function applyFiltres() {
-      const search  = document.getElementById('searchInput').value.toLowerCase().trim();
-      const rubrique = document.getElementById('filtreRubrique').value;
-      const langue   = document.getElementById('filtreLangue').value;
-      const style    = document.getElementById('filtreStyle').value;
-      const tri      = document.getElementById('triSelect').value;
+      var search   = document.getElementById('searchInput').value.toLowerCase().trim();
+      var rubrique = document.getElementById('filtreRubrique').value;
+      var langue   = document.getElementById('filtreLangue').value;
+      var style    = document.getElementById('filtreStyle').value;
+      var tri      = document.getElementById('triSelect').value;
 
-      const clearBtn = document.getElementById('searchClear');
-      clearBtn.classList.toggle('hidden', !search);
+      document.getElementById('searchClear').classList.toggle('hidden', !search);
 
-      filteredChansons = allChansons.filter(c => {
-        const matchSearch = !search ||
-          (c.titre && c.titre.toLowerCase().includes(search)) ||
-          (c.numero && String(c.numero).includes(search));
-        const matchRubrique = !rubrique || c.rubrique === rubrique;
-        const matchLangue   = !langue   || c.langue   === langue;
-        const matchStyle    = !style    || c.style    === style;
+      filteredChansons = allChansons.filter(function(c) {
+        var matchSearch  = !search   || (c.titre && c.titre.toLowerCase().includes(search)) || (c.numero && String(c.numero).includes(search));
+        var matchRubrique = !rubrique || c.rubrique === rubrique;
+        var matchLangue   = !langue   || c.langue   === langue;
+        var matchStyle    = !style    || c.style    === style;
         return matchSearch && matchRubrique && matchLangue && matchStyle;
       });
 
-      filteredChansons.sort((a, b) => {
-        if (tri === 'numero') return (a.numero || 9999) - (b.numero || 9999);
-        if (tri === 'titre')  return (a.titre || '').localeCompare(b.titre || '');
+      filteredChansons.sort(function(a, b) {
+        if (tri === 'numero')   return (a.numero || 9999) - (b.numero || 9999);
+        if (tri === 'titre')    return (a.titre || '').localeCompare(b.titre || '');
         if (tri === 'rubrique') return (a.rubrique || '').localeCompare(b.rubrique || '');
         return 0;
       });
@@ -316,44 +501,36 @@
     }
 
     async function init() {
-      // Session
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.href = 'index.html'; return; }
+      var r = await sb.auth.getSession();
+      if (!r.data.session) { window.location.href = 'index.html'; return; }
 
-      // Profil
-      const { data: profil } = await sb.from('profils').select('*').eq('id', session.user.id).single();
-      if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
+      var p = await sb.from('profils').select('*').eq('id', r.data.session.user.id).single();
+      if (!p.data || !p.data.actif) { window.location.href = 'index.html'; return; }
 
-      userRole = profil.role || 'membre';
-      const nom = profil.nom || session.user.email.split('@')[0];
+      userRole = p.data.role || 'membre';
+      var nom = p.data.nom || r.data.session.user.email.split('@')[0];
 
-      // Navbar
       document.getElementById('navUserName').textContent = nom;
-      const roleEl = document.getElementById('navUserRole');
+      var roleEl = document.getElementById('navUserRole');
       roleEl.textContent = getRoleLabel(userRole);
-      roleEl.className = `user-role-badge ${getRoleBadgeClass(userRole)}`;
+      roleEl.className = 'user-role-badge ' + getRoleBadgeClass(userRole);
 
-      if (profil.photo_url) {
-        const img = document.createElement('img');
-        img.src = profil.photo_url; img.className = 'user-avatar'; img.alt = nom;
+      if (p.data.photo_url) {
+        var img = document.createElement('img');
+        img.src = p.data.photo_url; img.className = 'user-avatar'; img.alt = nom;
         document.getElementById('navAvatar').replaceWith(img);
       } else {
         document.getElementById('navAvatar').textContent = nom.charAt(0).toUpperCase();
       }
 
       if (userRole === 'admin') {
-        document.querySelectorAll('[data-role-required="admin"]').forEach(el => el.style.display = 'block');
+        document.querySelectorAll('[data-role-required="admin"]').forEach(function(el) { el.style.display = 'block'; });
         document.getElementById('adminActions').style.display = 'flex';
       }
 
-      // Charger les chansons
-      const { data: chansons, error } = await sb
-        .from('chansons')
-        .select('*')
-        .order('numero', { ascending: true });
-
-      allChansons = chansons || [];
-      filteredChansons = [...allChansons];
+      var res = await sb.from('chansons').select('*').order('numero', { ascending: true });
+      allChansons = res.data || [];
+      filteredChansons = allChansons.slice();
 
       applyFiltres();
 
@@ -361,9 +538,9 @@
       document.getElementById('mainContent').classList.remove('hidden');
     }
 
-    // Events
+    // ── EVENTS ──
     document.getElementById('searchInput').addEventListener('input', applyFiltres);
-    document.getElementById('searchClear').addEventListener('click', () => {
+    document.getElementById('searchClear').addEventListener('click', function() {
       document.getElementById('searchInput').value = '';
       applyFiltres();
     });
@@ -372,20 +549,21 @@
     document.getElementById('filtreStyle').addEventListener('change', applyFiltres);
     document.getElementById('triSelect').addEventListener('change', applyFiltres);
 
-    document.getElementById('vueGrille').addEventListener('click', () => {
+    document.getElementById('vueGrille').addEventListener('click', function() {
       currentVue = 'grille';
       document.getElementById('vueGrille').classList.add('active');
       document.getElementById('vueListe').classList.remove('active');
       renderChansons();
     });
-    document.getElementById('vueListe').addEventListener('click', () => {
+
+    document.getElementById('vueListe').addEventListener('click', function() {
       currentVue = 'liste';
       document.getElementById('vueListe').classList.add('active');
       document.getElementById('vueGrille').classList.remove('active');
       renderChansons();
     });
 
-    document.getElementById('btnLogout').addEventListener('click', async () => {
+    document.getElementById('btnLogout').addEventListener('click', async function() {
       await sb.auth.signOut();
       window.location.href = 'index.html';
     });
@@ -393,6 +571,5 @@
     init();
   </script>
 
-</body>  
+</body>
 </html>
-              
