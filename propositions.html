@@ -12,7 +12,6 @@
 </head>
 <body class="page-propositions">
 
-  <!-- LOADER -->
   <div id="loader" class="loader-overlay">
     <div class="loader-cross">
       <div class="loader-bar loader-bar-h"></div>
@@ -20,10 +19,8 @@
     </div>
   </div>
 
-  <!-- TOAST -->
   <div id="toast" class="toast" aria-live="polite"></div>
 
-  <!-- NAVBAR -->
   <nav class="navbar">
     <a href="dashboard.html" class="navbar-brand">
       <span class="navbar-logo">♪</span>
@@ -45,7 +42,6 @@
     <button class="navbar-toggle" id="navToggle" aria-label="Menu">&#9776;</button>
   </nav>
 
-  <!-- HERO -->
   <header class="pp-hero">
     <div class="pp-hero-bg"></div>
     <div class="pp-hero-content">
@@ -53,7 +49,6 @@
       <h1 class="pp-title">Propositions</h1>
       <p class="pp-subtitle">Examinez et traitez les suggestions de chansons des membres</p>
     </div>
-    <!-- Compteurs statut -->
     <div class="pp-hero-stats" id="ppHeroStats">
       <div class="pp-hero-stat">
         <span class="pp-hero-stat-num" id="nbEnAttente">—</span>
@@ -73,15 +68,13 @@
     <div class="pp-hero-ornement"></div>
   </header>
 
-  <!-- CONTENU -->
   <main class="pp-main">
 
     <!-- FILTRES -->
     <div class="pp-filters">
       <div class="pp-filter-tabs" id="ppFilterTabs">
         <button class="pp-tab active" data-statut="en_attente">
-          ⏳ En attente
-          <span class="pp-tab-badge" id="tabBadgeAttente">0</span>
+          ⏳ En attente <span class="pp-tab-badge" id="tabBadgeAttente">0</span>
         </button>
         <button class="pp-tab" data-statut="accepte">✅ Acceptées</button>
         <button class="pp-tab" data-statut="refuse">❌ Refusées</button>
@@ -93,203 +86,382 @@
       </div>
     </div>
 
-    <!-- LAYOUT PRINCIPAL -->
-    <div class="pp-layout">
-
-      <!-- LISTE -->
-      <section class="pp-list-section">
-        <div class="pp-count" id="ppCount">Chargement…</div>
-        <div class="pp-list" id="ppList">
-          <div class="pp-skeleton"></div>
-          <div class="pp-skeleton"></div>
-          <div class="pp-skeleton"></div>
-        </div>
-      </section>
-
-      <!-- PANNEAU DÉTAIL -->
-      <aside class="pp-detail-aside">
-        <div class="pp-detail-card" id="ppDetailCard">
-          <div class="pp-detail-idle" id="ppDetailIdle">
-            <div class="pp-detail-idle-icon">📋</div>
-            <p>Sélectionnez une proposition pour voir ses détails et la traiter.</p>
-          </div>
-          <div class="pp-detail-body" id="ppDetailBody" style="display:none;"></div>
-        </div>
-      </aside>
-
+    <!-- LISTE -->
+    <div class="pp-count" id="ppCount">Chargement…</div>
+    <div class="pp-list" id="ppList">
+      <div class="pp-skeleton"></div>
+      <div class="pp-skeleton"></div>
+      <div class="pp-skeleton"></div>
     </div>
+
+    <!-- DÉTAIL (en dessous sur mobile) -->
+    <div class="pp-detail-card" id="ppDetailCard" style="margin-top:1.5rem;">
+      <div class="pp-detail-idle" id="ppDetailIdle">
+        <div class="pp-detail-idle-icon">📋</div>
+        <p>Sélectionnez une proposition pour voir ses détails et la traiter.</p>
+      </div>
+      <div class="pp-detail-body" id="ppDetailBody" style="display:none;"></div>
+    </div>
+
   </main>
 
-  <!-- MODAL AJOUTER AU RÉPERTOIRE -->
+  <!-- MODAL ACCEPTER -->
   <div id="modalAjouter" class="modal-overlay" style="display:none;">
     <div class="modal-box">
       <div class="modal-success-icon">🎵</div>
-      <h3>Ajouter au répertoire ?</h3>
-      <p>La proposition sera acceptée et la chanson ajoutée directement au répertoire avec les informations fournies.</p>
+      <h3>Accepter & Ajouter au répertoire ?</h3>
+      <p>La chanson sera ajoutée directement au répertoire avec les informations fournies.</p>
       <div class="modal-actions">
-        <button class="btn-secondary" onclick="fermerModalAjouter()">Annuler</button>
-        <button class="btn-primary" id="btnConfirmerAjouter">
-          <span>✦</span> Accepter & Ajouter
-        </button>
+        <button class="btn-secondary" id="btnAnnulerAjouter">Annuler</button>
+        <button class="btn-primary" id="btnConfirmerAjouter">✦ Accepter & Ajouter</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL REFUS -->
+  <!-- MODAL REFUSER -->
   <div id="modalRefuser" class="modal-overlay" style="display:none;">
-    <div class="modal-box modal-danger">
+    <div class="modal-box">
       <div class="modal-danger-icon">✕</div>
       <h3>Refuser cette proposition ?</h3>
-      <p>La proposition sera marquée comme refusée. Le membre en sera informé lors de sa prochaine visite.</p>
+      <p>La proposition sera marquée comme refusée.</p>
       <div class="modal-actions">
-        <button class="btn-secondary" onclick="fermerModalRefuser()">Annuler</button>
+        <button class="btn-secondary" id="btnAnnulerRefuser">Annuler</button>
         <button class="btn-danger" id="btnConfirmerRefuser">Refuser</button>
       </div>
     </div>
   </div>
 
-  <script>
-    // ─── SUPABASE ───────────────────────────────────────────────────
-    const SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+  <!-- CSS CORRECTIF MOBILE -->
+  <style>
+    .pp-main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 4rem;
+    }
+    .pp-filters {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-bottom: 1.2rem;
+    }
+    .pp-filter-tabs {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .pp-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.9rem;
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 20px;
+      background: transparent;
+      color: rgba(250,246,237,0.6);
+      font-family: 'Lato', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .pp-tab.active {
+      background: rgba(201,168,76,0.18);
+      border-color: #C9A84C;
+      color: #F0D98A;
+    }
+    .pp-tab-badge {
+      background: #C9A84C;
+      color: #0D1B2A;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 10px;
+    }
+    .pp-search-wrapper {
+      position: relative;
+    }
+    .pp-search-icon {
+      position: absolute;
+      left: 0.8rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.85rem;
+      opacity: 0.45;
+      pointer-events: none;
+    }
+    .pp-search-input {
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(26,46,69,0.8);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 8px;
+      padding: 0.6rem 1rem 0.6rem 2.2rem;
+      color: #FAF6ED;
+      font-family: 'Lato', sans-serif;
+      font-size: 0.88rem;
+    }
+    .pp-search-input::placeholder { color: rgba(250,246,237,0.3); }
+    .pp-search-input:focus { outline: none; border-color: #C9A84C; }
 
-    let currentUser = null;
-    let propositions = [];
-    let filtreStatut = 'en_attente';
-    let propositionSelectionnee = null;
+    .pp-count {
+      font-size: 0.8rem;
+      color: rgba(250,246,237,0.4);
+      margin-bottom: 0.8rem;
+    }
+    .pp-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .pp-empty {
+      text-align: center;
+      color: rgba(250,246,237,0.35);
+      font-style: italic;
+      padding: 2.5rem 0;
+      font-size: 0.88rem;
+    }
+    .pp-skeleton {
+      height: 90px;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #1A2E45 25%, #1f3550 50%, #1A2E45 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-    // ─── INIT ────────────────────────────────────────────────────────
-    async function init() {
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.href = 'index.html'; return; }
-      currentUser = session.user;
+    /* Item proposition */
+    .pp-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 12px;
+      padding: 0.9rem 1.1rem;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: border-color 0.2s;
+    }
+    .pp-item:active { opacity: 0.8; }
+    .pp-item.pp-item-active {
+      border-color: #C9A84C;
+      box-shadow: 0 0 0 2px rgba(201,168,76,0.2);
+    }
+    .pp-item-left { flex: 1; min-width: 0; }
+    .pp-item-titre {
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #FAF6ED;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 0.2rem;
+    }
+    .pp-item-meta {
+      font-size: 0.76rem;
+      color: rgba(250,246,237,0.5);
+      margin-bottom: 0.2rem;
+    }
+    .pp-item-auteur {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.74rem;
+      color: rgba(250,246,237,0.4);
+    }
+    .pp-avatar {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .pp-avatar-fallback { font-size: 0.85rem; opacity: 0.5; }
 
-      const { data: profil } = await sb.from('profils')
-        .select('*').eq('id', currentUser.id).single();
+    /* Badges */
+    .pp-badge {
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.22rem 0.65rem;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .pp-badge-en_attente { background: rgba(201,168,76,0.15); color: #F0D98A; border: 1px solid rgba(201,168,76,0.3); }
+    .pp-badge-accepte    { background: rgba(76,175,130,0.15); color: #7ecfaf; border: 1px solid rgba(76,175,130,0.3); }
+    .pp-badge-refuse     { background: rgba(224,108,108,0.15); color: #e09696; border: 1px solid rgba(224,108,108,0.3); }
 
-      if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
-      if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
-
-      document.getElementById('userAvatar').src = profil.photo_url || '';
-      document.getElementById('userName').textContent = profil.nom || profil.email;
-
-      await chargerPropositions();
-      hideLoader();
+    /* Détail */
+    .pp-detail-card {
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.22);
+      border-radius: 16px;
+      overflow: hidden;
+      min-height: 160px;
+    }
+    .pp-detail-idle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+    }
+    .pp-detail-idle-icon { font-size: 2rem; opacity: 0.3; }
+    .pp-detail-idle p { font-size: 0.87rem; color: rgba(250,246,237,0.4); margin: 0; }
+    .pp-detail-body {
+      padding: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .pp-detail-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.8rem;
+    }
+    .pp-detail-titre {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #FAF6ED;
+      margin: 0;
+      line-height: 1.3;
+    }
+    .pp-detail-infos {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      background: rgba(13,27,42,0.35);
+      border-radius: 10px;
+      padding: 0.9rem 1rem;
+    }
+    .pp-detail-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+    }
+    .pp-detail-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #C9A84C;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      min-width: 90px;
+      flex-shrink: 0;
+    }
+    .pp-detail-val {
+      font-size: 0.85rem;
+      color: #FAF6ED;
+    }
+    .pp-detail-auteur {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .pp-detail-commentaire {
+      border-left: 3px solid rgba(201,168,76,0.35);
+      padding-left: 1rem;
+    }
+    .pp-blockquote {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 0.87rem;
+      color: rgba(250,246,237,0.7);
+      line-height: 1.6;
+      margin: 0.5rem 0 0;
     }
 
-    // ─── LOADER / TOAST ──────────────────────────────────────────────
+    /* Paroles */
+    .pp-detail-paroles {
+      background: rgba(13,27,42,0.3);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .pp-paroles-titre {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      color: #C9A84C;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.7rem;
+    }
+    .pp-paroles-texte {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.88rem;
+      color: rgba(250,246,237,0.85);
+      line-height: 1.9;
+      white-space: pre-wrap;
+      max-height: 220px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(201,168,76,0.3) transparent;
+    }
+
+    /* Actions */
+    .pp-detail-actions {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      padding-top: 0.5rem;
+      border-top: 1px solid rgba(201,168,76,0.1);
+    }
+    .pp-detail-actions .btn-primary,
+    .pp-detail-actions .btn-danger {
+      flex: 1;
+      justify-content: center;
+      min-width: 100px;
+    }
+    .pp-detail-statut-final {
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 0.8rem;
+      border-radius: 10px;
+    }
+    .pp-statut-accepte { background: rgba(76,175,130,0.12); color: #7ecfaf; border: 1px solid rgba(76,175,130,0.25); }
+    .pp-statut-refuse  { background: rgba(224,108,108,0.12); color: #e09696; border: 1px solid rgba(224,108,108,0.25); }
+  </style>
+
+  <script>
+    var SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+    var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+    var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    var currentUser = null;
+    var propositions = [];
+    var filtreStatut = 'en_attente';
+    var propSelectionnee = null;
+
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function showToast(msg, type) {
+      type = type || 'info';
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast toast-' + type + ' show';
+      setTimeout(function() { t.classList.remove('show'); }, 3500);
+    }
+
     function hideLoader() {
       document.getElementById('loader').style.opacity = '0';
-      setTimeout(() => document.getElementById('loader').style.display = 'none', 400);
+      setTimeout(function() { document.getElementById('loader').style.display = 'none'; }, 400);
     }
 
-    function showToast(msg, type = 'info') {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.className = `toast toast-${type} show`;
-      setTimeout(() => t.classList.remove('show'), 3500);
-    }
-
-    // ─── CHARGEMENT ──────────────────────────────────────────────────
-    async function chargerPropositions() {
-      const { data, error } = await sb.from('propositions')
-        .select('*, profils(nom, email, photo_url)')
-        .order('created_at', { ascending: false });
-
-      if (error) { showToast('Erreur de chargement.', 'error'); return; }
-      propositions = data || [];
-      mettreAJourCompteurs();
-      appliquerFiltres();
-    }
-
-    function mettreAJourCompteurs() {
-      const enAttente = propositions.filter(p => p.statut === 'en_attente').length;
-      const accepte   = propositions.filter(p => p.statut === 'accepte').length;
-      const refuse    = propositions.filter(p => p.statut === 'refuse').length;
-
-      document.getElementById('nbEnAttente').textContent = enAttente;
-      document.getElementById('nbAccepte').textContent   = accepte;
-      document.getElementById('nbRefuse').textContent    = refuse;
-      document.getElementById('tabBadgeAttente').textContent = enAttente;
-      document.getElementById('tabBadgeAttente').style.display = enAttente > 0 ? 'inline' : 'none';
-    }
-
-    // ─── FILTRES + RECHERCHE ─────────────────────────────────────────
-    function appliquerFiltres() {
-      const q = document.getElementById('ppSearch').value.toLowerCase().trim();
-      let liste = filtreStatut === 'all'
-        ? propositions
-        : propositions.filter(p => p.statut === filtreStatut);
-
-      if (q) {
-        liste = liste.filter(p =>
-          p.titre.toLowerCase().includes(q) ||
-          (p.artiste || '').toLowerCase().includes(q) ||
-          (p.commentaire || '').toLowerCase().includes(q)
-        );
-      }
-
-      renderListe(liste);
-    }
-
-    // Tabs
-    document.getElementById('ppFilterTabs').addEventListener('click', (e) => {
-      const tab = e.target.closest('.pp-tab');
-      if (!tab) return;
-      document.querySelectorAll('.pp-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      filtreStatut = tab.dataset.statut;
-      propositionSelectionnee = null;
-      resetDetail();
-      appliquerFiltres();
-    });
-
-    document.getElementById('ppSearch').addEventListener('input', appliquerFiltres);
-
-    // ─── RENDER LISTE ────────────────────────────────────────────────
-    function renderListe(liste) {
-      const container = document.getElementById('ppList');
-      const count = document.getElementById('ppCount');
-      count.textContent = `${liste.length} proposition${liste.length !== 1 ? 's' : ''}`;
-
-      if (liste.length === 0) {
-        container.innerHTML = `<div class="pp-empty">Aucune proposition dans cette catégorie.</div>`;
-        return;
-      }
-
-      container.innerHTML = liste.map(p => {
-        const auteur = p.profils?.nom || p.profils?.email || 'Membre inconnu';
-        const date = new Date(p.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-        const actif = propositionSelectionnee?.id === p.id ? ' pp-item-active' : '';
-        return `
-        <div class="pp-item${actif}" data-id="${p.id}" onclick="selectionnerProposition('${p.id}')">
-          <div class="pp-item-left">
-            <div class="pp-item-titre">${escHtml(p.titre)}</div>
-            <div class="pp-item-meta">
-              ${p.artiste ? `<span>${escHtml(p.artiste)}</span> · ` : ''}
-              <span>${escHtml(p.langue || '')}</span> ·
-              <span>${escHtml(p.rubrique || '')}</span>
-            </div>
-            <div class="pp-item-auteur">
-              ${p.profils?.photo_url ? `<img src="${p.profils.photo_url}" class="pp-avatar" alt="" />` : '<span class="pp-avatar-fallback">👤</span>'}
-              <span>${escHtml(auteur)}</span> · <span>${date}</span>
-            </div>
-          </div>
-          <span class="pp-badge pp-badge-${p.statut}">${labelStatut(p.statut)}</span>
-        </div>`;
-      }).join('');
-    }
-
-    // ─── SÉLECTION ───────────────────────────────────────────────────
-    function selectionnerProposition(id) {
-      propositionSelectionnee = propositions.find(p => p.id === id);
-      // Mettre à jour l'item actif visuellement
-      document.querySelectorAll('.pp-item').forEach(el => {
-        el.classList.toggle('pp-item-active', el.dataset.id === id);
-      });
-      afficherDetail(propositionSelectionnee);
+    function labelStatut(s) {
+      if (s === 'en_attente') return '⏳ En attente';
+      if (s === 'accepte') return '✅ Acceptée';
+      if (s === 'refuse') return '❌ Refusée';
+      return s;
     }
 
     function resetDetail() {
@@ -297,148 +469,274 @@
       document.getElementById('ppDetailBody').style.display = 'none';
     }
 
+    // ─── INIT ────────────────────────────────────────────────────────
+    async function init() {
+      var r = await sb.auth.getSession();
+      if (!r.data.session) { window.location.href = 'index.html'; return; }
+      currentUser = r.data.session.user;
+
+      var p = await sb.from('profils').select('*').eq('id', currentUser.id).single();
+      if (!p.data || !p.data.actif) { window.location.href = 'index.html'; return; }
+      if (p.data.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
+
+      document.getElementById('userAvatar').src = p.data.photo_url || '';
+      document.getElementById('userName').textContent = p.data.nom || p.data.email;
+
+      await chargerPropositions();
+      hideLoader();
+    }
+
+    // ─── CHARGEMENT ──────────────────────────────────────────────────
+    async function chargerPropositions() {
+      var res = await sb.from('propositions')
+        .select('*, profils(nom, email, photo_url)')
+        .order('created_at', { ascending: false });
+
+      if (res.error) { showToast('Erreur de chargement.', 'error'); return; }
+      propositions = res.data || [];
+      mettreAJourCompteurs();
+      appliquerFiltres();
+    }
+
+    function mettreAJourCompteurs() {
+      var enAttente = propositions.filter(function(p) { return p.statut === 'en_attente'; }).length;
+      var accepte   = propositions.filter(function(p) { return p.statut === 'accepte'; }).length;
+      var refuse    = propositions.filter(function(p) { return p.statut === 'refuse'; }).length;
+      document.getElementById('nbEnAttente').textContent = enAttente;
+      document.getElementById('nbAccepte').textContent   = accepte;
+      document.getElementById('nbRefuse').textContent    = refuse;
+      var badge = document.getElementById('tabBadgeAttente');
+      badge.textContent = enAttente;
+      badge.style.display = enAttente > 0 ? 'inline' : 'none';
+    }
+
+    // ─── FILTRES ─────────────────────────────────────────────────────
+    document.getElementById('ppFilterTabs').addEventListener('click', function(e) {
+      var tab = e.target.closest('.pp-tab');
+      if (!tab) return;
+      document.querySelectorAll('.pp-tab').forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      filtreStatut = tab.dataset.statut;
+      propSelectionnee = null;
+      resetDetail();
+      appliquerFiltres();
+    });
+
+    document.getElementById('ppSearch').addEventListener('input', appliquerFiltres);
+
+    function appliquerFiltres() {
+      var q = document.getElementById('ppSearch').value.toLowerCase().trim();
+      var liste = filtreStatut === 'all'
+        ? propositions
+        : propositions.filter(function(p) { return p.statut === filtreStatut; });
+      if (q) {
+        liste = liste.filter(function(p) {
+          return p.titre.toLowerCase().includes(q)
+            || (p.artiste || '').toLowerCase().includes(q)
+            || (p.commentaire || '').toLowerCase().includes(q);
+        });
+      }
+      renderListe(liste);
+    }
+
+    // ─── RENDER LISTE ────────────────────────────────────────────────
+    function renderListe(liste) {
+      var container = document.getElementById('ppList');
+      document.getElementById('ppCount').textContent = liste.length + ' proposition' + (liste.length !== 1 ? 's' : '');
+
+      if (liste.length === 0) {
+        container.innerHTML = '<div class="pp-empty">Aucune proposition dans cette catégorie.</div>';
+        return;
+      }
+
+      container.innerHTML = '';
+      liste.forEach(function(p) {
+        var div = document.createElement('div');
+        div.className = 'pp-item' + (propSelectionnee && propSelectionnee.id === p.id ? ' pp-item-active' : '');
+
+        var auteur = (p.profils && (p.profils.nom || p.profils.email)) || 'Membre inconnu';
+        var date = new Date(p.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        var avatarHtml = (p.profils && p.profils.photo_url)
+          ? '<img src="' + escHtml(p.profils.photo_url) + '" class="pp-avatar" alt="" />'
+          : '<span class="pp-avatar-fallback">👤</span>';
+
+        div.innerHTML = '<div class="pp-item-left">'
+          + '<div class="pp-item-titre">' + escHtml(p.titre) + '</div>'
+          + '<div class="pp-item-meta">'
+          + (p.artiste ? escHtml(p.artiste) + ' · ' : '')
+          + escHtml(p.langue || '') + ' · ' + escHtml(p.rubrique || '')
+          + '</div>'
+          + '<div class="pp-item-auteur">' + avatarHtml + '<span>' + escHtml(auteur) + '</span> · <span>' + date + '</span></div>'
+          + '</div>'
+          + '<span class="pp-badge pp-badge-' + p.statut + '">' + labelStatut(p.statut) + '</span>';
+
+        // ── addEventListener au lieu de onclick inline ──
+        (function(prop) {
+          div.addEventListener('click', function() {
+            selectionnerProposition(prop);
+          });
+        })(p);
+
+        container.appendChild(div);
+      });
+    }
+
+    // ─── SÉLECTION ───────────────────────────────────────────────────
+    function selectionnerProposition(p) {
+      propSelectionnee = p;
+      document.querySelectorAll('.pp-item').forEach(function(el) {
+        el.classList.remove('pp-item-active');
+      });
+      // Marquer l'élément sélectionné
+      var items = document.querySelectorAll('.pp-item');
+      var liste = filtreStatut === 'all' ? propositions : propositions.filter(function(x) { return x.statut === filtreStatut; });
+      items.forEach(function(el, i) {
+        if (liste[i] && liste[i].id === p.id) el.classList.add('pp-item-active');
+      });
+
+      afficherDetail(p);
+      // Scroll vers le détail sur mobile
+      document.getElementById('ppDetailCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ─── AFFICHER DÉTAIL ─────────────────────────────────────────────
     function afficherDetail(p) {
       document.getElementById('ppDetailIdle').style.display = 'none';
-      const body = document.getElementById('ppDetailBody');
-      body.style.display = 'block';
+      var body = document.getElementById('ppDetailBody');
+      body.style.display = 'flex';
 
-      const auteur = p.profils?.nom || p.profils?.email || 'Membre inconnu';
-      const date = new Date(p.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+      var auteur = (p.profils && (p.profils.nom || p.profils.email)) || 'Membre inconnu';
+      var date = new Date(p.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
-      const actionsHtml = p.statut === 'en_attente' ? `
-        <div class="pp-detail-actions">
-          <button class="btn-danger" onclick="ouvrirModalRefuser()">❌ Refuser</button>
-          <button class="btn-primary" onclick="ouvrirModalAjouter()">✦ Accepter & Ajouter</button>
-        </div>` : `
-        <div class="pp-detail-statut-final pp-statut-${p.statut}">
-          ${p.statut === 'accepte' ? '✅ Cette proposition a été acceptée.' : '❌ Cette proposition a été refusée.'}
-        </div>`;
+      var avatarHtml = (p.profils && p.profils.photo_url)
+        ? '<img src="' + escHtml(p.profils.photo_url) + '" class="pp-avatar" alt="" />'
+        : '<span class="pp-avatar-fallback">👤</span>';
 
-      body.innerHTML = `
-        <div class="pp-detail-header">
-          <h2 class="pp-detail-titre">${escHtml(p.titre)}</h2>
-          <span class="pp-badge pp-badge-${p.statut}">${labelStatut(p.statut)}</span>
-        </div>
+      // Paroles si disponibles
+      var parolesHtml = '';
+      if (p.paroles) {
+        parolesHtml = '<div class="pp-detail-paroles">'
+          + '<div class="pp-paroles-titre">🎵 Paroles</div>'
+          + '<div class="pp-paroles-texte">' + escHtml(p.paroles) + '</div>'
+          + '</div>';
+      }
 
-        <div class="pp-detail-infos">
-          <div class="pp-detail-row">
-            <span class="pp-detail-label">Artiste</span>
-            <span class="pp-detail-val">${escHtml(p.artiste || '—')}</span>
-          </div>
-          <div class="pp-detail-row">
-            <span class="pp-detail-label">Langue</span>
-            <span class="pp-detail-val">${escHtml(p.langue || '—')}</span>
-          </div>
-          <div class="pp-detail-row">
-            <span class="pp-detail-label">Rubrique</span>
-            <span class="pp-detail-val">${escHtml(p.rubrique || '—')}</span>
-          </div>
-          <div class="pp-detail-row">
-            <span class="pp-detail-label">Proposé par</span>
-            <span class="pp-detail-val pp-detail-auteur">
-              ${p.profils?.photo_url ? `<img src="${p.profils.photo_url}" class="pp-avatar" alt="" />` : '<span class="pp-avatar-fallback">👤</span>'}
-              ${escHtml(auteur)}
-            </span>
-          </div>
-          <div class="pp-detail-row">
-            <span class="pp-detail-label">Date</span>
-            <span class="pp-detail-val">${date}</span>
-          </div>
-        </div>
+      // Commentaire
+      var commentaireHtml = p.commentaire
+        ? '<div class="pp-detail-commentaire">'
+          + '<div class="pp-detail-label">Commentaire</div>'
+          + '<p class="pp-blockquote">' + escHtml(p.commentaire) + '</p>'
+          + '</div>'
+        : '';
 
-        ${p.commentaire ? `
-        <div class="pp-detail-commentaire">
-          <div class="pp-detail-label">Commentaire du membre</div>
-          <blockquote class="pp-blockquote">${escHtml(p.commentaire)}</blockquote>
-        </div>` : ''}
+      // Actions selon statut
+      var actionsHtml = '';
+      if (p.statut === 'en_attente') {
+        actionsHtml = '<div class="pp-detail-actions">'
+          + '<button class="btn-danger" id="btnOuvrirRefuser">❌ Refuser</button>'
+          + '<button class="btn-primary" id="btnOuvrirAjouter">✦ Accepter & Ajouter</button>'
+          + '</div>';
+      } else {
+        actionsHtml = '<div class="pp-detail-statut-final pp-statut-' + p.statut + '">'
+          + (p.statut === 'accepte' ? '✅ Cette proposition a été acceptée.' : '❌ Cette proposition a été refusée.')
+          + '</div>';
+      }
 
-        ${actionsHtml}
-      `;
+      body.innerHTML = '<div class="pp-detail-header">'
+        + '<h2 class="pp-detail-titre">' + escHtml(p.titre) + '</h2>'
+        + '<span class="pp-badge pp-badge-' + p.statut + '">' + labelStatut(p.statut) + '</span>'
+        + '</div>'
+        + '<div class="pp-detail-infos">'
+        + '<div class="pp-detail-row"><span class="pp-detail-label">Artiste</span><span class="pp-detail-val">' + escHtml(p.artiste || '—') + '</span></div>'
+        + '<div class="pp-detail-row"><span class="pp-detail-label">Langue</span><span class="pp-detail-val">' + escHtml(p.langue || '—') + '</span></div>'
+        + '<div class="pp-detail-row"><span class="pp-detail-label">Rubrique</span><span class="pp-detail-val">' + escHtml(p.rubrique || '—') + '</span></div>'
+        + '<div class="pp-detail-row"><span class="pp-detail-label">Proposé par</span><span class="pp-detail-val pp-detail-auteur">' + avatarHtml + escHtml(auteur) + '</span></div>'
+        + '<div class="pp-detail-row"><span class="pp-detail-label">Date</span><span class="pp-detail-val">' + date + '</span></div>'
+        + '</div>'
+        + parolesHtml
+        + commentaireHtml
+        + actionsHtml;
+
+      // Attacher les boutons après injection
+      var btnA = document.getElementById('btnOuvrirAjouter');
+      var btnR = document.getElementById('btnOuvrirRefuser');
+      if (btnA) btnA.addEventListener('click', function() { ouvrirModalAjouter(p); });
+      if (btnR) btnR.addEventListener('click', function() { ouvrirModalRefuser(p); });
     }
 
-    // ─── MODAL AJOUTER ───────────────────────────────────────────────
-    function ouvrirModalAjouter() {
+    // ─── MODAL ACCEPTER ──────────────────────────────────────────────
+    function ouvrirModalAjouter(p) {
       document.getElementById('modalAjouter').style.display = 'flex';
+      document.getElementById('btnConfirmerAjouter').onclick = async function() {
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = '⏳…';
+
+        var r1 = await sb.from('propositions').update({ statut: 'accepte' }).eq('id', p.id);
+        if (r1.error) { showToast('Erreur mise à jour.', 'error'); btn.disabled = false; btn.innerHTML = '✦ Accepter & Ajouter'; return; }
+
+        var r2 = await sb.from('chansons').insert({
+          titre: p.titre,
+          langue: p.langue,
+          rubrique: p.rubrique,
+          style: null,
+          paroles: p.paroles || null,
+          partition_url: null,
+          audio_url: null
+        });
+
+        btn.disabled = false;
+        btn.innerHTML = '✦ Accepter & Ajouter';
+        fermerModals();
+
+        if (r2.error) showToast('Acceptée, mais erreur ajout chanson.', 'error');
+        else showToast('Proposition acceptée et chanson ajoutée !', 'success');
+
+        propSelectionnee = null;
+        resetDetail();
+        await chargerPropositions();
+      };
     }
-    function fermerModalAjouter() {
-      document.getElementById('modalAjouter').style.display = 'none';
-    }
-    document.getElementById('modalAjouter').addEventListener('click', (e) => {
-      if (e.target === document.getElementById('modalAjouter')) fermerModalAjouter();
-    });
-
-    document.getElementById('btnConfirmerAjouter').addEventListener('click', async () => {
-      if (!propositionSelectionnee) return;
-      const p = propositionSelectionnee;
-
-      // 1. Marquer la proposition comme acceptée
-      const { error: errProp } = await sb.from('propositions')
-        .update({ statut: 'accepte' }).eq('id', p.id);
-      if (errProp) { showToast('Erreur lors de la mise à jour.', 'error'); return; }
-
-      // 2. Ajouter la chanson au répertoire
-      const { error: errChanson } = await sb.from('chansons').insert({
-        titre: p.titre,
-        langue: p.langue,
-        rubrique: p.rubrique,
-        style: null,
-        paroles: null,
-        partition_url: null,
-        audio_url: null
-      });
-      if (errChanson) { showToast('Proposition acceptée, mais erreur à l\'ajout de la chanson.', 'error'); }
-      else { showToast('Proposition acceptée et chanson ajoutée au répertoire !', 'success'); }
-
-      fermerModalAjouter();
-      await chargerPropositions();
-      resetDetail();
-      propositionSelectionnee = null;
-    });
 
     // ─── MODAL REFUSER ───────────────────────────────────────────────
-    function ouvrirModalRefuser() {
+    function ouvrirModalRefuser(p) {
       document.getElementById('modalRefuser').style.display = 'flex';
+      document.getElementById('btnConfirmerRefuser').onclick = async function() {
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = '⏳…';
+
+        var res = await sb.from('propositions').update({ statut: 'refuse' }).eq('id', p.id);
+        btn.disabled = false;
+        btn.textContent = 'Refuser';
+        fermerModals();
+
+        if (res.error) { showToast('Erreur lors du refus.', 'error'); return; }
+        showToast('Proposition refusée.', 'success');
+        propSelectionnee = null;
+        resetDetail();
+        await chargerPropositions();
+      };
     }
-    function fermerModalRefuser() {
+
+    function fermerModals() {
+      document.getElementById('modalAjouter').style.display = 'none';
       document.getElementById('modalRefuser').style.display = 'none';
     }
-    document.getElementById('modalRefuser').addEventListener('click', (e) => {
-      if (e.target === document.getElementById('modalRefuser')) fermerModalRefuser();
-    });
 
-    document.getElementById('btnConfirmerRefuser').addEventListener('click', async () => {
-      if (!propositionSelectionnee) return;
-
-      const { error } = await sb.from('propositions')
-        .update({ statut: 'refuse' }).eq('id', propositionSelectionnee.id);
-
-      if (error) { showToast('Erreur lors du refus.', 'error'); return; }
-
-      showToast('Proposition refusée.', 'success');
-      fermerModalRefuser();
-      await chargerPropositions();
-      resetDetail();
-      propositionSelectionnee = null;
-    });
+    document.getElementById('btnAnnulerAjouter').addEventListener('click', fermerModals);
+    document.getElementById('btnAnnulerRefuser').addEventListener('click', fermerModals);
+    document.getElementById('modalAjouter').addEventListener('click', function(e) { if (e.target === this) fermerModals(); });
+    document.getElementById('modalRefuser').addEventListener('click', function(e) { if (e.target === this) fermerModals(); });
 
     // ─── LOGOUT + NAV ────────────────────────────────────────────────
-    document.getElementById('btnLogout').addEventListener('click', async () => {
-      await sb.auth.signOut();
-      window.location.href = 'index.html';
+    document.getElementById('btnLogout').addEventListener('click', async function() {
+      await sb.auth.signOut(); window.location.href = 'index.html';
     });
-    document.getElementById('navToggle').addEventListener('click', () => {
+    document.getElementById('navToggle').addEventListener('click', function() {
       document.getElementById('navLinks').classList.toggle('open');
     });
-
-    // ─── UTILS ───────────────────────────────────────────────────────
-    function labelStatut(s) {
-      return { en_attente: '⏳ En attente', accepte: '✅ Acceptée', refuse: '❌ Refusée' }[s] || s;
-    }
-
-    function escHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
 
     init();
   </script>
