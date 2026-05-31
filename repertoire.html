@@ -105,11 +105,12 @@
           </select>
         </div>
         <div class="filtre-group">
-          <label class="filtre-label">Vue</label>
-          <div class="vue-toggle">
-            <button class="vue-btn active" id="vueGrille" title="Grille">⊞</button>
-            <button class="vue-btn" id="vueListe" title="Liste">☰</button>
-          </div>
+          <label class="filtre-label">Trier par</label>
+          <select class="filtre-select" id="triSelect">
+            <option value="numero">Numéro</option>
+            <option value="titre">Titre A→Z</option>
+            <option value="rubrique">Rubrique</option>
+          </select>
         </div>
       </div>
     </div>
@@ -117,18 +118,10 @@
     <!-- COMPTEUR -->
     <div class="repertoire-info">
       <span class="repertoire-count" id="repertoireCount">Chargement…</span>
-      <div class="repertoire-tri">
-        <label class="filtre-label">Trier par</label>
-        <select class="filtre-select" id="triSelect">
-          <option value="numero">Numéro</option>
-          <option value="titre">Titre A→Z</option>
-          <option value="rubrique">Rubrique</option>
-        </select>
-      </div>
     </div>
 
-    <!-- LISTE CHANSONS -->
-    <div class="chansons-grille" id="chansonsList"></div>
+    <!-- LISTE CHANSONS (vue liste uniquement) -->
+    <div class="rep-liste" id="chansonsList"></div>
 
     <!-- ÉTAT VIDE -->
     <div class="empty-state hidden" id="emptyState">
@@ -142,192 +135,131 @@
 
   </main>
 
-  <!-- CSS CORRECTIF RÉPERTOIRE MOBILE -->
   <style>
-    /* ── Grille responsive correcte ── */
-    .chansons-grille {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 1rem;
+    /* ── LISTE ── */
+    .rep-liste {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
       margin-bottom: 2rem;
     }
 
-    /* ── Carte chanson correcte ── */
-    .carte-chanson {
-      position: relative;
+    .rep-item {
       display: flex;
-      flex-direction: column;
-      gap: 0.45rem;
-      padding: 1rem 0.9rem;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 0.85rem 1.1rem;
       background: linear-gradient(145deg, rgba(26,46,69,0.85), rgba(13,27,42,0.95));
-      border: 1px solid rgba(201,168,76,0.2);
+      border: 1px solid rgba(201,168,76,0.15);
       border-radius: 12px;
       text-decoration: none;
       color: #FAF6ED;
-      overflow: hidden;
-      min-height: 130px;
       box-sizing: border-box;
-      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+      position: relative;
     }
 
-    .carte-chanson:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-      border-color: rgba(201,168,76,0.45);
-    }
-
-    .carte-numero {
-      font-family: 'Cinzel', serif;
-      font-size: 0.68rem;
-      color: rgba(201,168,76,0.7);
-      letter-spacing: 0.08em;
-    }
-
-    .carte-icon {
-      font-size: 1.6rem;
-      line-height: 1;
-    }
-
-    .carte-titre {
-      font-family: 'Lato', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #FAF6ED;
-      line-height: 1.3;
-      flex: 1;
-      word-break: break-word;
-    }
-
-    .carte-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.3rem;
-      margin-top: 0.2rem;
-    }
-
-    .carte-rubrique {
-      font-size: 0.62rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      padding: 2px 7px;
-      border-radius: 10px;
-      border: 1px solid;
-      white-space: nowrap;
-    }
-
-    .carte-langue {
-      font-size: 0.68rem;
-      color: rgba(250,246,237,0.5);
-      align-self: center;
-    }
-
-    .carte-audio-badge {
-      position: absolute;
-      top: 7px; right: 7px;
-      font-size: 0.75rem;
-    }
-
-    .carte-partition-badge {
-      position: absolute;
-      top: 7px; right: 26px;
-      font-size: 0.75rem;
-    }
-
-    .carte-admin-btns {
-      position: absolute;
-      bottom: 6px; right: 6px;
-      display: flex;
-      gap: 0.2rem;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-    .carte-chanson:hover .carte-admin-btns { opacity: 1; }
-
-    /* ── Vue liste correcte ── */
-    .chansons-liste {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .carte-liste {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      padding: 0.8rem 1rem;
-      background: linear-gradient(145deg, rgba(26,46,69,0.8), rgba(13,27,42,0.9));
-      border: 1px solid rgba(201,168,76,0.15);
-      border-radius: 10px;
-      text-decoration: none;
-      color: #FAF6ED;
-      box-sizing: border-box;
-      transition: border-color 0.2s, transform 0.15s;
-    }
-
-    .carte-liste:hover {
+    .rep-item:hover {
       border-color: rgba(201,168,76,0.4);
-      transform: translateX(3px);
+      transform: translateX(4px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
     }
 
-    .liste-numero {
+    .rep-num {
       font-family: 'Cinzel', serif;
       font-size: 0.72rem;
       color: rgba(201,168,76,0.7);
-      min-width: 30px;
+      min-width: 32px;
       flex-shrink: 0;
+      font-weight: 600;
     }
 
-    .liste-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .rep-icon {
+      font-size: 1.3rem;
+      flex-shrink: 0;
+      line-height: 1;
+    }
 
-    .liste-info {
+    .rep-info {
       flex: 1;
       min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
     }
 
-    .liste-titre {
-      font-size: 0.88rem;
+    .rep-titre {
+      font-family: 'Lato', sans-serif;
+      font-size: 0.92rem;
       font-weight: 700;
       color: #FAF6ED;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      margin-bottom: 0.2rem;
     }
 
-    .liste-meta {
+    .rep-meta {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.3rem;
       align-items: center;
+      gap: 0.4rem;
     }
 
-    .liste-badges {
+    .rep-rubrique {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+
+    .rep-langue {
+      font-size: 0.72rem;
+      color: rgba(250,246,237,0.45);
+    }
+
+    .rep-badges {
       display: flex;
       gap: 0.3rem;
       flex-shrink: 0;
+      align-items: center;
     }
 
-    /* ── Filtres mobile ── */
+    .rep-btn-edit {
+      background: transparent;
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 0.8rem;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      flex-shrink: 0;
+    }
+
+    .rep-btn-edit:hover {
+      background: rgba(201,168,76,0.12);
+      border-color: rgba(201,168,76,0.5);
+    }
+
+    /* ── Filtres ── */
+    .filtres-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      align-items: flex-end;
+    }
+
     @media (max-width: 600px) {
-      .chansons-grille {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.7rem;
-      }
-      .carte-chanson {
-        padding: 0.8rem 0.7rem;
-        min-height: 110px;
-      }
-      .carte-titre { font-size: 0.78rem; }
       .filtres-row { flex-direction: column; gap: 0.6rem; }
       .filtre-group { width: 100%; }
       .filtre-select { width: 100%; }
-      .repertoire-info { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-    }
-
-    @media (max-width: 380px) {
-      .chansons-grille { grid-template-columns: 1fr; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
+      .repertoire-info { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+      .rep-item { padding: 0.75rem 0.9rem; gap: 0.7rem; }
+      .rep-titre { font-size: 0.86rem; }
     }
   </style>
 
@@ -352,10 +284,14 @@
 
     var allChansons = [];
     var filteredChansons = [];
-    var currentVue = 'grille';
     var currentPage = 1;
-    var PER_PAGE = 12;
+    var PER_PAGE = 20;
     var userRole = 'membre';
+
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
 
     function getRoleBadgeClass(role) {
       if (role === 'admin') return 'role-admin';
@@ -367,11 +303,6 @@
       if (role === 'admin') return '✦ Administrateur';
       if (role === 'preparateur') return '✧ Préparateur';
       return '· Membre';
-    }
-
-    function escHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
     function renderChansons() {
@@ -393,64 +324,39 @@
       var start = (currentPage - 1) * PER_PAGE;
       var pageItems = filteredChansons.slice(start, start + PER_PAGE);
 
-      if (currentVue === 'grille') {
-        list.className = 'chansons-grille';
-        var html = '';
-        pageItems.forEach(function(c) { html += renderCarteGrille(c); });
-        list.innerHTML = html;
-      } else {
-        list.className = 'chansons-liste';
-        var html = '';
-        pageItems.forEach(function(c) { html += renderCarteListe(c); });
-        list.innerHTML = html;
-      }
+      list.innerHTML = '';
+      pageItems.forEach(function(c) {
+        var rc = RUBRIQUES_COLORS[c.rubrique] || { bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.2)', text: '#FAF6ED' };
+        var icon = RUBRIQUES_ICONS[c.rubrique] || '🎵';
+
+        var a = document.createElement('a');
+        a.href = 'chanson.html?id=' + c.id;
+        a.className = 'rep-item';
+
+        var adminBtn = userRole === 'admin'
+          ? '<a href="modifier-chanson.html?id=' + c.id + '" class="rep-btn-edit" title="Modifier" onclick="event.stopPropagation()">✏️</a>'
+          : '';
+
+        var mediaBadges = '';
+        if (c.audio_url) mediaBadges += '<span title="Audio">🎧</span>';
+        if (c.partition_url) mediaBadges += '<span title="Partition">📄</span>';
+
+        a.innerHTML = '<div class="rep-num">' + (c.numero ? '#' + escHtml(String(c.numero)) : '—') + '</div>'
+          + '<div class="rep-icon">' + icon + '</div>'
+          + '<div class="rep-info">'
+          + '<div class="rep-titre">' + escHtml(c.titre) + '</div>'
+          + '<div class="rep-meta">'
+          + '<span class="rep-rubrique" style="color:' + rc.text + ';border-color:' + rc.border + ';background:' + rc.bg + ';">' + escHtml(c.rubrique || '—') + '</span>'
+          + '<span class="rep-langue">' + escHtml(c.langue || '—') + '</span>'
+          + (c.style ? '<span class="rep-langue">' + escHtml(c.style) + '</span>' : '')
+          + '</div>'
+          + '</div>'
+          + '<div class="rep-badges">' + mediaBadges + adminBtn + '</div>';
+
+        list.appendChild(a);
+      });
 
       renderPagination();
-    }
-
-    function renderCarteGrille(c) {
-      var rc = RUBRIQUES_COLORS[c.rubrique] || RUBRIQUES_COLORS['Adoration'];
-      var icon = RUBRIQUES_ICONS[c.rubrique] || '🎵';
-      var adminBtns = userRole === 'admin'
-        ? '<div class="carte-admin-btns"><a href="modifier-chanson.html?id=' + c.id + '" class="btn-edit" title="Modifier">✏️</a></div>'
-        : '';
-      return '<a href="chanson.html?id=' + c.id + '" class="carte-chanson">'
-        + adminBtns
-        + '<div class="carte-numero">' + (c.numero ? '#' + escHtml(String(c.numero)) : '—') + '</div>'
-        + '<div class="carte-icon">' + icon + '</div>'
-        + '<div class="carte-titre">' + escHtml(c.titre) + '</div>'
-        + '<div class="carte-meta">'
-        + '<span class="carte-rubrique" style="color:' + rc.text + ';border-color:' + rc.border + ';background:' + rc.bg + ';">' + escHtml(c.rubrique || '—') + '</span>'
-        + '<span class="carte-langue">' + escHtml(c.langue || '—') + '</span>'
-        + '</div>'
-        + (c.audio_url ? '<div class="carte-audio-badge">🎧</div>' : '')
-        + (c.partition_url ? '<div class="carte-partition-badge">📄</div>' : '')
-        + '</a>';
-    }
-
-    function renderCarteListe(c) {
-      var rc = RUBRIQUES_COLORS[c.rubrique] || RUBRIQUES_COLORS['Adoration'];
-      var icon = RUBRIQUES_ICONS[c.rubrique] || '🎵';
-      var adminBtns = userRole === 'admin'
-        ? '<a href="modifier-chanson.html?id=' + c.id + '" class="btn-edit-liste" title="Modifier">✏️</a>'
-        : '';
-      return '<a href="chanson.html?id=' + c.id + '" class="carte-liste">'
-        + '<div class="liste-numero">' + (c.numero ? '#' + escHtml(String(c.numero)) : '—') + '</div>'
-        + '<div class="liste-icon">' + icon + '</div>'
-        + '<div class="liste-info">'
-        + '<div class="liste-titre">' + escHtml(c.titre) + '</div>'
-        + '<div class="liste-meta">'
-        + '<span class="carte-rubrique" style="color:' + rc.text + ';border-color:' + rc.border + ';background:' + rc.bg + ';">' + escHtml(c.rubrique || '—') + '</span>'
-        + '<span class="carte-langue">' + escHtml(c.langue || '—') + '</span>'
-        + (c.style ? '<span class="carte-langue">' + escHtml(c.style) + '</span>' : '')
-        + '</div>'
-        + '</div>'
-        + '<div class="liste-badges">'
-        + (c.audio_url ? '<span>🎧</span>' : '')
-        + (c.partition_url ? '<span>📄</span>' : '')
-        + '</div>'
-        + adminBtns
-        + '</a>';
     }
 
     function renderPagination() {
@@ -482,7 +388,7 @@
       document.getElementById('searchClear').classList.toggle('hidden', !search);
 
       filteredChansons = allChansons.filter(function(c) {
-        var matchSearch  = !search   || (c.titre && c.titre.toLowerCase().includes(search)) || (c.numero && String(c.numero).includes(search));
+        var matchSearch   = !search   || (c.titre && c.titre.toLowerCase().includes(search)) || (c.numero && String(c.numero).includes(search));
         var matchRubrique = !rubrique || c.rubrique === rubrique;
         var matchLangue   = !langue   || c.langue   === langue;
         var matchStyle    = !style    || c.style    === style;
@@ -517,7 +423,9 @@
 
       if (p.data.photo_url) {
         var img = document.createElement('img');
-        img.src = p.data.photo_url; img.className = 'user-avatar'; img.alt = nom;
+        img.src = p.data.photo_url;
+        img.className = 'user-avatar';
+        img.alt = nom;
         document.getElementById('navAvatar').replaceWith(img);
       } else {
         document.getElementById('navAvatar').textContent = nom.charAt(0).toUpperCase();
@@ -538,7 +446,6 @@
       document.getElementById('mainContent').classList.remove('hidden');
     }
 
-    // ── EVENTS ──
     document.getElementById('searchInput').addEventListener('input', applyFiltres);
     document.getElementById('searchClear').addEventListener('click', function() {
       document.getElementById('searchInput').value = '';
@@ -548,20 +455,6 @@
     document.getElementById('filtreLangue').addEventListener('change', applyFiltres);
     document.getElementById('filtreStyle').addEventListener('change', applyFiltres);
     document.getElementById('triSelect').addEventListener('change', applyFiltres);
-
-    document.getElementById('vueGrille').addEventListener('click', function() {
-      currentVue = 'grille';
-      document.getElementById('vueGrille').classList.add('active');
-      document.getElementById('vueListe').classList.remove('active');
-      renderChansons();
-    });
-
-    document.getElementById('vueListe').addEventListener('click', function() {
-      currentVue = 'liste';
-      document.getElementById('vueListe').classList.add('active');
-      document.getElementById('vueGrille').classList.remove('active');
-      renderChansons();
-    });
 
     document.getElementById('btnLogout').addEventListener('click', async function() {
       await sb.auth.signOut();
