@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Programme & Propositions — Mélodie's Book</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="prog-pub-page">
+
+  <div class="page-loader" id="pageLoader">
+    <div class="loader-cross">✦</div>
+    <p>Chargement…</p>
+  </div>
+
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <span class="navbar-logo">♪</span>
+      <span class="navbar-title">Mélodie's Book</span>
+    </div>
+    <div class="navbar-links" id="navLinks"></div>
+    <div class="navbar-user" id="navUser"></div>
+  </nav>
+
+  <main class="prog-pub-main" id="progPubMain" style="display:none;">
+
+    <!-- EN-TÊTE -->
+    <header class="prog-pub-header">
+      <div class="prog-pub-header-icon">🕊️</div>
+      <div>
+        <h1 class="prog-pub-title">Programmes & Propositions</h1>
+        <p class="prog-pub-subtitle">Cultes validés, événements à venir et propositions de chansons</p>
+      </div>
+    </header>
+
+    <!-- TABS NAVIGATION -->
+    <div class="prog-pub-tabs">
+      <button class="prog-pub-tab active" data-tab="cultes">⛪ Cultes validés</button>
+      <button class="prog-pub-tab" data-tab="evenements">📅 Événements</button>
+      <button class="prog-pub-tab" data-tab="propositions">💡 Propositions</button>
+    </div>
+
+    <!-- SECTION CULTES VALIDÉS -->
+    <section class="prog-pub-section" id="sectionCultes">
+      <div class="prog-pub-section-info">
+        Programmes de culte validés — cliquez sur un culte pour voir son programme et télécharger le PDF.
+      </div>
+      <div id="listeCultes" class="prog-pub-list">
+        <div class="prog-pub-skeleton"></div>
+        <div class="prog-pub-skeleton"></div>
+      </div>
+    </section>
+
+    <!-- SECTION ÉVÉNEMENTS -->
+    <section class="prog-pub-section" id="sectionEvenements" style="display:none;">
+      <div class="prog-pub-section-info">
+        Événements à venir organisés par la chorale.
+      </div>
+      <div id="listeEvenements" class="prog-pub-list">
+        <div class="prog-pub-skeleton"></div>
+        <div class="prog-pub-skeleton"></div>
+      </div>
+    </section>
+
+    <!-- SECTION PROPOSITIONS -->
+    <section class="prog-pub-section" id="sectionPropositions" style="display:none;">
+      <div class="prog-pub-section-info">
+        Chansons proposées par les membres de la chorale. Consultation uniquement.
+      </div>
+      <div id="listePropositions" class="prog-pub-list">
+        <div class="prog-pub-skeleton"></div>
+        <div class="prog-pub-skeleton"></div>
+      </div>
+    </section>
+
+    <!-- PANNEAU DÉTAIL CULTE (programme + PDF) -->
+    <div class="prog-pub-detail" id="progPubDetail" style="display:none;">
+      <div class="prog-pub-detail-inner" id="progPubDetailInner"></div>
+    </div>
+
+  </main>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <style>
+    .prog-pub-page {
+      background: #0D1B2A;
+      min-height: 100vh;
+      font-family: 'Lato', sans-serif;
+      color: #FAF6ED;
+    }
+    .prog-pub-main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* EN-TÊTE */
+    .prog-pub-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1.2rem;
+      border-bottom: 1px solid rgba(201,168,76,0.2);
+    }
+    .prog-pub-header-icon { font-size: 2.2rem; }
+    .prog-pub-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #F0D98A;
+      margin: 0 0 0.2rem;
+    }
+    .prog-pub-subtitle {
+      font-size: 0.85rem;
+      color: rgba(250,246,237,0.5);
+      margin: 0;
+    }
+
+    /* TABS */
+    .prog-pub-tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .prog-pub-tab {
+      padding: 0.5rem 1.1rem;
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 20px;
+      background: transparent;
+      color: rgba(250,246,237,0.55);
+      font-family: 'Lato', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .prog-pub-tab.active {
+      background: rgba(201,168,76,0.18);
+      border-color: #C9A84C;
+      color: #F0D98A;
+    }
+
+    /* SECTION INFO */
+    .prog-pub-section-info {
+      font-size: 0.82rem;
+      color: rgba(250,246,237,0.4);
+      font-style: italic;
+      margin-bottom: 1rem;
+      padding: 0.6rem 0.9rem;
+      border-left: 3px solid rgba(201,168,76,0.3);
+    }
+
+    /* LISTE */
+    .prog-pub-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    .prog-pub-skeleton {
+      height: 80px;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #1A2E45 25%, #1f3550 50%, #1A2E45 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    .prog-pub-empty {
+      text-align: center;
+      color: rgba(250,246,237,0.3);
+      font-style: italic;
+      padding: 2.5rem 0;
+      font-size: 0.88rem;
+    }
+
+    /* CARD CULTE */
+    .prog-culte-card {
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 14px;
+      padding: 1.1rem 1.3rem;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .prog-culte-card:active { opacity: 0.8; }
+    .prog-culte-card.active {
+      border-color: #C9A84C;
+      box-shadow: 0 0 0 2px rgba(201,168,76,0.2);
+    }
+    .prog-culte-left { flex: 1; min-width: 0; }
+    .prog-culte-theme {
+      font-family: 'Cinzel', serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #FAF6ED;
+      margin-bottom: 0.25rem;
+    }
+    .prog-culte-date { font-size: 0.78rem; color: rgba(250,246,237,0.5); }
+    .prog-culte-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.4rem;
+      flex-shrink: 0;
+    }
+    .prog-culte-badge-valide {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      background: rgba(76,175,130,0.15);
+      color: #7ecfaf;
+      border: 1px solid rgba(76,175,130,0.3);
+      white-space: nowrap;
+    }
+    .prog-culte-nb {
+      font-size: 0.72rem;
+      color: rgba(250,246,237,0.4);
+    }
+
+    /* CARD ÉVÉNEMENT */
+    .prog-ev-card {
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 14px;
+      padding: 1rem 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .prog-ev-cal {
+      flex-shrink: 0;
+      width: 50px; height: 54px;
+      background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 10px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .prog-ev-jour {
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem; font-weight: 700; color: #F0D98A; line-height: 1;
+    }
+    .prog-ev-mois {
+      font-size: 0.65rem; font-weight: 700;
+      color: #C9A84C; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .prog-ev-info { flex: 1; min-width: 0; }
+    .prog-ev-titre {
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem; font-weight: 600; color: #FAF6ED;
+      margin-bottom: 0.2rem;
+    }
+    .prog-ev-desc {
+      font-size: 0.78rem; color: rgba(250,246,237,0.5);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .prog-ev-countdown {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem; font-weight: 700; color: #F0D98A;
+      background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 8px; padding: 0.15rem 0.5rem;
+      white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* CARD PROPOSITION */
+    .prog-prop-card {
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 12px;
+      padding: 0.9rem 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+    }
+    .prog-prop-left { flex: 1; min-width: 0; }
+    .prog-prop-titre {
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem; font-weight: 600; color: #FAF6ED;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 0.2rem;
+    }
+    .prog-prop-meta { font-size: 0.76rem; color: rgba(250,246,237,0.45); }
+    .prog-prop-auteur {
+      display: flex; align-items: center; gap: 0.3rem;
+      font-size: 0.74rem; color: rgba(250,246,237,0.35); margin-top: 0.15rem;
+    }
+    .prog-prop-badge {
+      flex-shrink: 0;
+      font-size: 0.7rem; font-weight: 700;
+      padding: 0.2rem 0.6rem; border-radius: 20px;
+    }
+    .prog-prop-badge-en_attente { background: rgba(201,168,76,0.12); color: #F0D98A; border: 1px solid rgba(201,168,76,0.3); }
+    .prog-prop-badge-accepte    { background: rgba(76,175,130,0.12); color: #7ecfaf; border: 1px solid rgba(76,175,130,0.3); }
+    .prog-prop-badge-refuse     { background: rgba(224,108,108,0.12); color: #e09696; border: 1px solid rgba(224,108,108,0.3); }
+
+    /* DÉTAIL PROGRAMME */
+    .prog-pub-detail {
+      margin-top: 1.5rem;
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .prog-pub-detail-inner { padding: 1.4rem; }
+    .prog-detail-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 1rem;
+      margin-bottom: 1.2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(201,168,76,0.15);
+      flex-wrap: wrap;
+    }
+    .prog-detail-theme {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem; font-weight: 700; color: #FAF6ED; margin: 0 0 0.3rem;
+    }
+    .prog-detail-date { font-size: 0.8rem; color: rgba(250,246,237,0.5); }
+    .prog-detail-verset {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 0.9rem;
+      color: rgba(201,168,76,0.8);
+      border-left: 3px solid rgba(201,168,76,0.3);
+      padding: 0.5rem 0.9rem;
+      margin-bottom: 1.2rem;
+      background: rgba(201,168,76,0.05);
+      border-radius: 0 8px 8px 0;
+    }
+    .prog-detail-rubrique {
+      margin-bottom: 1rem;
+    }
+    .prog-detail-rubrique-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem; font-weight: 700;
+      color: #C9A84C; text-transform: uppercase; letter-spacing: 0.1em;
+      padding: 0.3rem 0.7rem;
+      background: rgba(201,168,76,0.08);
+      border-left: 3px solid #C9A84C;
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 0.4rem;
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .prog-detail-tonal {
+      font-size: 0.72rem;
+      color: #F0D98A;
+      background: rgba(201,168,76,0.15);
+      padding: 0.15rem 0.55rem;
+      border-radius: 20px;
+      font-style: italic;
+    }
+    .prog-detail-chanson {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.5rem 0.7rem;
+      background: rgba(13,27,42,0.4);
+      border-radius: 8px;
+      margin-bottom: 0.3rem;
+      border-left: 2px solid rgba(201,168,76,0.2);
+    }
+    .prog-detail-chanson-num {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem; color: #C9A84C; min-width: 30px;
+    }
+    .prog-detail-chanson-titre {
+      font-size: 0.88rem; color: #FAF6ED;
+      flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .prog-detail-chanson-langue {
+      font-size: 0.72rem; color: rgba(250,246,237,0.35); flex-shrink: 0;
+    }
+    .prog-detail-actions {
+      margin-top: 1.2rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(201,168,76,0.1);
+      display: flex; gap: 0.8rem; flex-wrap: wrap;
+    }
+    .btn-pdf {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.65rem 1.3rem;
+      background: linear-gradient(135deg, #C9A84C, #F0D98A);
+      color: #0D1B2A;
+      border: none; border-radius: 8px;
+      font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.04em;
+      transition: opacity 0.2s, transform 0.15s;
+      box-shadow: 0 2px 10px rgba(201,168,76,0.25);
+    }
+    .btn-pdf:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-fermer-detail {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.65rem 1.1rem;
+      background: transparent;
+      color: rgba(250,246,237,0.5);
+      border: 1px solid rgba(250,246,237,0.15);
+      border-radius: 8px;
+      font-family: 'Lato', sans-serif; font-size: 0.85rem;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-fermer-detail:hover { border-color: rgba(201,168,76,0.3); color: #FAF6ED; }
+
+    @media (max-width: 600px) {
+      .prog-pub-title { font-size: 1.2rem; }
+      .prog-pub-header { flex-wrap: wrap; }
+    }
+  </style>
+
+  <script>
+    var SUPA_URL = "https://tjqicfxkxhlciebmswqu.supabase.co";
+    var SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ";
+    var sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+    var profilUser = null;
+    var tabActif = "cultes";
+    var culteActifId = null;
+
+    var RUBRIQUES_ORDER = ["Prélude","Adoration","Louange","Offrande","Méditation","Envoi"];
+
+    function escHtml(str) {
+      if (str == null) return "";
+      return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
+    function showToast(msg, type) {
+      type = type || "info";
+      var tc = document.getElementById("toastContainer");
+      var t = document.createElement("div");
+      t.className = "toast toast-" + type;
+      t.textContent = msg;
+      tc.appendChild(t);
+      setTimeout(function() { t.classList.add("toast-show"); }, 10);
+      setTimeout(function() {
+        t.classList.remove("toast-show");
+        setTimeout(function() { if (tc.contains(t)) tc.removeChild(t); }, 400);
+      }, 3500);
+    }
+
+    function hideLoader() {
+      document.getElementById("pageLoader").style.display = "none";
+      document.getElementById("progPubMain").style.display = "block";
+    }
+
+    function formatDate(d) {
+      if (!d) return "";
+      var p = d.split("-");
+      return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : d;
+    }
+
+    // ─── AUTH ────────────────────────────────────────────────────────
+    async function authGuard() {
+      var r = await sb.auth.getSession();
+      if (!r.data.session) { window.location.href = "index.html"; return null; }
+      var p = await sb.from("profils").select("*").eq("id", r.data.session.user.id).single();
+      if (!p.data || !p.data.actif) { window.location.href = "index.html"; return null; }
+      return p.data;
+    }
+
+    function buildNavbar(profil) {
+      var links = [
+        { href:"dashboard.html", label:"Tableau de bord" },
+        { href:"repertoire.html", label:"Répertoire" },
+        { href:"bibliotheque.html", label:"Bibliothèque" },
+        { href:"proposer.html", label:"Proposer" },
+        { href:"programme.html", label:"Programme", active:true }
+      ];
+      if (profil.role === "admin") {
+        links.push({ href:"statistiques.html", label:"Statistiques" });
+        links.push({ href:"comptes.html", label:"Comptes" });
+      }
+      if (profil.role === "preparateur" || profil.role === "admin") {
+        links.push({ href:"preparation-culte.html", label:"Préparation" });
+      }
+      var html = "";
+      links.forEach(function(l) {
+        html += "<a href=\"" + l.href + "\" class=\"nav-link" + (l.active ? " active" : "") + "\">" + l.label + "</a>";
+      });
+      document.getElementById("navLinks").innerHTML = html;
+      document.getElementById("navUser").innerHTML =
+        "<span class=\"nav-username\">" + escHtml(profil.nom || profil.email) + "</span>"
+        + "<span class=\"nav-role\" style=\"font-size:0.72rem;color:#C9A84C;\">" + escHtml(profil.role) + "</span>"
+        + "<button class=\"nav-logout\" onclick=\"logout()\">Déconnexion</button>";
+    }
+
+    async function logout() { await sb.auth.signOut(); window.location.href = "index.html"; }
+
+    // ─── TABS ────────────────────────────────────────────────────────
+    document.getElementById("progPubMain") && document.querySelectorAll(".prog-pub-tab").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        document.querySelectorAll(".prog-pub-tab").forEach(function(b) { b.classList.remove("active"); });
+        this.classList.add("active");
+        tabActif = this.dataset.tab;
+        document.getElementById("sectionCultes").style.display = tabActif === "cultes" ? "block" : "none";
+        document.getElementById("sectionEvenements").style.display = tabActif === "evenements" ? "block" : "none";
+        document.getElementById("sectionPropositions").style.display = tabActif === "propositions" ? "block" : "none";
+        // Fermer le détail si on change d'onglet
+        if (tabActif !== "cultes") {
+          document.getElementById("progPubDetail").style.display = "none";
+          culteActifId = null;
+        }
+      });
+    });
+
+    // ─── CHARGER CULTES VALIDÉS ──────────────────────────────────────
+    async function chargerCultes() {
+      var res = await sb.from("cultes")
+        .select("id, theme, date_culte, statut, notes, profils(nom)")
+        .eq("statut", "valide")
+        .order("date_culte", { ascending: false });
+
+      var container = document.getElementById("listeCultes");
+      var cultes = res.data || [];
+
+      if (cultes.length === 0) {
+        container.innerHTML = "<div class=\"prog-pub-empty\">Aucun programme validé pour l'instant.</div>";
+        return;
+      }
+
+      container.innerHTML = "";
+      cultes.forEach(function(c) {
+        var div = document.createElement("div");
+        div.className = "prog-culte-card";
+        var dateStr = new Date(c.date_culte).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+
+        div.innerHTML = "<div class=\"prog-culte-left\">"
+          + "<div class=\"prog-culte-theme\">" + escHtml(c.theme) + "</div>"
+          + "<div class=\"prog-culte-date\">📅 " + dateStr + (c.profils ? " · " + escHtml(c.profils.nom) : "") + "</div>"
+          + "</div>"
+          + "<div class=\"prog-culte-right\">"
+          + "<span class=\"prog-culte-badge-valide\">✅ Validé</span>"
+          + "<span class=\"prog-culte-nb\">Voir programme →</span>"
+          + "</div>";
+
+        (function(culte) {
+          div.addEventListener("click", function() {
+            // Fermer si déjà ouvert
+            if (culteActifId === culte.id) {
+              document.getElementById("progPubDetail").style.display = "none";
+              culteActifId = null;
+              document.querySelectorAll(".prog-culte-card").forEach(function(c) { c.classList.remove("active"); });
+              return;
+            }
+            culteActifId = culte.id;
+            document.querySelectorAll(".prog-culte-card").forEach(function(c) { c.classList.remove("active"); });
+            div.classList.add("active");
+            afficherDetailCulte(culte);
+          });
+        })(c);
+
+        container.appendChild(div);
+      });
+    }
+
+    // ─── AFFICHER DÉTAIL CULTE ───────────────────────────────────────
+    async function afficherDetailCulte(culte) {
+      var detail = document.getElementById("progPubDetail");
+      var inner = document.getElementById("progPubDetailInner");
+      detail.style.display = "block";
+      inner.innerHTML = "<div style=\"padding:1.5rem;text-align:center;color:rgba(250,246,237,0.4);font-style:italic;\">Chargement du programme…</div>";
+      detail.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      var progRes = await sb.from("programme_culte")
+        .select("id, ordre, rubrique, tonalite, tonalite_libre, chansons(numero, titre, langue)")
+        .eq("culte_id", culte.id)
+        .order("ordre", { ascending: true });
+
+      var programme = progRes.data || [];
+      var dateStr = new Date(culte.date_culte).toLocaleDateString("fr-FR", {
+        weekday: "long", day: "numeric", month: "long", year: "numeric"
+      });
+
+      // Extraire verset des notes JSON
+      var verset = "";
+      if (culte.notes) {
+        try { verset = JSON.parse(culte.notes).verset || ""; } catch(e) {}
+      }
+
+      // Grouper par rubrique
+      var parRubrique = {};
+      RUBRIQUES_ORDER.forEach(function(r) { parRubrique[r] = []; });
+      programme.forEach(function(p) {
+        var r = p.rubrique || "Autre";
+        if (!parRubrique[r]) parRubrique[r] = [];
+        parRubrique[r].push(p);
+      });
+
+      var programmeHtml = "";
+      RUBRIQUES_ORDER.forEach(function(rubrique) {
+        var items = parRubrique[rubrique] || [];
+        if (items.length === 0) return;
+
+        var ton = "";
+        if (items[0].tonalite && items[0].tonalite !== "autre") ton = items[0].tonalite;
+        else if (items[0].tonalite === "autre") ton = items[0].tonalite_libre || "";
+
+        programmeHtml += "<div class=\"prog-detail-rubrique\">"
+          + "<div class=\"prog-detail-rubrique-label\">" + escHtml(rubrique)
+          + (ton ? "<span class=\"prog-detail-tonal\">Tonalité : " + escHtml(ton) + "</span>" : "")
+          + "</div>";
+
+        items.forEach(function(item) {
+          var ch = item.chansons || {};
+          var tonItem = "";
+          if (item.tonalite && item.tonalite !== "autre") tonItem = item.tonalite;
+          else if (item.tonalite === "autre") tonItem = item.tonalite_libre || "";
+
+          programmeHtml += "<div class=\"prog-detail-chanson\">"
+            + "<span class=\"prog-detail-chanson-num\">" + (ch.numero ? "#" + escHtml(String(ch.numero)) : "—") + "</span>"
+            + "<span class=\"prog-detail-chanson-titre\">" + escHtml(ch.titre || "—") + "</span>"
+            + (tonItem ? "<span class=\"prog-detail-tonal\" style=\"font-size:0.68rem;\">" + escHtml(tonItem) + "</span>" : "")
+            + "<span class=\"prog-detail-chanson-langue\">" + escHtml(ch.langue || "") + "</span>"
+            + "</div>";
+        });
+        programmeHtml += "</div>";
+      });
+
+      inner.innerHTML = "<div class=\"prog-detail-header\">"
+        + "<div>"
+        + "<h2 class=\"prog-detail-theme\">" + escHtml(culte.theme) + "</h2>"
+        + "<div class=\"prog-detail-date\">📅 " + dateStr + "</div>"
+        + "</div>"
+        + "<span class=\"prog-culte-badge-valide\">✅ Validé</span>"
+        + "</div>"
+        + (verset ? "<div class=\"prog-detail-verset\">« " + escHtml(verset) + " »</div>" : "")
+        + programmeHtml
+        + "<div class=\"prog-detail-actions\">"
+        + "<button class=\"btn-pdf\" id=\"btnGenPDF\">📄 Télécharger le PDF</button>"
+        + "<button class=\"btn-fermer-detail\" id=\"btnFermerDetail\">✕ Fermer</button>"
+        + "</div>";
+
+      // Bouton fermer
+      document.getElementById("btnFermerDetail").addEventListener("click", function() {
+        document.getElementById("progPubDetail").style.display = "none";
+        culteActifId = null;
+        document.querySelectorAll(".prog-culte-card").forEach(function(c) { c.classList.remove("active"); });
+      });
+
+      // Bouton PDF
+      document.getElementById("btnGenPDF").addEventListener("click", function() {
+        genererPDFCulte(culte, programme, verset);
+      });
+    }
+
+    // ─── GÉNÉRER PDF ─────────────────────────────────────────────────
+    function genererPDFCulte(culte, programme, verset) {
+      var parRubrique = {};
+      RUBRIQUES_ORDER.forEach(function(r) { parRubrique[r] = []; });
+      programme.forEach(function(p) {
+        var r = p.rubrique || "Autre";
+        if (!parRubrique[r]) parRubrique[r] = [];
+        parRubrique[r].push(p);
+      });
+
+      var contenu = "";
+      RUBRIQUES_ORDER.forEach(function(rubrique) {
+        var items = parRubrique[rubrique] || [];
+        if (items.length === 0) return;
+
+        items.forEach(function(item, i) {
+          var ch = item.chansons || {};
+          var ton = item.tonalite === "autre" ? (item.tonalite_libre || "") : (item.tonalite || "");
+          if (i === 0) {
+            contenu += "<div class=\"pdf-rubrique-header\">"
+              + "<span class=\"pdf-rubrique-name\">" + escHtml(rubrique) + "</span>"
+              + (ton ? "<span class=\"pdf-rubrique-tonal\">Tonalité : " + escHtml(ton) + "</span>" : "")
+              + "</div>";
+          } else if (ton) {
+            contenu += "<div class=\"pdf-rubrique-header pdf-rub-sub\">"
+              + "<span style=\"flex:1;\"></span>"
+              + "<span class=\"pdf-rubrique-tonal\">Tonalité : " + escHtml(ton) + "</span>"
+              + "</div>";
+          }
+          contenu += "<div class=\"pdf-chanson-row\">"
+            + (ch.numero ? "<span class=\"pdf-chanson-num\">#" + escHtml(String(ch.numero)) + "</span>" : "")
+            + "<span class=\"pdf-chanson-titre\">" + escHtml(ch.titre || "—") + "</span>"
+            + "</div>";
+        });
+      });
+
+      var dateFormatee = formatDate(culte.date_culte);
+      var theme = culte.theme || "Culte";
+      var versetBlock = verset
+        ? "<div class=\"pdf-verset\">\u201C\u00A0" + escHtml(verset) + "\u00A0\u201D</div>" : "";
+
+      var pdfWin = window.open("", "_blank");
+      if (!pdfWin) { showToast("Autorisez les popups pour le PDF.", "error"); return; }
+
+      var css = "* { margin:0; padding:0; box-sizing:border-box; }"
+        + "body { font-family:'Lato',sans-serif; background:#fff; color:#1A1A2E; padding:2cm 2.5cm; font-size:11pt; }"
+        + ".pdf-header { text-align:center; border-bottom:2px solid #C9A84C; padding-bottom:1rem; margin-bottom:1.5rem; }"
+        + ".pdf-church { font-family:'Cinzel',serif; font-size:9pt; color:#C9A84C; letter-spacing:0.15em; text-transform:uppercase; margin-bottom:0.3rem; }"
+        + ".pdf-titre { font-family:'Cinzel',serif; font-size:20pt; font-weight:700; color:#0D1B2A; margin-bottom:0.3rem; }"
+        + ".pdf-date { font-size:10pt; color:#555; }"
+        + ".pdf-verset { font-family:'Playfair Display',serif; font-style:italic; font-size:10pt; color:#4A4A6A; border-left:3px solid #C9A84C; padding:0.5rem 1rem; margin:1rem 0 1.5rem; background:#FAF6ED; }"
+        + ".pdf-prog-title { font-family:'Cinzel',serif; font-size:10pt; font-weight:600; color:#C9A84C; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.8rem; }"
+        + ".pdf-rubrique-header { display:flex; align-items:center; gap:1rem; background:#0D1B2A; color:#F0D98A; padding:0.4rem 0.8rem; border-radius:4px 4px 0 0; margin-top:1.2rem; }"
+        + ".pdf-rub-sub { background:#1A2E45; border-radius:0; margin-top:0; }"
+        + ".pdf-rubrique-name { font-family:'Cinzel',serif; font-size:10pt; font-weight:700; flex:1; }"
+        + ".pdf-rubrique-tonal { font-size:9pt; color:#F0D98A; font-style:italic; background:rgba(201,168,76,0.15); padding:0.1rem 0.5rem; border-radius:20px; }"
+        + ".pdf-chanson-row { display:flex; align-items:center; gap:0.7rem; padding:0.5rem 0.8rem; border:1px solid #E0D8C8; border-top:none; background:#FFFDF8; }"
+        + ".pdf-chanson-num { font-family:'Cinzel',serif; font-size:9pt; color:#C9A84C; font-weight:600; min-width:2.5rem; }"
+        + ".pdf-chanson-titre { font-size:11pt; color:#1A1A2E; }"
+        + ".pdf-footer { text-align:center; margin-top:2rem; font-size:8pt; color:#999; border-top:1px solid #eee; padding-top:0.7rem; }"
+        + ".print-btn { position:fixed; bottom:1.5rem; right:1.5rem; background:#C9A84C; color:#0D1B2A; border:none; padding:0.7rem 1.5rem; font-family:'Cinzel',serif; font-weight:600; border-radius:8px; cursor:pointer; font-size:11pt; box-shadow:0 4px 16px rgba(0,0,0,0.2); }"
+        + "@media print { .print-btn { display:none; } body { padding:1.5cm 2cm; } }";
+
+      var html = "<!DOCTYPE html><html lang=\"fr\"><head><meta charset=\"UTF-8\">"
+        + "<title>Programme — " + escHtml(theme) + "</title>"
+        + "<link href=\"https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&family=Playfair+Display:ital@1&display=swap\" rel=\"stylesheet\">"
+        + "<style>" + css + "</style></head><body>"
+        + "<div class=\"pdf-header\">"
+        + "<div class=\"pdf-church\">Mélodie\u2019s Book \u2014 Programme de Culte</div>"
+        + "<div class=\"pdf-titre\">" + escHtml(theme) + "</div>"
+        + "<div class=\"pdf-date\">\uD83D\uDCC5 " + escHtml(dateFormatee) + "</div>"
+        + "</div>"
+        + versetBlock
+        + "<div class=\"pdf-prog-title\">Programme</div>"
+        + contenu
+        + "<div class=\"pdf-footer\">Mélodie\u2019s Book \u00B7 " + escHtml(dateFormatee) + "</div>"
+        + "<button class=\"print-btn\" onclick=\"window.print()\">\uD83D\uDDB8\uFE0F Imprimer / Enregistrer PDF</button>"
+        + "</body></html>";
+
+      pdfWin.document.write(html);
+      pdfWin.document.close();
+    }
+
+    // ─── CHARGER ÉVÉNEMENTS ──────────────────────────────────────────
+    async function chargerEvenements() {
+      var res = await sb.from("evenements")
+        .select("id, titre, date_event, description")
+        .order("date_event", { ascending: true });
+
+      var container = document.getElementById("listeEvenements");
+      var evs = res.data || [];
+      var today = new Date(); today.setHours(0,0,0,0);
+
+      if (evs.length === 0) {
+        container.innerHTML = "<div class=\"prog-pub-empty\">Aucun événement enregistré.</div>";
+        return;
+      }
+
+      container.innerHTML = "";
+      evs.forEach(function(ev) {
+        var d = new Date(ev.date_event);
+        var jour = d.getDate();
+        var mois = d.toLocaleDateString("fr-FR", { month: "short" }).toUpperCase();
+        var diff = Math.ceil((d - today) / 86400000);
+        var isPasse = diff < 0;
+
+        var div = document.createElement("div");
+        div.className = "prog-ev-card";
+        if (isPasse) div.style.opacity = "0.5";
+
+        var countdownHtml = isPasse
+          ? "<span style=\"font-size:0.72rem;color:rgba(250,246,237,0.3);font-style:italic;\">Passé</span>"
+          : (diff === 0
+              ? "<span class=\"prog-ev-countdown\">Aujourd'hui</span>"
+              : "<span class=\"prog-ev-countdown\">J-" + diff + "</span>");
+
+        div.innerHTML = "<div class=\"prog-ev-cal\">"
+          + "<div class=\"prog-ev-jour\">" + jour + "</div>"
+          + "<div class=\"prog-ev-mois\">" + mois + "</div>"
+          + "</div>"
+          + "<div class=\"prog-ev-info\">"
+          + "<div class=\"prog-ev-titre\">" + escHtml(ev.titre) + "</div>"
+          + (ev.description ? "<div class=\"prog-ev-desc\">" + escHtml(ev.description) + "</div>" : "")
+          + "</div>"
+          + countdownHtml;
+
+        container.appendChild(div);
+      });
+    }
+
+    // ─── CHARGER PROPOSITIONS ────────────────────────────────────────
+    async function chargerPropositions() {
+      var res = await sb.from("propositions")
+        .select("id, titre, artiste, langue, rubrique, statut, created_at, profils(nom, email)")
+        .order("created_at", { ascending: false });
+
+      var container = document.getElementById("listePropositions");
+      var props = res.data || [];
+
+      if (props.length === 0) {
+        container.innerHTML = "<div class=\"prog-pub-empty\">Aucune proposition pour l'instant.</div>";
+        return;
+      }
+
+      container.innerHTML = "";
+      props.forEach(function(p) {
+        var div = document.createElement("div");
+        div.className = "prog-prop-card";
+
+        var auteur = (p.profils && (p.profils.nom || p.profils.email)) || "Membre";
+        var date = new Date(p.created_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" });
+
+        var badgeClass = "prog-prop-badge-" + p.statut;
+        var badgeLabel = p.statut === "en_attente" ? "⏳ En attente"
+          : p.statut === "accepte" ? "✅ Acceptée" : "❌ Refusée";
+
+        div.innerHTML = "<div class=\"prog-prop-left\">"
+          + "<div class=\"prog-prop-titre\">" + escHtml(p.titre) + "</div>"
+          + "<div class=\"prog-prop-meta\">"
+          + (p.artiste ? escHtml(p.artiste) + " · " : "")
+          + escHtml(p.langue || "") + (p.rubrique ? " · " + escHtml(p.rubrique) : "")
+          + "</div>"
+          + "<div class=\"prog-prop-auteur\">👤 <span>" + escHtml(auteur) + "</span> · <span>" + date + "</span></div>"
+          + "</div>"
+          + "<span class=\"prog-prop-badge " + badgeClass + "\">" + badgeLabel + "</span>";
+
+        container.appendChild(div);
+      });
+    }
+
+    // ─── INIT ────────────────────────────────────────────────────────
+    (async function init() {
+      profilUser = await authGuard();
+      if (!profilUser) return;
+      buildNavbar(profilUser);
+
+      // Attacher les tabs après que le main soit visible
+      document.querySelectorAll(".prog-pub-tab").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+          document.querySelectorAll(".prog-pub-tab").forEach(function(b) { b.classList.remove("active"); });
+          this.classList.add("active");
+          tabActif = this.dataset.tab;
+          document.getElementById("sectionCultes").style.display = tabActif === "cultes" ? "block" : "none";
+          document.getElementById("sectionEvenements").style.display = tabActif === "evenements" ? "block" : "none";
+          document.getElementById("sectionPropositions").style.display = tabActif === "propositions" ? "block" : "none";
+          if (tabActif !== "cultes") {
+            document.getElementById("progPubDetail").style.display = "none";
+            culteActifId = null;
+            document.querySelectorAll(".prog-culte-card").forEach(function(c) { c.classList.remove("active"); });
+          }
+        });
+      });
+
+      await Promise.all([chargerCultes(), chargerEvenements(), chargerPropositions()]);
+      hideLoader();
+    })();
+  </script>
+</body>
+</html>
