@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400;1,600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="navbar.js"></script>
 </head>
 
 <body class="dashboard-body">
@@ -19,35 +20,9 @@
     <div class="loading-spinner"></div>
   </div>
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a class="navbar-brand" href="dashboard.html">
-      <div class="navbar-logo">♪</div>
-      <span class="navbar-title">Mélodie's Book</span>
-    </a>
-    <ul class="navbar-nav">
-      <li><a href="dashboard.html"><span class="nav-icon">🏠</span> Accueil</a></li>
-      <li><a href="repertoire.html" class="active"><span class="nav-icon">🎵</span> Répertoire</a></li>
-      <li><a href="themes.html"><span class="nav-icon">📖</span> Thèmes</a></li>
-      <li><a href="historique.html"><span class="nav-icon">📜</span> Historique</a></li>
-      <li><a href="bibliotheque.html"><span class="nav-icon">📚</span> Bibliothèque</a></li>
-      <li data-role-required="admin"><a href="comptes.html"><span class="nav-icon">👥</span> Comptes</a></li>
-      <li data-role-required="admin"><a href="statistiques.html"><span class="nav-icon">📊</span> Stats</a></li>
-    </ul>
-    <div class="navbar-user">
-      <div class="user-info">
-        <span class="user-name" id="navUserName">—</span>
-        <span class="user-role-badge" id="navUserRole">—</span>
-      </div>
-      <div class="user-avatar-placeholder" id="navAvatar">?</div>
-      <button class="btn-logout" id="btnLogout">⬡ Quitter</button>
-    </div>
-  </nav>
-
   <!-- CONTENU PRINCIPAL -->
   <main class="main-content hidden" id="mainContent">
 
-    <!-- EN-TÊTE -->
     <div class="page-header">
       <div class="page-header-left">
         <div class="page-header-icon">🎵</div>
@@ -63,7 +38,6 @@
       </div>
     </div>
 
-    <!-- BARRE DE RECHERCHE ET FILTRES -->
     <div class="repertoire-controls">
       <div class="search-bar">
         <span class="search-icon">🔍</span>
@@ -115,151 +89,45 @@
       </div>
     </div>
 
-    <!-- COMPTEUR -->
     <div class="repertoire-info">
       <span class="repertoire-count" id="repertoireCount">Chargement…</span>
     </div>
 
-    <!-- LISTE CHANSONS (vue liste uniquement) -->
     <div class="rep-liste" id="chansonsList"></div>
 
-    <!-- ÉTAT VIDE -->
     <div class="empty-state hidden" id="emptyState">
       <div class="empty-icon">🎼</div>
       <div class="empty-title">Aucune chanson trouvée</div>
       <div class="empty-text">Modifiez vos filtres ou ajoutez une nouvelle chanson.</div>
     </div>
 
-    <!-- PAGINATION -->
     <div class="pagination" id="pagination"></div>
 
   </main>
 
   <style>
-    /* ── LISTE ── */
-    .rep-liste {
-      display: flex;
-      flex-direction: column;
-      gap: 0.55rem;
-      margin-bottom: 2rem;
-    }
-
-    .rep-item {
-      display: flex;
-      align-items: center;
-      gap: 0.9rem;
-      padding: 0.85rem 1.1rem;
-      background: linear-gradient(145deg, rgba(26,46,69,0.85), rgba(13,27,42,0.95));
-      border: 1px solid rgba(201,168,76,0.15);
-      border-radius: 12px;
-      text-decoration: none;
-      color: #FAF6ED;
-      box-sizing: border-box;
-      transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
-      position: relative;
-    }
-
-    .rep-item:hover {
-      border-color: rgba(201,168,76,0.4);
-      transform: translateX(4px);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-    }
-
-    .rep-num {
-      font-family: 'Cinzel', serif;
-      font-size: 0.72rem;
-      color: rgba(201,168,76,0.7);
-      min-width: 32px;
-      flex-shrink: 0;
-      font-weight: 600;
-    }
-
-    .rep-icon {
-      font-size: 1.3rem;
-      flex-shrink: 0;
-      line-height: 1;
-    }
-
-    .rep-info {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-
-    .rep-titre {
-      font-family: 'Lato', sans-serif;
-      font-size: 0.92rem;
-      font-weight: 700;
-      color: #FAF6ED;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .rep-meta {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .rep-rubrique {
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      padding: 2px 8px;
-      border-radius: 10px;
-      border: 1px solid;
-      white-space: nowrap;
-    }
-
-    .rep-langue {
-      font-size: 0.72rem;
-      color: rgba(250,246,237,0.45);
-    }
-
-    .rep-badges {
-      display: flex;
-      gap: 0.3rem;
-      flex-shrink: 0;
-      align-items: center;
-    }
-
-    .rep-btn-edit {
-      background: transparent;
-      border: 1px solid rgba(201,168,76,0.25);
-      border-radius: 6px;
-      padding: 3px 7px;
-      font-size: 0.8rem;
-      text-decoration: none;
-      transition: background 0.2s, border-color 0.2s;
-      flex-shrink: 0;
-    }
-
-    .rep-btn-edit:hover {
-      background: rgba(201,168,76,0.12);
-      border-color: rgba(201,168,76,0.5);
-    }
-
-    /* ── Filtres ── */
-    .filtres-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-      align-items: flex-end;
-    }
-
-    @media (max-width: 600px) {
-      .filtres-row { flex-direction: column; gap: 0.6rem; }
-      .filtre-group { width: 100%; }
-      .filtre-select { width: 100%; }
-      .page-header { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
-      .repertoire-info { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
-      .rep-item { padding: 0.75rem 0.9rem; gap: 0.7rem; }
-      .rep-titre { font-size: 0.86rem; }
+    .rep-liste { display:flex; flex-direction:column; gap:0.55rem; margin-bottom:2rem; }
+    .rep-item { display:flex; align-items:center; gap:0.9rem; padding:0.85rem 1.1rem; background:linear-gradient(145deg,rgba(26,46,69,0.85),rgba(13,27,42,0.95)); border:1px solid rgba(201,168,76,0.15); border-radius:12px; text-decoration:none; color:#FAF6ED; box-sizing:border-box; transition:border-color 0.2s,transform 0.15s,box-shadow 0.2s; position:relative; }
+    .rep-item:hover { border-color:rgba(201,168,76,0.4); transform:translateX(4px); box-shadow:0 4px 16px rgba(0,0,0,0.3); }
+    .rep-num { font-family:'Cinzel',serif; font-size:0.72rem; color:rgba(201,168,76,0.7); min-width:32px; flex-shrink:0; font-weight:600; }
+    .rep-icon { font-size:1.3rem; flex-shrink:0; line-height:1; }
+    .rep-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:0.25rem; }
+    .rep-titre { font-family:'Lato',sans-serif; font-size:0.92rem; font-weight:700; color:#FAF6ED; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rep-meta { display:flex; flex-wrap:wrap; align-items:center; gap:0.4rem; }
+    .rep-rubrique { font-size:0.65rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; padding:2px 8px; border-radius:10px; border:1px solid; white-space:nowrap; }
+    .rep-langue { font-size:0.72rem; color:rgba(250,246,237,0.45); }
+    .rep-badges { display:flex; gap:0.3rem; flex-shrink:0; align-items:center; }
+    .rep-btn-edit { background:transparent; border:1px solid rgba(201,168,76,0.25); border-radius:6px; padding:3px 7px; font-size:0.8rem; text-decoration:none; transition:background 0.2s,border-color 0.2s; flex-shrink:0; }
+    .rep-btn-edit:hover { background:rgba(201,168,76,0.12); border-color:rgba(201,168,76,0.5); }
+    .filtres-row { display:flex; flex-wrap:wrap; gap:0.8rem; align-items:flex-end; }
+    @media (max-width:600px) {
+      .filtres-row { flex-direction:column; gap:0.6rem; }
+      .filtre-group { width:100%; }
+      .filtre-select { width:100%; }
+      .page-header { flex-direction:column; align-items:flex-start; gap:0.8rem; }
+      .repertoire-info { flex-direction:column; align-items:flex-start; gap:0.4rem; }
+      .rep-item { padding:0.75rem 0.9rem; gap:0.7rem; }
+      .rep-titre { font-size:0.86rem; }
     }
   </style>
 
@@ -267,48 +135,32 @@
     var SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
     var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
     var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    window._sb = sb;
 
     var RUBRIQUES_COLORS = {
-      'Adoration':  { bg: 'rgba(201,168,76,0.12)',  border: 'rgba(201,168,76,0.4)',  text: '#F0D98A' },
-      'Louange':    { bg: 'rgba(91,163,201,0.12)',  border: 'rgba(91,163,201,0.4)',  text: '#7ECFF0' },
-      'Prélude':    { bg: 'rgba(156,126,204,0.12)', border: 'rgba(156,126,204,0.4)', text: '#C5B3E8' },
-      'Offrande':   { bg: 'rgba(91,170,125,0.12)',  border: 'rgba(91,170,125,0.4)',  text: '#6EC99A' },
-      'Méditation': { bg: 'rgba(200,120,80,0.12)',  border: 'rgba(200,120,80,0.4)',  text: '#F0A882' },
-      'Envoi':      { bg: 'rgba(180,180,60,0.12)',  border: 'rgba(180,180,60,0.4)',  text: '#E0E070' }
+      'Adoration':  { bg:'rgba(201,168,76,0.12)',  border:'rgba(201,168,76,0.4)',  text:'#F0D98A' },
+      'Louange':    { bg:'rgba(91,163,201,0.12)',  border:'rgba(91,163,201,0.4)',  text:'#7ECFF0' },
+      'Prélude':    { bg:'rgba(156,126,204,0.12)', border:'rgba(156,126,204,0.4)', text:'#C5B3E8' },
+      'Offrande':   { bg:'rgba(91,170,125,0.12)',  border:'rgba(91,170,125,0.4)',  text:'#6EC99A' },
+      'Méditation': { bg:'rgba(200,120,80,0.12)',  border:'rgba(200,120,80,0.4)',  text:'#F0A882' },
+      'Envoi':      { bg:'rgba(180,180,60,0.12)',  border:'rgba(180,180,60,0.4)',  text:'#E0E070' }
     };
-
     var RUBRIQUES_ICONS = {
-      'Adoration': '🙏', 'Louange': '🎶', 'Prélude': '🌅',
-      'Offrande': '🕊️', 'Méditation': '✨', 'Envoi': '🚀'
+      'Adoration':'🙏','Louange':'🎶','Prélude':'🌅',
+      'Offrande':'🕊️','Méditation':'✨','Envoi':'🚀'
     };
 
-    var allChansons = [];
-    var filteredChansons = [];
-    var currentPage = 1;
-    var PER_PAGE = 20;
-    var userRole = 'membre';
+    var allChansons = [], filteredChansons = [];
+    var currentPage = 1, PER_PAGE = 20, userRole = 'membre';
 
     function escHtml(str) {
       if (!str) return '';
       return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    function getRoleBadgeClass(role) {
-      if (role === 'admin') return 'role-admin';
-      if (role === 'preparateur') return 'role-preparateur';
-      return 'role-membre';
-    }
-
-    function getRoleLabel(role) {
-      if (role === 'admin') return '✦ Administrateur';
-      if (role === 'preparateur') return '✧ Préparateur';
-      return '· Membre';
-    }
-
     function renderChansons() {
       var list = document.getElementById('chansonsList');
       var empty = document.getElementById('emptyState');
-
       if (filteredChansons.length === 0) {
         list.innerHTML = '';
         empty.classList.remove('hidden');
@@ -316,46 +168,31 @@
         document.getElementById('repertoireCount').textContent = 'Aucune chanson trouvée';
         return;
       }
-
       empty.classList.add('hidden');
       document.getElementById('repertoireCount').textContent =
         filteredChansons.length + ' chanson' + (filteredChansons.length > 1 ? 's' : '');
-
       var start = (currentPage - 1) * PER_PAGE;
       var pageItems = filteredChansons.slice(start, start + PER_PAGE);
-
       list.innerHTML = '';
       pageItems.forEach(function(c) {
-        var rc = RUBRIQUES_COLORS[c.rubrique] || { bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.2)', text: '#FAF6ED' };
+        var rc = RUBRIQUES_COLORS[c.rubrique] || { bg:'rgba(255,255,255,0.05)', border:'rgba(255,255,255,0.2)', text:'#FAF6ED' };
         var icon = RUBRIQUES_ICONS[c.rubrique] || '🎵';
-
         var a = document.createElement('a');
         a.href = 'chanson.html?id=' + c.id;
         a.className = 'rep-item';
-
         var adminBtn = userRole === 'admin'
-          ? '<a href="modifier-chanson.html?id=' + c.id + '" class="rep-btn-edit" title="Modifier" onclick="event.stopPropagation()">✏️</a>'
-          : '';
-
-        var mediaBadges = '';
-        if (c.audio_url) mediaBadges += '<span title="Audio">🎧</span>';
-        if (c.partition_url) mediaBadges += '<span title="Partition">📄</span>';
-
+          ? '<a href="modifier-chanson.html?id=' + c.id + '" class="rep-btn-edit" title="Modifier" onclick="event.stopPropagation()">✏️</a>' : '';
+        var mediaBadges = (c.audio_url ? '<span title="Audio">🎧</span>' : '') + (c.partition_url ? '<span title="Partition">📄</span>' : '');
         a.innerHTML = '<div class="rep-num">' + (c.numero ? '#' + escHtml(String(c.numero)) : '—') + '</div>'
           + '<div class="rep-icon">' + icon + '</div>'
-          + '<div class="rep-info">'
-          + '<div class="rep-titre">' + escHtml(c.titre) + '</div>'
-          + '<div class="rep-meta">'
-          + '<span class="rep-rubrique" style="color:' + rc.text + ';border-color:' + rc.border + ';background:' + rc.bg + ';">' + escHtml(c.rubrique || '—') + '</span>'
+          + '<div class="rep-info"><div class="rep-titre">' + escHtml(c.titre) + '</div>'
+          + '<div class="rep-meta"><span class="rep-rubrique" style="color:' + rc.text + ';border-color:' + rc.border + ';background:' + rc.bg + ';">' + escHtml(c.rubrique || '—') + '</span>'
           + '<span class="rep-langue">' + escHtml(c.langue || '—') + '</span>'
           + (c.style ? '<span class="rep-langue">' + escHtml(c.style) + '</span>' : '')
-          + '</div>'
-          + '</div>'
+          + '</div></div>'
           + '<div class="rep-badges">' + mediaBadges + adminBtn + '</div>';
-
         list.appendChild(a);
       });
-
       renderPagination();
     }
 
@@ -364,19 +201,14 @@
       var pg = document.getElementById('pagination');
       if (total <= 1) { pg.innerHTML = ''; return; }
       var html = '';
-      if (currentPage > 1) html += '<button class="pg-btn" onclick="goPage(' + (currentPage - 1) + ')">←</button>';
-      for (var i = 1; i <= total; i++) {
-        html += '<button class="pg-btn ' + (i === currentPage ? 'active' : '') + '" onclick="goPage(' + i + ')">' + i + '</button>';
-      }
-      if (currentPage < total) html += '<button class="pg-btn" onclick="goPage(' + (currentPage + 1) + ')">→</button>';
+      if (currentPage > 1) html += '<button class="pg-btn" onclick="goPage(' + (currentPage-1) + ')">←</button>';
+      for (var i = 1; i <= total; i++)
+        html += '<button class="pg-btn ' + (i===currentPage?'active':'') + '" onclick="goPage(' + i + ')">' + i + '</button>';
+      if (currentPage < total) html += '<button class="pg-btn" onclick="goPage(' + (currentPage+1) + ')">→</button>';
       pg.innerHTML = html;
     }
 
-    function goPage(n) {
-      currentPage = n;
-      renderChansons();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    function goPage(n) { currentPage = n; renderChansons(); window.scrollTo({top:0,behavior:'smooth'}); }
 
     function applyFiltres() {
       var search   = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -384,24 +216,19 @@
       var langue   = document.getElementById('filtreLangue').value;
       var style    = document.getElementById('filtreStyle').value;
       var tri      = document.getElementById('triSelect').value;
-
       document.getElementById('searchClear').classList.toggle('hidden', !search);
-
       filteredChansons = allChansons.filter(function(c) {
-        var matchSearch   = !search   || (c.titre && c.titre.toLowerCase().includes(search)) || (c.numero && String(c.numero).includes(search));
-        var matchRubrique = !rubrique || c.rubrique === rubrique;
-        var matchLangue   = !langue   || c.langue   === langue;
-        var matchStyle    = !style    || c.style    === style;
-        return matchSearch && matchRubrique && matchLangue && matchStyle;
+        return (!search || (c.titre&&c.titre.toLowerCase().includes(search)) || (c.numero&&String(c.numero).includes(search)))
+          && (!rubrique || c.rubrique===rubrique)
+          && (!langue   || c.langue===langue)
+          && (!style    || c.style===style);
       });
-
-      filteredChansons.sort(function(a, b) {
-        if (tri === 'numero')   return (a.numero || 9999) - (b.numero || 9999);
-        if (tri === 'titre')    return (a.titre || '').localeCompare(b.titre || '');
-        if (tri === 'rubrique') return (a.rubrique || '').localeCompare(b.rubrique || '');
+      filteredChansons.sort(function(a,b) {
+        if (tri==='numero')   return (a.numero||9999)-(b.numero||9999);
+        if (tri==='titre')    return (a.titre||'').localeCompare(b.titre||'');
+        if (tri==='rubrique') return (a.rubrique||'').localeCompare(b.rubrique||'');
         return 0;
       });
-
       currentPage = 1;
       renderChansons();
     }
@@ -409,37 +236,19 @@
     async function init() {
       var r = await sb.auth.getSession();
       if (!r.data.session) { window.location.href = 'index.html'; return; }
-
       var p = await sb.from('profils').select('*').eq('id', r.data.session.user.id).single();
       if (!p.data || !p.data.actif) { window.location.href = 'index.html'; return; }
 
       userRole = p.data.role || 'membre';
-      var nom = p.data.nom || r.data.session.user.email.split('@')[0];
 
-      document.getElementById('navUserName').textContent = nom;
-      var roleEl = document.getElementById('navUserRole');
-      roleEl.textContent = getRoleLabel(userRole);
-      roleEl.className = 'user-role-badge ' + getRoleBadgeClass(userRole);
+      // ── Navbar partagée (sans bouton quitter) ──
+      buildSharedNavbar(p.data, 'repertoire');
 
-      if (p.data.photo_url) {
-        var img = document.createElement('img');
-        img.src = p.data.photo_url;
-        img.className = 'user-avatar';
-        img.alt = nom;
-        document.getElementById('navAvatar').replaceWith(img);
-      } else {
-        document.getElementById('navAvatar').textContent = nom.charAt(0).toUpperCase();
-      }
+      if (userRole === 'admin') document.getElementById('adminActions').style.display = 'flex';
 
-      if (userRole === 'admin') {
-        document.querySelectorAll('[data-role-required="admin"]').forEach(function(el) { el.style.display = 'block'; });
-        document.getElementById('adminActions').style.display = 'flex';
-      }
-
-      var res = await sb.from('chansons').select('*').order('numero', { ascending: true });
+      var res = await sb.from('chansons').select('*').order('numero', {ascending:true});
       allChansons = res.data || [];
       filteredChansons = allChansons.slice();
-
       applyFiltres();
 
       document.getElementById('loadingOverlay').classList.add('hidden');
@@ -448,18 +257,12 @@
 
     document.getElementById('searchInput').addEventListener('input', applyFiltres);
     document.getElementById('searchClear').addEventListener('click', function() {
-      document.getElementById('searchInput').value = '';
-      applyFiltres();
+      document.getElementById('searchInput').value = ''; applyFiltres();
     });
     document.getElementById('filtreRubrique').addEventListener('change', applyFiltres);
     document.getElementById('filtreLangue').addEventListener('change', applyFiltres);
     document.getElementById('filtreStyle').addEventListener('change', applyFiltres);
     document.getElementById('triSelect').addEventListener('change', applyFiltres);
-
-    document.getElementById('btnLogout').addEventListener('click', async function() {
-      await sb.auth.signOut();
-      window.location.href = 'index.html';
-    });
 
     init();
   </script>
