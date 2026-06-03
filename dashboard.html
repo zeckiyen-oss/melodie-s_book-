@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400;1,600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="navbar.js"></script>
 
   <style>
     /* =============================================
@@ -77,148 +78,6 @@
       10%  { opacity: 0.6; }
       90%  { opacity: 0.2; }
       100% { opacity: 0; transform: translateY(-20px) scale(1.5); }
-    }
-
-    /* ============================================
-       NAVBAR
-    ============================================ */
-    .navbar {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 2rem;
-      height: 68px;
-      background: linear-gradient(180deg, rgba(13,27,42,0.98) 0%, rgba(13,27,42,0.88) 100%);
-      border-bottom: 1px solid rgba(201,168,76,0.25);
-      backdrop-filter: blur(12px);
-    }
-
-    .navbar-brand {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      text-decoration: none;
-    }
-    .navbar-logo {
-      width: 38px;
-      height: 38px;
-      background: linear-gradient(135deg, var(--or), var(--or-clair));
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
-      box-shadow: 0 0 14px rgba(201,168,76,0.4);
-    }
-    .navbar-title {
-      font-family: 'Cinzel', serif;
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: var(--or-clair);
-      letter-spacing: 0.04em;
-    }
-
-    .navbar-nav {
-      display: flex;
-      align-items: center;
-      gap: 0.2rem;
-      list-style: none;
-    }
-    .navbar-nav a {
-      display: flex;
-      align-items: center;
-      gap: 0.45rem;
-      padding: 0.45rem 0.85rem;
-      text-decoration: none;
-      color: var(--texte-muted);
-      font-size: 0.82rem;
-      font-family: 'Lato', sans-serif;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      border-radius: 6px;
-      transition: all 0.22s ease;
-      border: 1px solid transparent;
-    }
-    .navbar-nav a:hover,
-    .navbar-nav a.active {
-      color: var(--or-clair);
-      background: rgba(201,168,76,0.09);
-      border-color: rgba(201,168,76,0.22);
-    }
-    .navbar-nav a .nav-icon { font-size: 0.95rem; }
-
-    .navbar-user {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-    .user-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 2px solid var(--or);
-      object-fit: cover;
-      box-shadow: 0 0 10px rgba(201,168,76,0.3);
-    }
-    .user-avatar-placeholder {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 2px solid var(--or);
-      background: linear-gradient(135deg, var(--bleu-profond), var(--or));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Cinzel', serif;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--ivoire);
-    }
-    .user-info { display: flex; flex-direction: column; align-items: flex-end; }
-    .user-name {
-      font-family: 'Lato', sans-serif;
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: var(--ivoire);
-    }
-    .user-role-badge {
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 2px 8px;
-      border-radius: 20px;
-      border: 1px solid;
-    }
-    .role-admin    { color: var(--or-clair);  border-color: var(--or);          background: rgba(201,168,76,0.12); }
-    .role-membre   { color: #7ECFF0;           border-color: #3A89B0;            background: rgba(58,137,176,0.12); }
-    .role-preparateur { color: #B39DDB;        border-color: #7E57C2;            background: rgba(126,87,194,0.12); }
-
-    .btn-logout {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.38rem 0.85rem;
-      background: transparent;
-      border: 1px solid rgba(201,168,76,0.25);
-      color: var(--texte-muted);
-      font-size: 0.75rem;
-      font-family: 'Lato', sans-serif;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.22s ease;
-    }
-    .btn-logout:hover {
-      border-color: rgba(192,57,43,0.5);
-      color: #E57373;
-      background: rgba(192,57,43,0.08);
     }
 
     /* ============================================
@@ -760,8 +619,6 @@
        RESPONSIVE
     ============================================ */
     @media (max-width: 768px) {
-      .navbar { padding: 0 1rem; }
-      .navbar-nav { display: none; }
       .main-content { padding: 1.5rem 1rem 3rem; }
       .dashboard-title { font-size: 1.6rem; }
       .dashboard-grid { grid-template-columns: 1fr; }
@@ -775,9 +632,6 @@
 
     /* hidden utility */
     .hidden { display: none !important; }
-
-    /* Section admin/préparateur masquée par défaut */
-    [data-role-required] { display: none; }
   </style>
 </head>
 
@@ -792,33 +646,7 @@
   <!-- PARTICULES DÉCORATIVES -->
   <div class="particles" id="particles"></div>
 
-  <!-- ==================== NAVBAR ==================== -->
-  <nav class="navbar">
-    <a class="navbar-brand" href="dashboard.html">
-      <div class="navbar-logo">♪</div>
-      <span class="navbar-title">Mélodie's Book</span>
-    </a>
-
-    <ul class="navbar-nav" id="navLinks">
-      <li><a href="dashboard.html" class="active"><span class="nav-icon">🏠</span> Accueil</a></li>
-      <li><a href="repertoire.html"><span class="nav-icon">🎵</span> Répertoire</a></li>
-      <li><a href="themes.html"><span class="nav-icon">📖</span> Thèmes</a></li>
-      <li><a href="historique.html"><span class="nav-icon">📜</span> Historique</a></li>
-      <li><a href="bibliotheque.html"><span class="nav-icon">📚</span> Bibliothèque</a></li>
-      <!-- Admin uniquement -->
-      <li data-role-required="admin"><a href="comptes.html"><span class="nav-icon">👥</span> Comptes</a></li>
-      <li data-role-required="admin"><a href="statistiques.html"><span class="nav-icon">📊</span> Stats</a></li>
-    </ul>
-
-    <div class="navbar-user">
-      <div class="user-info">
-        <span class="user-name" id="navUserName">—</span>
-        <span class="user-role-badge" id="navUserRole">—</span>
-      </div>
-      <div class="user-avatar-placeholder" id="navAvatar">?</div>
-      <button class="btn-logout" id="btnLogout">⬡ Quitter</button>
-    </div>
-  </nav>
+  <!-- NAVBAR injectée par navbar.js via buildSharedNavbar() -->
 
   <!-- ==================== ACCÈS EN ATTENTE ==================== -->
   <div class="waiting-screen hidden" id="waitingScreen">
@@ -948,36 +776,38 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+    window._sb = sb;
 
     // ---- Versets rotatifs ----
     const VERSETS = [
-      { texte: '« Chantez à l\'Éternel un cantique nouveau ! Que sa louange retentisse dans l\'assemblée des fidèles. »', ref: '— Psaume 149:1' },
-      { texte: '« Que la parole de Christ habite parmi vous abondamment. Enseignez-vous et exhortez-vous les uns les autres avec sagesse, par des psaumes, des hymnes, des cantiques spirituels. »', ref: '— Colossiens 3:16' },
-      { texte: '« Mon cœur est prêt, ô Dieu ! Je veux chanter et célébrer ma gloire. »', ref: '— Psaume 108:1' },
-      { texte: '« Louez l\'Éternel, car il est bon ! Car sa bonté dure à toujours ! »', ref: '— Psaume 136:1' },
-      { texte: '« Chantez à l\'Éternel, bénissez son nom ! Annoncez de jour en jour son salut. »', ref: '— Psaume 96:2' },
+      { texte: 'Chantez a l\'Eternel un cantique nouveau ! Que sa louange retentisse dans l\'assemblee des fideles.', ref: '— Psaume 149:1' },
+      { texte: 'Que la parole de Christ habite parmi vous abondamment. Enseignez-vous et exhortez-vous les uns les autres avec sagesse, par des psaumes, des hymnes, des cantiques spirituels.', ref: '— Colossiens 3:16' },
+      { texte: 'Mon coeur est pret, o Dieu ! Je veux chanter et celebrer ma gloire.', ref: '— Psaume 108:1' },
+      { texte: 'Louez l\'Eternel, car il est bon ! Car sa bonte dure a toujours !', ref: '— Psaume 136:1' },
+      { texte: 'Chantez a l\'Eternel, benissez son nom ! Annoncez de jour en jour son salut.', ref: '— Psaume 96:2' },
     ];
 
     // ---- Accès rapides selon le rôle ----
     const QUICK_ACCESS = {
       all: [
-        { icon: '🎵', label: 'Répertoire', href: 'repertoire.html' },
-        { icon: '📖', label: 'Thèmes', href: 'themes.html' },
-        { icon: '📚', label: 'Bibliothèque', href: 'bibliotheque.html' },
-        { icon: '📜', label: 'Historique', href: 'historique.html' },
-        { icon: '💡', label: 'Proposer', href: 'proposer.html' },
+        { icon: '🎵', label: 'Repertoire',   href: 'repertoire.html' },
+        { icon: '📖', label: 'Themes',        href: 'themes.html' },
+        { icon: '📚', label: 'Bibliotheque',  href: 'bibliotheque.html' },
+        { icon: '📜', label: 'Historique',    href: 'historique.html' },
+        { icon: '💡', label: 'Proposer',      href: 'proposer.html' },
+        { icon: '🕊️', label: 'Programme',    href: 'programme.html' },
       ],
       admin: [
-        { icon: '➕', label: 'Ajouter chanson', href: 'ajouter-chanson.html' },
-        { icon: '📋', label: 'Propositions', href: 'propositions.html', badge: true },
-        { icon: '📅', label: 'Événements', href: 'evenements.html' },
-        { icon: '👤', label: 'Désigner prép.', href: 'designateur.html' },
-        { icon: '✅', label: 'Valider programme', href: 'validation-programme.html' },
-        { icon: '👥', label: 'Comptes', href: 'comptes.html' },
-        { icon: '📊', label: 'Statistiques', href: 'statistiques.html' },
+        { icon: '➕', label: 'Ajouter chanson',    href: 'ajouter-chanson.html' },
+        { icon: '📋', label: 'Propositions',        href: 'propositions.html', badge: true },
+        { icon: '📅', label: 'Evenements',          href: 'evenements.html' },
+        { icon: '👤', label: 'Designer prep.',      href: 'designateur.html' },
+        { icon: '✅', label: 'Valider programme',   href: 'validation-programme.html' },
+        { icon: '👥', label: 'Comptes',             href: 'comptes.html' },
+        { icon: '📊', label: 'Statistiques',        href: 'statistiques.html' },
       ],
       preparateur: [
-        { icon: '🎼', label: 'Préparer culte', href: 'preparation-culte.html' },
+        { icon: '🎼', label: 'Preparer culte', href: 'preparation-culte.html' },
       ]
     };
 
@@ -997,18 +827,6 @@
       }
     }
 
-    // ---- Utilitaire : rôle badge ----
-    function getRoleBadgeClass(role) {
-      if (role === 'admin')       return 'role-admin';
-      if (role === 'preparateur') return 'role-preparateur';
-      return 'role-membre';
-    }
-    function getRoleLabel(role) {
-      if (role === 'admin')       return '✦ Administrateur';
-      if (role === 'preparateur') return '✧ Préparateur';
-      return '· Membre';
-    }
-
     // ---- Construire les accès rapides ----
     function buildQuickAccess(role, propositionsCount) {
       const grid = document.getElementById('quickAccessGrid');
@@ -1018,29 +836,38 @@
       if (role === 'admin')       items = [...items, ...QUICK_ACCESS.admin];
       if (role === 'preparateur') items = [...items, ...QUICK_ACCESS.preparateur];
 
-      items.forEach(item => {
+      items.forEach(function(item) {
         const a = document.createElement('a');
         a.className = 'qa-card';
         a.href = item.href;
         if (item.badge && propositionsCount > 0) {
-          a.innerHTML = `
-            <span class="qa-badge">${propositionsCount}</span>
-            <span class="qa-icon">${item.icon}</span>
-            <span class="qa-label">${item.label}</span>`;
+          a.innerHTML =
+            '<span class="qa-badge">' + propositionsCount + '</span>' +
+            '<span class="qa-icon">' + item.icon + '</span>' +
+            '<span class="qa-label">' + item.label + '</span>';
         } else {
-          a.innerHTML = `
-            <span class="qa-icon">${item.icon}</span>
-            <span class="qa-label">${item.label}</span>`;
+          a.innerHTML =
+            '<span class="qa-icon">' + item.icon + '</span>' +
+            '<span class="qa-label">' + item.label + '</span>';
         }
         grid.appendChild(a);
       });
     }
 
     // ---- Afficher le prochain culte ----
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
     function displayProchainCulte(culte) {
       const body = document.getElementById('prochainCulteBody');
       if (!culte) {
-        body.innerHTML = '<div class="no-culte">Aucun culte à venir pour le moment.</div>';
+        body.innerHTML = '<div class="no-culte">Aucun culte a venir pour le moment.</div>';
         return;
       }
       const date = new Date(culte.date_culte);
@@ -1054,27 +881,25 @@
       }[culte.statut] || 'statut-preparation';
 
       const statutLabel = {
-        en_preparation: 'En préparation',
-        valide:         'Validé',
-        archive:        'Archivé'
+        en_preparation: 'En preparation',
+        valide:         'Valide',
+        archive:        'Archive'
       }[culte.statut] || culte.statut;
 
-      body.innerHTML = `
-        <div class="culte-card">
-          <div class="culte-date-block">
-            <div class="culte-date-day">${jour}</div>
-            <div class="culte-date-month">${mois}</div>
-          </div>
-          <div class="culte-info">
-            <div class="culte-theme">${culte.theme || 'Thème à définir'}</div>
-            <div class="culte-meta">
-              <span class="culte-statut ${statutClass}">${statutLabel}</span>
-            </div>
-            <div class="culte-chansons-count">
-              Programme en cours de préparation
-            </div>
-          </div>
-        </div>`;
+      body.innerHTML =
+        '<div class="culte-card">' +
+          '<div class="culte-date-block">' +
+            '<div class="culte-date-day">' + jour + '</div>' +
+            '<div class="culte-date-month">' + mois + '</div>' +
+          '</div>' +
+          '<div class="culte-info">' +
+            '<div class="culte-theme">' + escHtml(culte.theme || 'Theme a definir') + '</div>' +
+            '<div class="culte-meta">' +
+              '<span class="culte-statut ' + statutClass + '">' + statutLabel + '</span>' +
+            '</div>' +
+            '<div class="culte-chansons-count">Programme en cours de preparation</div>' +
+          '</div>' +
+        '</div>';
     }
 
     // ---- Activité récente ----
@@ -1082,47 +907,46 @@
       const list = document.getElementById('activityList');
       const items = [];
 
-      // Dernières chansons ajoutées
       if (chansons && chansons.length > 0) {
-        chansons.slice(0, 3).forEach(c => {
+        chansons.slice(0, 3).forEach(function(c) {
           const d = new Date(c.created_at);
           const diff = Math.floor((Date.now() - d) / 86400000);
-          const timeStr = diff === 0 ? 'Aujourd\'hui' : diff === 1 ? 'Hier' : `Il y a ${diff} jours`;
+          const timeStr = diff === 0 ? 'Aujourd\'hui' : diff === 1 ? 'Hier' : 'Il y a ' + diff + ' jours';
           items.push({
             dot: 'dot-or',
-            text: `Chanson ajoutée : <strong>${c.titre}</strong>`,
+            text: 'Chanson ajoutee : <strong>' + escHtml(c.titre) + '</strong>',
             time: timeStr
           });
         });
       }
 
-      // Derniers cultes
       if (cultes && cultes.length > 0) {
-        cultes.slice(0, 2).forEach(c => {
+        cultes.slice(0, 2).forEach(function(c) {
           const d = new Date(c.created_at);
           const diff = Math.floor((Date.now() - d) / 86400000);
-          const timeStr = diff === 0 ? 'Aujourd\'hui' : diff === 1 ? 'Hier' : `Il y a ${diff} jours`;
+          const timeStr = diff === 0 ? 'Aujourd\'hui' : diff === 1 ? 'Hier' : 'Il y a ' + diff + ' jours';
           items.push({
             dot: 'dot-violet',
-            text: `Culte créé : <strong>${c.theme || 'Sans thème'}</strong>`,
+            text: 'Culte cree : <strong>' + escHtml(c.theme || 'Sans theme') + '</strong>',
             time: timeStr
           });
         });
       }
 
       if (items.length === 0) {
-        list.innerHTML = '<div class="no-culte">Aucune activité récente.</div>';
+        list.innerHTML = '<div class="no-culte">Aucune activite recente.</div>';
         return;
       }
 
-      list.innerHTML = items.map(item => `
-        <div class="activity-item">
-          <div class="activity-dot ${item.dot}"></div>
-          <div class="activity-content">
-            <div class="activity-text">${item.text}</div>
-            <div class="activity-time">${item.time}</div>
-          </div>
-        </div>`).join('');
+      list.innerHTML = items.map(function(item) {
+        return '<div class="activity-item">' +
+          '<div class="activity-dot ' + item.dot + '"></div>' +
+          '<div class="activity-content">' +
+            '<div class="activity-text">' + item.text + '</div>' +
+            '<div class="activity-time">' + item.time + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
     }
 
     // ---- Propositions en attente (admin) ----
@@ -1145,14 +969,15 @@
         return 0;
       }
 
-      body.innerHTML = data.map(p => `
-        <div class="proposition-item">
-          <div>
-            <div class="proposition-titre">${p.titre}</div>
-            <div class="proposition-artiste">${p.artiste || ''} · ${p.langue || ''}</div>
-          </div>
-          <a href="propositions.html" class="btn-voir">Voir</a>
-        </div>`).join('');
+      body.innerHTML = data.map(function(p) {
+        return '<div class="proposition-item">' +
+          '<div>' +
+            '<div class="proposition-titre">' + escHtml(p.titre) + '</div>' +
+            '<div class="proposition-artiste">' + escHtml(p.artiste || '') + ' · ' + escHtml(p.langue || '') + '</div>' +
+          '</div>' +
+          '<a href="propositions.html" class="btn-voir">Voir</a>' +
+        '</div>';
+      }).join('');
 
       return data.length;
     }
@@ -1189,77 +1014,48 @@
       if (!profil.actif) {
         document.getElementById('loadingOverlay').classList.add('hidden');
         document.getElementById('waitingScreen').classList.remove('hidden');
-        // Mettre le nom dans la navbar quand même
-        document.getElementById('navUserName').textContent = profil.nom || session.user.email.split('@')[0];
-        document.getElementById('navUserRole').textContent = 'En attente';
-        document.getElementById('navUserRole').className = 'user-role-badge';
+        // Navbar minimale pour l'écran d'attente
+        buildSharedNavbar(profil, 'dashboard');
         return;
       }
 
       const role = profil.role || 'membre';
       const nom  = profil.nom || session.user.email.split('@')[0];
 
-      // 4. Mettre à jour la navbar
-      document.getElementById('navUserName').textContent = nom;
-      const roleEl = document.getElementById('navUserRole');
-      roleEl.textContent = getRoleLabel(role);
-      roleEl.className = `user-role-badge ${getRoleBadgeClass(role)}`;
-
-      // Avatar
-      if (profil.photo_url) {
-        const img = document.createElement('img');
-        img.src = profil.photo_url;
-        img.className = 'user-avatar';
-        img.alt = nom;
-        document.getElementById('navAvatar').replaceWith(img);
-      } else {
-        document.getElementById('navAvatar').textContent = nom.charAt(0).toUpperCase();
-      }
-
-      // Afficher les éléments nav admin
-      if (role === 'admin') {
-        document.querySelectorAll('[data-role-required="admin"]').forEach(el => {
-          el.style.display = 'block';
-        });
-      }
+      // 4. Navbar partagée (isDashboard=true pour afficher le bouton Quitter)
+      buildSharedNavbar(profil, 'dashboard');
 
       // 5. Titre du dashboard
       const heure = new Date().getHours();
-      let salut = heure < 12 ? 'Bon matin' : heure < 18 ? 'Bon après-midi' : 'Bonsoir';
-      document.getElementById('dashboardTitle').textContent = `${salut}, ${nom}`;
+      const salut = heure < 12 ? 'Bon matin' : heure < 18 ? 'Bon apres-midi' : 'Bonsoir';
+      document.getElementById('dashboardTitle').textContent = salut + ', ' + nom;
 
       const subtitles = {
-        admin:        'Que l\'Éternel bénisse votre service aujourd\'hui.',
-        preparateur:  'La préparation du culte vous a été confiée.',
-        membre:       'Louez l\'Éternel avec tout votre être.'
+        admin:        'Que l\'Eternel benisse votre service aujourd\'hui.',
+        preparateur:  'La preparation du culte vous a ete confiee.',
+        membre:       'Louez l\'Eternel avec tout votre etre.'
       };
       document.getElementById('dashboardSub').textContent = subtitles[role] || subtitles.membre;
 
       // 6. Charger les données en parallèle
       const [
-        { data: chansons },
-        { data: themes },
-        { data: cultes },
         { data: membres },
         { data: chansonsTri },
         { data: cultesTri }
       ] = await Promise.all([
-        sb.from('chansons').select('id', { count: 'exact', head: true }),
-        sb.from('themes').select('id', { count: 'exact', head: true }),
-        sb.from('cultes').select('id', { count: 'exact', head: true }),
-        role === 'admin' ? sb.from('profils').select('id').eq('actif', true) : { data: null },
+        role === 'admin' ? sb.from('profils').select('id').eq('actif', true) : Promise.resolve({ data: null }),
         sb.from('chansons').select('id, titre, created_at').order('created_at', { ascending: false }).limit(3),
         sb.from('cultes').select('id, theme, date_culte, statut, created_at').order('date_culte', { ascending: false }).limit(3),
       ]);
 
-      // Stats
+      // Stats (counts séparés)
       const { count: nbChansons } = await sb.from('chansons').select('*', { count: 'exact', head: true });
       const { count: nbThemes }   = await sb.from('themes').select('*', { count: 'exact', head: true });
       const { count: nbCultes }   = await sb.from('cultes').select('*', { count: 'exact', head: true });
 
-      document.getElementById('statChansons').textContent = nbChansons ?? '—';
-      document.getElementById('statThemes').textContent   = nbThemes   ?? '—';
-      document.getElementById('statCultes').textContent   = nbCultes   ?? '—';
+      document.getElementById('statChansons').textContent = nbChansons != null ? nbChansons : '—';
+      document.getElementById('statThemes').textContent   = nbThemes   != null ? nbThemes   : '—';
+      document.getElementById('statCultes').textContent   = nbCultes   != null ? nbCultes   : '—';
 
       if (role === 'admin' && membres) {
         document.getElementById('statMembres').textContent = membres.length;
@@ -1268,7 +1064,7 @@
       }
 
       // Prochain culte
-      const futurCultes = (cultesTri || []).filter(c => new Date(c.date_culte) >= new Date());
+      const futurCultes = (cultesTri || []).filter(function(c) { return new Date(c.date_culte) >= new Date(); });
       displayProchainCulte(futurCultes[0] || (cultesTri && cultesTri[0]) || null);
 
       // Activité récente
@@ -1284,12 +1080,6 @@
       document.getElementById('loadingOverlay').classList.add('hidden');
       document.getElementById('mainContent').classList.remove('hidden');
     }
-
-    // ---- Déconnexion ----
-    document.getElementById('btnLogout').addEventListener('click', async () => {
-      await sb.auth.signOut();
-      window.location.href = 'index.html';
-    });
 
     // ---- Lancer ----
     init();
