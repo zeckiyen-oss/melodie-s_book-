@@ -5,56 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fiche Chanson — Mélodie's Book</title>
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet" />
 
-  <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- Styles globaux -->
+  <script src="navbar.js"></script>
   <link rel="stylesheet" href="css/style.css" />
-  <!-- Styles spécifiques à cette page -->
   <link rel="stylesheet" href="css/chanson.css" />
 </head>
 <body class="page-chanson">
 
-  <!-- ═══════════════════════════════════════════
-       NAVBAR
-  ═══════════════════════════════════════════ -->
-  <nav class="navbar">
-    <a href="dashboard.html" class="nav-logo">
-      <span class="nav-logo-icon">♪</span>
-      <span class="nav-logo-text">Mélodie's Book</span>
-    </a>
-    <div class="nav-links">
-      <a href="repertoire.html" class="nav-link">Répertoire</a>
-      <a href="bibliotheque.html" class="nav-link">Bibliothèque</a>
-      <a href="themes.html" class="nav-link">Thèmes</a>
-      <a href="historique.html" class="nav-link">Historique</a>
-    </div>
-    <div class="nav-user" id="navUser">
-      <img id="navAvatar" src="" alt="Avatar" class="nav-avatar" />
-      <span id="navNom" class="nav-nom"></span>
-      <button class="btn-deconnexion" id="btnDeconnexion">Déconnexion</button>
-    </div>
-  </nav>
+  <!-- NAVBAR injectée par navbar.js -->
 
-  <!-- ═══════════════════════════════════════════
-       LOADER
-  ═══════════════════════════════════════════ -->
+  <!-- LOADER -->
   <div id="loader" class="page-loader">
     <div class="loader-cross">✝</div>
     <p class="loader-text">Chargement…</p>
   </div>
 
-  <!-- ═══════════════════════════════════════════
-       CONTENU PRINCIPAL
-  ═══════════════════════════════════════════ -->
+  <!-- CONTENU PRINCIPAL -->
   <main class="chanson-main" id="mainContent" style="display:none">
 
-    <!-- Fil d'Ariane -->
     <div class="breadcrumb">
       <a href="dashboard.html">Accueil</a>
       <span class="bc-sep">›</span>
@@ -63,35 +35,24 @@
       <span id="bcTitre" class="bc-current">Chanson</span>
     </div>
 
-    <!-- ── HEADER DE LA CHANSON ── -->
     <header class="chanson-header">
       <div class="chanson-header-left">
         <div class="chanson-numero-badge" id="chNumero">—</div>
         <div class="chanson-meta">
           <h1 class="chanson-titre" id="chTitre">Chargement…</h1>
-          <div class="chanson-tags" id="chTags">
-            <!-- badges langue, style, rubrique injectés via JS -->
-          </div>
+          <div class="chanson-tags" id="chTags"></div>
         </div>
       </div>
-      <!-- Actions admin -->
       <div class="chanson-actions" id="chActions" style="display:none">
-        <a href="#" class="btn-action btn-modifier" id="btnModifier">
-          ✏️ Modifier
-        </a>
-        <button class="btn-action btn-supprimer" id="btnSupprimer">
-          🗑️ Supprimer
-        </button>
+        <a href="#" class="btn-action btn-modifier" id="btnModifier">✏️ Modifier</a>
+        <button class="btn-action btn-supprimer" id="btnSupprimer">🗑️ Supprimer</button>
       </div>
     </header>
 
-    <!-- ── GRILLE PRINCIPALE ── -->
     <div class="chanson-grid">
 
-      <!-- ── COLONNE GAUCHE ── -->
       <div class="chanson-col-left">
 
-        <!-- Lecteur audio -->
         <section class="card-sacre" id="sectionAudio" style="display:none">
           <div class="card-sacre-header">
             <span class="card-icon">🎵</span>
@@ -105,21 +66,15 @@
           </div>
         </section>
 
-        <!-- Partition -->
         <section class="card-sacre" id="sectionPartition" style="display:none">
           <div class="card-sacre-header">
             <span class="card-icon">📄</span>
             <h2 class="card-title">Partition</h2>
           </div>
-          <div class="partition-preview" id="partitionPreview">
-            <!-- iframe ou image selon extension -->
-          </div>
-          <a href="#" class="btn-partition" id="btnPartition" target="_blank">
-            ↗ Ouvrir la partition
-          </a>
+          <div class="partition-preview" id="partitionPreview"></div>
+          <a href="#" class="btn-partition" id="btnPartition" target="_blank">↗ Ouvrir la partition</a>
         </section>
 
-        <!-- Thèmes associés -->
         <section class="card-sacre">
           <div class="card-sacre-header">
             <span class="card-icon">🏷️</span>
@@ -130,7 +85,6 @@
           </div>
         </section>
 
-        <!-- Utilisation dans les cultes -->
         <section class="card-sacre">
           <div class="card-sacre-header">
             <span class="card-icon">📅</span>
@@ -141,27 +95,23 @@
           </div>
         </section>
 
-      </div><!-- /col-left -->
+      </div>
 
-      <!-- ── COLONNE DROITE : PAROLES ── -->
       <div class="chanson-col-right">
         <section class="card-sacre card-paroles">
           <div class="card-sacre-header">
             <span class="card-icon">📖</span>
             <h2 class="card-title">Paroles</h2>
-            <button class="btn-copier" id="btnCopierParoles" title="Copier les paroles">
-              📋 Copier
-            </button>
+            <button class="btn-copier" id="btnCopierParoles" title="Copier les paroles">📋 Copier</button>
           </div>
           <div class="paroles-content" id="parolesContent">
             <p class="no-data">Aucune parole enregistrée.</p>
           </div>
         </section>
-      </div><!-- /col-right -->
+      </div>
 
-    </div><!-- /chanson-grid -->
+    </div>
 
-    <!-- ── VERSET INSPIRANT ── -->
     <div class="verset-bloc">
       <p class="verset-texte">« Chantez au Seigneur un cantique nouveau, car il a fait des prodiges. »</p>
       <p class="verset-ref">— Psaume 98 : 1</p>
@@ -169,9 +119,7 @@
 
   </main>
 
-  <!-- ═══════════════════════════════════════════
-       MODAL SUPPRESSION
-  ═══════════════════════════════════════════ -->
+  <!-- MODAL SUPPRESSION -->
   <div class="modal-overlay" id="modalSuppression" style="display:none">
     <div class="modal-card">
       <div class="modal-icon">⚠️</div>
@@ -184,106 +132,91 @@
     </div>
   </div>
 
-  <!-- Toast notification -->
   <div class="toast" id="toast"></div>
 
-  <!-- ═══════════════════════════════════════════
-       SCRIPT
-  ═══════════════════════════════════════════ -->
   <script>
-  // ── CONFIG SUPABASE ──
-  const SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  var SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+  var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  window._sb = sb;
 
-  let currentUser = null;
-  let currentProfil = null;
-  let chansonId = null;
+  var currentProfil = null;
+  var chansonId = null;
 
-  // ── UTILITAIRES ──
-  function showToast(msg, type = 'info') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = `toast toast-${type} show`;
-    setTimeout(() => t.classList.remove('show'), 3500);
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  function setLoader(visible) {
-    document.getElementById('loader').style.display = visible ? 'flex' : 'none';
-    document.getElementById('mainContent').style.display = visible ? 'none' : 'block';
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast toast-' + (type || 'info') + ' show';
+    setTimeout(function() { t.classList.remove('show'); }, 3500);
   }
 
   function getBadgeClass(type, val) {
-    const map = {
-      langue: { fr: 'badge-fr', en: 'badge-en', lingala: 'badge-ling', autre: 'badge-autre' },
-      style:  { contemporain: 'badge-contemp', classique: 'badge-class', gospel: 'badge-gospel', cantique: 'badge-cant' },
-      rubrique: {
-        Adoration: 'badge-adora', Louange: 'badge-louange', Prélude: 'badge-prelude',
-        Offrande: 'badge-offrand', Méditation: 'badge-medit', Envoi: 'badge-envoi'
-      }
+    var map = {
+      langue:   { fr:'badge-fr', en:'badge-en', lingala:'badge-ling', autre:'badge-autre' },
+      style:    { contemporain:'badge-contemp', classique:'badge-class', gospel:'badge-gospel', cantique:'badge-cant' },
+      rubrique: { Adoration:'badge-adora', Louange:'badge-louange', 'Prélude':'badge-prelude', Offrande:'badge-offrand', 'Méditation':'badge-medit', Envoi:'badge-envoi' }
     };
-    return map[type]?.[val] || 'badge-default';
+    return (map[type] && map[type][val]) ? map[type][val] : 'badge-default';
   }
 
-  // ── PROTECTION DE ROUTE ──
+  // INIT
   async function initPage() {
-    const { data: { session } } = await sb.auth.getSession();
+    var sessionData = await sb.auth.getSession();
+    var session = sessionData.data.session;
     if (!session) { window.location.href = 'index.html'; return; }
 
-    currentUser = session.user;
-
-    const { data: profil } = await sb
-      .from('profils').select('*').eq('id', currentUser.id).single();
-
+    var profilData = await sb.from('profils').select('*').eq('id', session.user.id).single();
+    var profil = profilData.data;
     if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
     currentProfil = profil;
 
-    // Navbar
-    document.getElementById('navAvatar').src = profil.photo_url || '';
-    document.getElementById('navNom').textContent = profil.nom || profil.email;
+    buildSharedNavbar(profil, 'chanson');
 
-    // Récupérer l'ID depuis l'URL
-    const params = new URLSearchParams(window.location.search);
+    var params = new URLSearchParams(window.location.search);
     chansonId = params.get('id');
     if (!chansonId) { window.location.href = 'repertoire.html'; return; }
 
     await loadChanson();
-    setLoader(false);
+
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
   }
 
-  // ── CHARGEMENT DE LA CHANSON ──
+  // CHARGEMENT
   async function loadChanson() {
-    const { data: ch, error } = await sb
-      .from('chansons').select('*').eq('id', chansonId).single();
+    var res = await sb.from('chansons').select('*').eq('id', chansonId).single();
 
-    if (error || !ch) {
+    if (res.error || !res.data) {
       showToast('Chanson introuvable.', 'error');
-      setTimeout(() => window.location.href = 'repertoire.html', 2000);
+      setTimeout(function() { window.location.href = 'repertoire.html'; }, 2000);
       return;
     }
 
-    // Titre & breadcrumb
-    document.title = `${ch.titre} — Mélodie's Book`;
-    document.getElementById('chTitre').textContent = ch.titre;
-    document.getElementById('bcTitre').textContent = ch.titre;
-    document.getElementById('chNumero').textContent = ch.numero ? `#${ch.numero}` : '♪';
+    var ch = res.data;
 
-    // Tags
-    const tagsDiv = document.getElementById('chTags');
-    tagsDiv.innerHTML = [
-      ch.langue  ? `<span class="badge ${getBadgeClass('langue',  ch.langue)}">${ch.langue}</span>`   : '',
-      ch.style   ? `<span class="badge ${getBadgeClass('style',   ch.style)}">${ch.style}</span>`     : '',
-      ch.rubrique ? `<span class="badge ${getBadgeClass('rubrique', ch.rubrique)}">${ch.rubrique}</span>` : '',
+    document.title = escHtml(ch.titre) + ' — Melodie\'s Book';
+    document.getElementById('chTitre').textContent  = ch.titre;
+    document.getElementById('bcTitre').textContent  = ch.titre;
+    document.getElementById('chNumero').textContent = ch.numero ? '#' + ch.numero : '♪';
+
+    var tags = [
+      ch.langue   ? '<span class="badge ' + getBadgeClass('langue',   ch.langue)   + '">' + escHtml(ch.langue)   + '</span>' : '',
+      ch.style    ? '<span class="badge ' + getBadgeClass('style',    ch.style)    + '">' + escHtml(ch.style)    + '</span>' : '',
+      ch.rubrique ? '<span class="badge ' + getBadgeClass('rubrique', ch.rubrique) + '">' + escHtml(ch.rubrique) + '</span>' : '',
     ].join('');
+    document.getElementById('chTags').innerHTML = tags;
 
     // Paroles
-    const parolesDiv = document.getElementById('parolesContent');
     if (ch.paroles) {
-      // Transformer les sauts de ligne en blocs (couplets séparés par ligne vide)
-      const blocs = ch.paroles.split(/\n{2,}/);
-      parolesDiv.innerHTML = blocs.map(bloc => {
-        const lignes = bloc.trim().split('\n').map(l => `<span>${l}</span>`).join('');
-        return `<p class="paroles-strophe">${lignes}</p>`;
+      var blocs = ch.paroles.split(/\n{2,}/);
+      document.getElementById('parolesContent').innerHTML = blocs.map(function(bloc) {
+        var lignes = bloc.trim().split('\n').map(function(l) { return '<span>' + escHtml(l) + '</span>'; }).join('');
+        return '<p class="paroles-strophe">' + lignes + '</p>';
       }).join('');
     }
 
@@ -297,100 +230,87 @@
     if (ch.partition_url) {
       document.getElementById('sectionPartition').style.display = 'block';
       document.getElementById('btnPartition').href = ch.partition_url;
-      const prev = document.getElementById('partitionPreview');
+      var prev = document.getElementById('partitionPreview');
       if (ch.partition_url.match(/\.pdf$/i)) {
-        prev.innerHTML = `<iframe src="${ch.partition_url}" class="partition-iframe" loading="lazy"></iframe>`;
+        prev.innerHTML = '<iframe src="' + escHtml(ch.partition_url) + '" class="partition-iframe" loading="lazy"></iframe>';
       } else if (ch.partition_url.match(/\.(png|jpg|jpeg|webp)$/i)) {
-        prev.innerHTML = `<img src="${ch.partition_url}" class="partition-img" alt="Partition" />`;
+        prev.innerHTML = '<img src="' + escHtml(ch.partition_url) + '" class="partition-img" alt="Partition" />';
       } else {
-        prev.innerHTML = `<p class="partition-ext">Fichier : ${ch.partition_url.split('/').pop()}</p>`;
+        prev.innerHTML = '<p class="partition-ext">Fichier : ' + escHtml(ch.partition_url.split('/').pop()) + '</p>';
       }
     }
 
     // Actions admin
     if (currentProfil.role === 'admin') {
-      const actDiv = document.getElementById('chActions');
-      actDiv.style.display = 'flex';
-      document.getElementById('btnModifier').href = `modifier-chanson.html?id=${chansonId}`;
+      document.getElementById('chActions').style.display = 'flex';
+      document.getElementById('btnModifier').href = 'modifier-chanson.html?id=' + chansonId;
     }
 
-    // Thèmes
     await loadThemes();
-    // Cultes
     await loadCultes();
   }
 
   async function loadThemes() {
-    const { data } = await sb
+    var res = await sb
       .from('chansons_themes')
       .select('theme_id, themes(nom)')
       .eq('chanson_id', chansonId);
 
-    const div = document.getElementById('themesList');
-    if (data && data.length > 0) {
-      div.innerHTML = data.map(d =>
-        `<span class="theme-pill">
-          <a href="themes.html?id=${d.theme_id}">${d.themes?.nom || '—'}</a>
-        </span>`
-      ).join('');
+    var div = document.getElementById('themesList');
+    if (res.data && res.data.length > 0) {
+      div.innerHTML = res.data.map(function(d) {
+        return '<span class="theme-pill"><a href="themes.html?id=' + escHtml(d.theme_id) + '">' + escHtml((d.themes && d.themes.nom) || '—') + '</a></span>';
+      }).join('');
     }
   }
 
   async function loadCultes() {
-    const { data } = await sb
+    var res = await sb
       .from('programme_culte')
       .select('culte_id, rubrique, cultes(date_culte, theme, statut)')
       .eq('chanson_id', chansonId)
       .order('culte_id', { ascending: false })
       .limit(5);
 
-    const div = document.getElementById('cultesList');
-    if (data && data.length > 0) {
-      div.innerHTML = data.map(d => {
-        const date = d.cultes?.date_culte
+    var div = document.getElementById('cultesList');
+    if (res.data && res.data.length > 0) {
+      div.innerHTML = res.data.map(function(d) {
+        var date = (d.cultes && d.cultes.date_culte)
           ? new Date(d.cultes.date_culte).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' })
           : '—';
-        return `<div class="culte-item">
-          <span class="culte-date">${date}</span>
-          <span class="culte-theme">${d.cultes?.theme || '—'}</span>
-          <span class="culte-rubrique badge badge-default">${d.rubrique || ''}</span>
-        </div>`;
+        return '<div class="culte-item">' +
+          '<span class="culte-date">' + date + '</span>' +
+          '<span class="culte-theme">' + escHtml((d.cultes && d.cultes.theme) || '—') + '</span>' +
+          '<span class="culte-rubrique badge badge-default">' + escHtml(d.rubrique || '') + '</span>' +
+        '</div>';
       }).join('');
     }
   }
 
-  // ── COPIER PAROLES ──
-  document.getElementById('btnCopierParoles').addEventListener('click', () => {
-    const texte = document.getElementById('parolesContent').innerText;
-    navigator.clipboard.writeText(texte).then(() => {
-      showToast('Paroles copiées dans le presse-papier ✓', 'success');
-    }).catch(() => showToast('Impossible de copier.', 'error'));
+  // COPIER PAROLES
+  document.getElementById('btnCopierParoles').addEventListener('click', function() {
+    var texte = document.getElementById('parolesContent').innerText;
+    navigator.clipboard.writeText(texte)
+      .then(function() { showToast('Paroles copiées dans le presse-papier ✓', 'success'); })
+      .catch(function() { showToast('Impossible de copier.', 'error'); });
   });
 
-  // ── SUPPRESSION ──
-  document.getElementById('btnSupprimer')?.addEventListener('click', () => {
+  // SUPPRESSION
+  document.getElementById('btnSupprimer').addEventListener('click', function() {
     document.getElementById('modalSuppression').style.display = 'flex';
   });
-  document.getElementById('btnAnnulerSuppr').addEventListener('click', () => {
+  document.getElementById('btnAnnulerSuppr').addEventListener('click', function() {
     document.getElementById('modalSuppression').style.display = 'none';
   });
-  document.getElementById('btnConfirmerSuppr').addEventListener('click', async () => {
-    const { error } = await sb.from('chansons').delete().eq('id', chansonId);
-    if (error) { showToast('Erreur lors de la suppression.', 'error'); return; }
+  document.getElementById('btnConfirmerSuppr').addEventListener('click', async function() {
+    var res = await sb.from('chansons').delete().eq('id', chansonId);
+    if (res.error) { showToast('Erreur lors de la suppression.', 'error'); return; }
     showToast('Chanson supprimée.', 'success');
-    setTimeout(() => window.location.href = 'repertoire.html', 1500);
+    setTimeout(function() { window.location.href = 'repertoire.html'; }, 1500);
   });
 
-  // ── DÉCONNEXION ──
-  document.getElementById('btnDeconnexion').addEventListener('click', async () => {
-    await sb.auth.signOut();
-    window.location.href = 'index.html';
-  });
-
-  // ── LANCEMENT ──
   initPage();
   </script>
 
 </body>
-        </html>
-    
+</html>
