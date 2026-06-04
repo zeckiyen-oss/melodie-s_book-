@@ -9,10 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="navbar.js"></script>
 </head>
 <body class="page-gestion-themes">
 
-  <!-- LOADER -->
   <div id="loader" class="loader-overlay">
     <div class="loader-cross">
       <div class="loader-bar loader-bar-h"></div>
@@ -20,32 +20,10 @@
     </div>
   </div>
 
-  <!-- TOAST -->
   <div id="toast" class="toast" aria-live="polite"></div>
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a href="dashboard.html" class="navbar-brand">
-      <span class="navbar-logo">♪</span>
-      <span class="navbar-title">Mélodie's Book</span>
-    </a>
-    <div class="navbar-links" id="navLinks">
-      <a href="dashboard.html">Accueil</a>
-      <a href="repertoire.html">Répertoire</a>
-      <a href="themes.html">Thèmes</a>
-      <a href="bibliotheque.html">Bibliothèque</a>
-      <a href="historique.html">Historique</a>
-      <a href="proposer.html">Proposer</a>
-    </div>
-    <div class="navbar-user" id="navUser">
-      <img id="userAvatar" src="" alt="Avatar" class="avatar-sm" />
-      <span id="userName"></span>
-      <button class="btn-logout" id="btnLogout">Déconnexion</button>
-    </div>
-    <button class="navbar-toggle" id="navToggle" aria-label="Menu">&#9776;</button>
-  </nav>
+  <!-- NAVBAR injectée par navbar.js -->
 
-  <!-- HERO HEADER -->
   <header class="gt-hero">
     <div class="gt-hero-bg"></div>
     <div class="gt-hero-content">
@@ -56,51 +34,36 @@
     <div class="gt-hero-ornement"></div>
   </header>
 
-  <!-- CONTENU PRINCIPAL -->
   <main class="gt-main">
     <div class="gt-layout">
 
-      <!-- COLONNE GAUCHE : liste des thèmes -->
       <section class="gt-list-section">
-
-        <!-- Barre d'actions -->
         <div class="gt-toolbar">
           <div class="gt-search-wrapper">
             <span class="gt-search-icon">🔍</span>
             <input type="text" id="searchTheme" class="gt-search-input" placeholder="Rechercher un thème…" />
           </div>
-          <button class="btn-primary" id="btnNouveauTheme">
-            <span>✦</span> Nouveau thème
-          </button>
+          <button class="btn-primary" id="btnNouveauTheme">✦ Nouveau thème</button>
         </div>
 
-        <!-- Compteur -->
         <div class="gt-count" id="gtCount">Chargement…</div>
-
-        <!-- Grille des thèmes -->
         <div class="gt-grid" id="gtGrid">
           <div class="gt-skeleton"></div>
           <div class="gt-skeleton"></div>
           <div class="gt-skeleton"></div>
           <div class="gt-skeleton"></div>
         </div>
-
       </section>
 
-      <!-- COLONNE DROITE : formulaire -->
       <aside class="gt-form-aside">
         <div class="gt-form-card" id="gtFormCard">
 
-          <!-- État : invitation -->
           <div class="gt-form-idle" id="gtFormIdle">
             <div class="gt-form-idle-icon">✦</div>
             <p>Sélectionnez un thème pour le modifier, ou créez-en un nouveau.</p>
-            <button class="btn-primary" onclick="ouvrirFormulaire()">
-              + Créer un thème
-            </button>
+            <button class="btn-primary" id="btnCreerDepuisIdle">+ Créer un thème</button>
           </div>
 
-          <!-- Formulaire réel (caché par défaut) -->
           <div class="gt-form-body" id="gtFormBody" style="display:none;">
             <div class="gt-form-header">
               <h2 id="gtFormTitle">Nouveau thème</h2>
@@ -110,29 +73,22 @@
             <input type="hidden" id="themeId" />
 
             <div class="form-group">
-              <label for="themeNom" class="form-label">
-                Nom du thème <span class="required">*</span>
-              </label>
-              <input type="text" id="themeNom" class="form-input" placeholder="Ex: Noël, Pentecôte, Évangélisation…" />
+              <label for="themeNom" class="form-label">Nom du thème <span class="required">*</span></label>
+              <input type="text" id="themeNom" class="form-input" placeholder="Ex: Noël, Pentecôte…" />
             </div>
 
             <div class="form-group">
               <label for="themeDesc" class="form-label">Description</label>
-              <textarea id="themeDesc" class="form-textarea" rows="4"
-                placeholder="Décrivez le contexte d'utilisation de ce thème…"></textarea>
+              <textarea id="themeDesc" class="form-textarea" rows="4" placeholder="Contexte d'utilisation…"></textarea>
             </div>
 
             <div class="gt-form-actions">
               <button class="btn-secondary" id="btnAnnulerForm">Annuler</button>
-              <button class="btn-primary" id="btnSauvegarder">
-                <span>💾</span> Sauvegarder
-              </button>
+              <button class="btn-primary" id="btnSauvegarder">💾 Sauvegarder</button>
             </div>
-
           </div>
         </div>
 
-        <!-- Stats thème sélectionné -->
         <div class="gt-theme-stats" id="gtThemeStats" style="display:none;">
           <h3 class="gt-stats-title">Statistiques du thème</h3>
           <div class="gt-stats-grid">
@@ -164,125 +120,124 @@
     <div class="modal-box modal-danger">
       <div class="modal-danger-icon">⚠</div>
       <h3>Supprimer ce thème ?</h3>
-      <p id="modalSupprimerMsg">Cette action est irréversible. Les chansons liées ne seront pas supprimées, uniquement l'association avec ce thème.</p>
+      <p id="modalSupprimerMsg">Cette action est irréversible.</p>
       <div class="modal-actions">
-        <button class="btn-secondary" onclick="fermerModalSupprimer()">Annuler</button>
+        <button class="btn-secondary" id="btnAnnulerSupprimer">Annuler</button>
         <button class="btn-danger" id="btnConfirmerSupprimer">Supprimer</button>
       </div>
     </div>
   </div>
 
   <script>
-    // ─── SUPABASE ───────────────────────────────────────────────────
-    const SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+    var SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+    var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+    var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    window._sb = sb;
 
-    let currentUser = null;
-    let themes = [];
-    let themeASupprimer = null;
+    var themes = [];
+    var themeASupprimer = null;
 
-    // ─── INIT ────────────────────────────────────────────────────────
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function hideLoader() {
+      document.getElementById('loader').style.opacity = '0';
+      setTimeout(function() { document.getElementById('loader').style.display = 'none'; }, 400);
+    }
+
+    function showToast(msg, type) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast toast-' + (type || 'info') + ' show';
+      setTimeout(function() { t.classList.remove('show'); }, 3500);
+    }
+
     async function init() {
-      const { data: { session } } = await sb.auth.getSession();
+      var sessionData = await sb.auth.getSession();
+      var session = sessionData.data.session;
       if (!session) { window.location.href = 'index.html'; return; }
-      currentUser = session.user;
 
-      const { data: profil } = await sb.from('profils')
-        .select('*').eq('id', currentUser.id).single();
-
+      var profilData = await sb.from('profils').select('*').eq('id', session.user.id).single();
+      var profil = profilData.data;
       if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
       if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
 
-      document.getElementById('userAvatar').src = profil.photo_url || '';
-      document.getElementById('userName').textContent = profil.nom || profil.email;
-
+      buildSharedNavbar(profil, 'gestion-themes');
       await chargerThemes();
       hideLoader();
     }
 
-    // ─── LOADER ──────────────────────────────────────────────────────
-    function hideLoader() {
-      document.getElementById('loader').style.opacity = '0';
-      setTimeout(() => document.getElementById('loader').style.display = 'none', 400);
-    }
-
-    // ─── TOAST ───────────────────────────────────────────────────────
-    function showToast(msg, type = 'info') {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.className = `toast toast-${type} show`;
-      setTimeout(() => t.classList.remove('show'), 3500);
-    }
-
-    // ─── CHARGER THÈMES ──────────────────────────────────────────────
     async function chargerThemes() {
-      const { data, error } = await sb.from('themes')
-        .select('*, chansons_themes(chanson_id)')
-        .order('nom');
-
-      if (error) { showToast('Erreur de chargement.', 'error'); return; }
-      themes = data || [];
+      var res = await sb.from('themes').select('*, chansons_themes(chanson_id)').order('nom');
+      if (res.error) { showToast('Erreur de chargement.', 'error'); return; }
+      themes = res.data || [];
       renderThemes(themes);
     }
 
     function renderThemes(liste) {
-      const grid = document.getElementById('gtGrid');
-      const count = document.getElementById('gtCount');
-      count.textContent = `${liste.length} thème${liste.length !== 1 ? 's' : ''}`;
+      var grid = document.getElementById('gtGrid');
+      var count = document.getElementById('gtCount');
+      count.textContent = liste.length + ' thème' + (liste.length !== 1 ? 's' : '');
 
       if (liste.length === 0) {
-        grid.innerHTML = `<div class="gt-empty">Aucun thème trouvé. Créez le premier !</div>`;
+        grid.innerHTML = '<div class="gt-empty">Aucun thème trouvé. Créez le premier !</div>';
         return;
       }
 
-      grid.innerHTML = liste.map(t => {
-        const nbChansons = t.chansons_themes ? t.chansons_themes.length : 0;
-        return `
-        <div class="gt-card" data-id="${t.id}">
-          <div class="gt-card-header">
-            <span class="gt-card-icon">✦</span>
-            <h3 class="gt-card-nom">${escHtml(t.nom)}</h3>
-          </div>
-          ${t.description ? `<p class="gt-card-desc">${escHtml(t.description)}</p>` : '<p class="gt-card-desc gt-card-desc-empty">Aucune description</p>'}
-          <div class="gt-card-footer">
-            <span class="gt-card-nb">${nbChansons} chanson${nbChansons !== 1 ? 's' : ''}</span>
-            <div class="gt-card-actions">
-              <button class="gt-btn-edit" onclick="editerTheme('${t.id}')" title="Modifier">✏️</button>
-              <button class="gt-btn-delete" onclick="demanderSuppression('${t.id}')" title="Supprimer">🗑️</button>
-            </div>
-          </div>
-        </div>`;
-      }).join('');
+      grid.innerHTML = '';
+      liste.forEach(function(t) {
+        var nb = t.chansons_themes ? t.chansons_themes.length : 0;
+        var div = document.createElement('div');
+        div.className = 'gt-card';
+        div.setAttribute('data-id', t.id);
+        div.innerHTML =
+          '<div class="gt-card-header">' +
+            '<span class="gt-card-icon">✦</span>' +
+            '<h3 class="gt-card-nom">' + escHtml(t.nom) + '</h3>' +
+          '</div>' +
+          (t.description ? '<p class="gt-card-desc">' + escHtml(t.description) + '</p>' : '<p class="gt-card-desc gt-card-desc-empty">Aucune description</p>') +
+          '<div class="gt-card-footer">' +
+            '<span class="gt-card-nb">' + nb + ' chanson' + (nb !== 1 ? 's' : '') + '</span>' +
+            '<div class="gt-card-actions">' +
+              '<button class="gt-btn-edit btn-edit-theme" data-id="' + t.id + '" title="Modifier">✏️</button>' +
+              '<button class="gt-btn-delete btn-del-theme" data-id="' + t.id + '" title="Supprimer">🗑️</button>' +
+            '</div>' +
+          '</div>';
+        grid.appendChild(div);
+      });
+
+      grid.querySelectorAll('.btn-edit-theme').forEach(function(btn) {
+        btn.addEventListener('click', function() { editerTheme(btn.getAttribute('data-id')); });
+      });
+      grid.querySelectorAll('.btn-del-theme').forEach(function(btn) {
+        btn.addEventListener('click', function() { demanderSuppression(btn.getAttribute('data-id')); });
+      });
     }
 
-    // ─── RECHERCHE ───────────────────────────────────────────────────
-    document.getElementById('searchTheme').addEventListener('input', (e) => {
-      const q = e.target.value.toLowerCase().trim();
-      const filtres = q ? themes.filter(t =>
-        t.nom.toLowerCase().includes(q) ||
-        (t.description || '').toLowerCase().includes(q)
-      ) : themes;
+    document.getElementById('searchTheme').addEventListener('input', function(e) {
+      var q = e.target.value.toLowerCase().trim();
+      var filtres = q ? themes.filter(function(t) {
+        return t.nom.toLowerCase().includes(q) || (t.description || '').toLowerCase().includes(q);
+      }) : themes;
       renderThemes(filtres);
     });
 
-    // ─── FORMULAIRE ──────────────────────────────────────────────────
-    function ouvrirFormulaire(theme = null) {
+    function ouvrirFormulaire(theme) {
       document.getElementById('gtFormIdle').style.display = 'none';
       document.getElementById('gtFormBody').style.display = 'block';
       document.getElementById('gtThemeStats').style.display = 'none';
-
       if (theme) {
         document.getElementById('gtFormTitle').textContent = 'Modifier le thème';
-        document.getElementById('themeId').value = theme.id;
-        document.getElementById('themeNom').value = theme.nom;
+        document.getElementById('themeId').value   = theme.id;
+        document.getElementById('themeNom').value  = theme.nom;
         document.getElementById('themeDesc').value = theme.description || '';
         chargerStatsTheme(theme.id);
       } else {
         document.getElementById('gtFormTitle').textContent = 'Nouveau thème';
-        document.getElementById('themeId').value = '';
-        document.getElementById('themeNom').value = '';
+        document.getElementById('themeId').value   = '';
+        document.getElementById('themeNom').value  = '';
         document.getElementById('themeDesc').value = '';
       }
     }
@@ -293,70 +248,54 @@
       document.getElementById('gtThemeStats').style.display = 'none';
     }
 
-    async function editerTheme(id) {
-      const theme = themes.find(t => t.id === id);
+    function editerTheme(id) {
+      var theme = themes.find(function(t) { return t.id === id; });
       if (theme) ouvrirFormulaire(theme);
     }
 
-    // ─── STATS THÈME ─────────────────────────────────────────────────
     async function chargerStatsTheme(themeId) {
-      const { data } = await sb
-        .from('chansons_themes')
-        .select('chanson_id, chansons(rubrique)')
-        .eq('theme_id', themeId);
-
-      if (!data) return;
-
-      const rubriques = data.map(r => r.chansons?.rubrique).filter(Boolean);
-      const count = (r) => rubriques.filter(x => x === r).length;
-
-      document.getElementById('statTotal').textContent = data.length;
+      var res = await sb.from('chansons_themes').select('chanson_id, chansons(rubrique)').eq('theme_id', themeId);
+      if (!res.data) return;
+      var rubriques = res.data.map(function(r) { return r.chansons && r.chansons.rubrique; }).filter(Boolean);
+      var count = function(r) { return rubriques.filter(function(x) { return x === r; }).length; };
+      document.getElementById('statTotal').textContent     = res.data.length;
       document.getElementById('statAdoration').textContent = count('Adoration');
-      document.getElementById('statLouange').textContent = count('Louange');
+      document.getElementById('statLouange').textContent   = count('Louange');
       document.getElementById('statMeditation').textContent = count('Méditation');
       document.getElementById('gtThemeStats').style.display = 'block';
     }
 
-    // ─── SAUVEGARDER ─────────────────────────────────────────────────
-    document.getElementById('btnSauvegarder').addEventListener('click', async () => {
-      const id = document.getElementById('themeId').value;
-      const nom = document.getElementById('themeNom').value.trim();
-      const description = document.getElementById('themeDesc').value.trim();
+    document.getElementById('btnSauvegarder').addEventListener('click', async function() {
+      var id          = document.getElementById('themeId').value;
+      var nom         = document.getElementById('themeNom').value.trim();
+      var description = document.getElementById('themeDesc').value.trim();
 
       if (!nom) { showToast('Le nom du thème est obligatoire.', 'error'); return; }
 
-      const btn = document.getElementById('btnSauvegarder');
+      var btn = document.getElementById('btnSauvegarder');
       btn.disabled = true;
 
-      let error;
+      var res;
       if (id) {
-        ({ error } = await sb.from('themes').update({ nom, description: description || null }).eq('id', id));
+        res = await sb.from('themes').update({ nom: nom, description: description || null }).eq('id', id);
       } else {
-        ({ error } = await sb.from('themes').insert({ nom, description: description || null }));
+        res = await sb.from('themes').insert({ nom: nom, description: description || null });
       }
-
       btn.disabled = false;
 
-      if (error) {
-        showToast('Erreur lors de la sauvegarde.', 'error');
-        console.error(error);
-        return;
-      }
-
-      showToast(id ? 'Thème modifié avec succès.' : 'Thème créé avec succès.', 'success');
+      if (res.error) { showToast('Erreur lors de la sauvegarde.', 'error'); return; }
+      showToast(id ? 'Thème modifié.' : 'Thème créé.', 'success');
       fermerFormulaire();
       await chargerThemes();
     });
 
-    // ─── SUPPRESSION ─────────────────────────────────────────────────
     function demanderSuppression(id) {
       themeASupprimer = id;
-      const theme = themes.find(t => t.id === id);
-      const nb = theme?.chansons_themes?.length || 0;
-      document.getElementById('modalSupprimerMsg').textContent =
-        nb > 0
-          ? `Ce thème est lié à ${nb} chanson${nb > 1 ? 's' : ''}. L'association sera supprimée, mais les chansons resteront dans le répertoire. Cette action est irréversible.`
-          : "Cette action est irréversible. Le thème sera définitivement supprimé.";
+      var theme = themes.find(function(t) { return t.id === id; });
+      var nb = theme && theme.chansons_themes ? theme.chansons_themes.length : 0;
+      document.getElementById('modalSupprimerMsg').textContent = nb > 0
+        ? 'Ce thème est lié à ' + nb + ' chanson' + (nb > 1 ? 's' : '') + '. L\'association sera supprimée, mais les chansons resteront. Cette action est irréversible.'
+        : 'Cette action est irréversible. Le thème sera définitivement supprimé.';
       document.getElementById('modalSupprimer').style.display = 'flex';
     }
 
@@ -365,47 +304,28 @@
       themeASupprimer = null;
     }
 
-    document.getElementById('btnConfirmerSupprimer').addEventListener('click', async () => {
+    document.getElementById('btnAnnulerSupprimer').addEventListener('click', fermerModalSupprimer);
+    document.getElementById('modalSupprimer').addEventListener('click', function(e) {
+      if (e.target === document.getElementById('modalSupprimer')) fermerModalSupprimer();
+    });
+
+    document.getElementById('btnConfirmerSupprimer').addEventListener('click', async function() {
       if (!themeASupprimer) return;
-
-      // Supprimer d'abord les liaisons
       await sb.from('chansons_themes').delete().eq('theme_id', themeASupprimer);
-      const { error } = await sb.from('themes').delete().eq('id', themeASupprimer);
-
-      if (error) { showToast('Erreur lors de la suppression.', 'error'); return; }
-
+      var res = await sb.from('themes').delete().eq('id', themeASupprimer);
+      if (res.error) { showToast('Erreur lors de la suppression.', 'error'); return; }
       showToast('Thème supprimé.', 'success');
       fermerModalSupprimer();
       fermerFormulaire();
       await chargerThemes();
     });
 
-    document.getElementById('modalSupprimer').addEventListener('click', (e) => {
-      if (e.target === document.getElementById('modalSupprimer')) fermerModalSupprimer();
-    });
-
-    // ─── BOUTONS ─────────────────────────────────────────────────────
-    document.getElementById('btnNouveauTheme').addEventListener('click', () => ouvrirFormulaire());
+    document.getElementById('btnNouveauTheme').addEventListener('click', function() { ouvrirFormulaire(null); });
+    document.getElementById('btnCreerDepuisIdle').addEventListener('click', function() { ouvrirFormulaire(null); });
     document.getElementById('btnFermerForm').addEventListener('click', fermerFormulaire);
     document.getElementById('btnAnnulerForm').addEventListener('click', fermerFormulaire);
 
-    // ─── LOGOUT + NAV ─────────────────────────────────────────────────
-    document.getElementById('btnLogout').addEventListener('click', async () => {
-      await sb.auth.signOut();
-      window.location.href = 'index.html';
-    });
-    document.getElementById('navToggle').addEventListener('click', () => {
-      document.getElementById('navLinks').classList.toggle('open');
-    });
-
-    // ─── UTILS ───────────────────────────────────────────────────────
-    function escHtml(str) {
-      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    // ─── LANCEMENT ───────────────────────────────────────────────────
     init();
   </script>
 </body>
-  </html>
-                
+</html>
