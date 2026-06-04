@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="navbar.js"></script>
 </head>
 <body class="page-comptes">
 
@@ -23,27 +24,7 @@
   <!-- TOAST -->
   <div id="toast" class="toast" aria-live="polite"></div>
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a href="dashboard.html" class="navbar-brand">
-      <span class="navbar-logo">♪</span>
-      <span class="navbar-title">Mélodie's Book</span>
-    </a>
-    <div class="navbar-links" id="navLinks">
-      <a href="dashboard.html">Accueil</a>
-      <a href="repertoire.html">Répertoire</a>
-      <a href="themes.html">Thèmes</a>
-      <a href="bibliotheque.html">Bibliothèque</a>
-      <a href="historique.html">Historique</a>
-      <a href="proposer.html">Proposer</a>
-    </div>
-    <div class="navbar-user" id="navUser">
-      <img id="userAvatar" src="" alt="Avatar" class="avatar-sm" />
-      <span id="userName"></span>
-      <button class="btn-logout" id="btnLogout">Déconnexion</button>
-    </div>
-    <button class="navbar-toggle" id="navToggle" aria-label="Menu">&#9776;</button>
-  </nav>
+  <!-- NAVBAR injectée par navbar.js -->
 
   <!-- HERO -->
   <header class="cp-hero">
@@ -75,7 +56,6 @@
   <!-- CONTENU -->
   <main class="cp-main">
 
-    <!-- TOOLBAR -->
     <div class="cp-toolbar">
       <div class="cp-filter-tabs" id="cpFilterTabs">
         <button class="cp-tab active" data-filtre="attente">
@@ -91,21 +71,17 @@
       </div>
     </div>
 
-    <!-- LAYOUT -->
     <div class="cp-layout">
 
-      <!-- LISTE MEMBRES -->
       <section class="cp-list-section">
         <div class="cp-count" id="cpCount">Chargement…</div>
         <div class="cp-list" id="cpList">
           <div class="cp-skeleton"></div>
           <div class="cp-skeleton"></div>
           <div class="cp-skeleton"></div>
-          <div class="cp-skeleton"></div>
         </div>
       </section>
 
-      <!-- PANNEAU DÉTAIL -->
       <aside class="cp-detail-aside">
         <div class="cp-detail-card">
           <div class="cp-detail-idle" id="cpDetailIdle">
@@ -119,103 +95,100 @@
     </div>
   </main>
 
-  <!-- MODAL CONFIRMATION ACTION -->
+  <!-- MODAL ACTION -->
   <div id="modalAction" class="modal-overlay" style="display:none;">
     <div class="modal-box" id="modalActionBox">
       <div class="modal-action-icon" id="modalActionIcon">👤</div>
       <h3 id="modalActionTitle">Confirmer</h3>
       <p id="modalActionMsg">Confirmez-vous cette action ?</p>
 
-      <!-- SÉLECTEUR RÔLE — visible uniquement à la validation -->
       <div id="modalRoleWrap" style="display:none; margin-top:1.2rem;">
         <label style="font-family:'Cinzel',serif; font-size:0.78rem; color:#C9A84C; letter-spacing:0.08em; text-transform:uppercase; display:block; margin-bottom:0.5rem;">Attribuer un rôle</label>
         <select id="modalRoleSelect" style="width:100%; background:#0D1B2A; border:1px solid rgba(201,168,76,0.4); border-radius:8px; color:#FAF6ED; padding:0.6rem 0.8rem; font-family:'Lato',sans-serif; font-size:0.9rem; cursor:pointer;">
-          <option value="membre">♪ Membre</option>
-          <option value="preparateur">🕊️ Préparateur</option>
-          <option value="admin">⚙ Admin</option>
+          <option value="membre">Membre</option>
+          <option value="preparateur">Préparateur</option>
+          <option value="admin">Admin</option>
         </select>
       </div>
 
       <div class="modal-actions">
-        <button class="btn-secondary" onclick="fermerModalAction()">Annuler</button>
+        <button class="btn-secondary" id="btnAnnulerModalAction">Annuler</button>
         <button class="btn-primary" id="btnConfirmerAction">Confirmer</button>
       </div>
     </div>
   </div>
 
   <script>
-    const SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+    var SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+    var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+    var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    window._sb = sb;
 
-    let currentUser = null;
-    let currentProfil = null;
-    let membres = [];
-    let filtre = 'attente';
-    let membreSelectionne = null;
-    let actionEnCours = null;
+    var currentUser = null;
+    var membres = [];
+    var filtre = 'attente';
+    var membreSelectionne = null;
+    var actionEnCours = null;
 
-    // ─── INIT ────────────────────────────────────────────────────────
-    async function init() {
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) { window.location.href = 'index.html'; return; }
-      currentUser = session.user;
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
 
-      const { data: profil } = await sb.from('profils')
-        .select('*').eq('id', currentUser.id).single();
-
-      if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
-      if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
-
-      currentProfil = profil;
-      document.getElementById('userAvatar').src = profil.photo_url || '';
-      document.getElementById('userName').textContent = profil.nom || profil.email;
-
-      await chargerMembres();
-      hideLoader();
+    function showToast(msg, type) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast toast-' + (type || 'info') + ' show';
+      setTimeout(function() { t.classList.remove('show'); }, 3500);
     }
 
     function hideLoader() {
       document.getElementById('loader').style.opacity = '0';
-      setTimeout(() => document.getElementById('loader').style.display = 'none', 400);
+      setTimeout(function() { document.getElementById('loader').style.display = 'none'; }, 400);
     }
 
-    function showToast(msg, type = 'info') {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.className = 'toast toast-' + type + ' show';
-      setTimeout(() => t.classList.remove('show'), 3500);
+    // INIT
+    async function init() {
+      var sessionData = await sb.auth.getSession();
+      var session = sessionData.data.session;
+      if (!session) { window.location.href = 'index.html'; return; }
+      currentUser = session.user;
+
+      var profilData = await sb.from('profils').select('*').eq('id', currentUser.id).single();
+      var profil = profilData.data;
+      if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
+      if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
+
+      buildSharedNavbar(profil, 'comptes');
+      await chargerMembres();
+      hideLoader();
     }
 
-    // ─── CHARGEMENT ──────────────────────────────────────────────────
+    // CHARGEMENT
     async function chargerMembres() {
-      const { data, error } = await sb.from('profils')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) { showToast('Erreur de chargement.', 'error'); return; }
-      membres = data || [];
+      var res = await sb.from('profils').select('*').order('created_at', { ascending: false });
+      if (res.error) { showToast('Erreur de chargement.', 'error'); return; }
+      membres = res.data || [];
       mettreAJourCompteurs();
       appliquerFiltre();
     }
 
     function mettreAJourCompteurs() {
-      const enAttente = membres.filter(m => !m.actif).length;
-      const actifs    = membres.filter(m => m.actif).length;
+      var enAttente = membres.filter(function(m) { return !m.actif; }).length;
+      var actifs    = membres.filter(function(m) { return m.actif; }).length;
       document.getElementById('nbTotal').textContent   = membres.length;
       document.getElementById('nbAttente').textContent = enAttente;
       document.getElementById('nbActifs').textContent  = actifs;
-      const badge = document.getElementById('cpBadgeAttente');
+      var badge = document.getElementById('cpBadgeAttente');
       badge.textContent = enAttente;
       badge.style.display = enAttente > 0 ? 'inline' : 'none';
     }
 
-    // ─── FILTRES ─────────────────────────────────────────────────────
-    document.getElementById('cpFilterTabs').addEventListener('click', (e) => {
-      const tab = e.target.closest('.cp-tab');
+    // FILTRES
+    document.getElementById('cpFilterTabs').addEventListener('click', function(e) {
+      var tab = e.target.closest('.cp-tab');
       if (!tab) return;
-      document.querySelectorAll('.cp-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.cp-tab').forEach(function(t) { t.classList.remove('active'); });
       tab.classList.add('active');
       filtre = tab.dataset.filtre;
       membreSelectionne = null;
@@ -226,25 +199,22 @@
     document.getElementById('cpSearch').addEventListener('input', appliquerFiltre);
 
     function appliquerFiltre() {
-      const q = document.getElementById('cpSearch').value.toLowerCase().trim();
-      let liste = membres;
-
-      if (filtre === 'attente') liste = membres.filter(m => !m.actif);
-      else if (filtre === 'actifs') liste = membres.filter(m => m.actif);
-
+      var q = document.getElementById('cpSearch').value.toLowerCase().trim();
+      var liste = membres;
+      if (filtre === 'attente') liste = membres.filter(function(m) { return !m.actif; });
+      else if (filtre === 'actifs') liste = membres.filter(function(m) { return m.actif; });
       if (q) {
-        liste = liste.filter(m =>
-          (m.nom || '').toLowerCase().includes(q) ||
-          (m.email || '').toLowerCase().includes(q)
-        );
+        liste = liste.filter(function(m) {
+          return (m.nom || '').toLowerCase().includes(q) || (m.email || '').toLowerCase().includes(q);
+        });
       }
       renderListe(liste);
     }
 
-    // ─── RENDER LISTE ────────────────────────────────────────────────
+    // RENDER LISTE
     function renderListe(liste) {
-      const container = document.getElementById('cpList');
-      const count = document.getElementById('cpCount');
+      var container = document.getElementById('cpList');
+      var count = document.getElementById('cpCount');
       count.textContent = liste.length + ' membre' + (liste.length !== 1 ? 's' : '');
 
       if (liste.length === 0) {
@@ -252,20 +222,25 @@
         return;
       }
 
-      container.innerHTML = liste.map(m => {
-        const initiale = (m.nom || m.email || '?')[0].toUpperCase();
-        const dateInscrit = new Date(m.created_at).toLocaleDateString('fr-FR', {
-          day: '2-digit', month: 'short', year: 'numeric'
-        });
-        const roleLabel = { admin: '⚙ Admin', preparateur: '🕊️ Préparateur', membre: '♪ Membre' }[m.role] || m.role;
-        const actif = membreSelectionne && membreSelectionne.id === m.id ? ' cp-item-active' : '';
-        const estMoi = m.id === currentUser.id;
+      container.innerHTML = '';
+      liste.forEach(function(m) {
+        var initiale = (m.nom || m.email || '?')[0].toUpperCase();
+        var dateInscrit = new Date(m.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+        var roleLabel = { admin:'Admin', preparateur:'Préparateur', membre:'Membre' }[m.role] || m.role;
+        var isActive = membreSelectionne && membreSelectionne.id === m.id;
+        var estMoi = m.id === currentUser.id;
 
-        return '<div class="cp-item' + actif + (m.actif ? '' : ' cp-item-pending') + '" data-id="' + m.id + '" onclick="selectionnerMembre(\'' + m.id + '\')">' +
+        var div = document.createElement('div');
+        div.className = 'cp-item' + (isActive ? ' cp-item-active' : '') + (m.actif ? '' : ' cp-item-pending');
+        div.setAttribute('data-id', m.id);
+
+        var avatarHtml = m.photo_url
+          ? '<img src="' + escHtml(m.photo_url) + '" class="cp-avatar" alt="" />'
+          : '<div class="cp-avatar-fallback">' + initiale + '</div>';
+
+        div.innerHTML =
           '<div class="cp-item-avatar-wrap">' +
-            (m.photo_url
-              ? '<img src="' + escHtml(m.photo_url) + '" class="cp-avatar" alt="" />'
-              : '<div class="cp-avatar-fallback">' + initiale + '</div>') +
+            avatarHtml +
             (m.actif ? '' : '<span class="cp-pending-dot" title="En attente de validation"></span>') +
           '</div>' +
           '<div class="cp-item-info">' +
@@ -274,18 +249,20 @@
             '<span class="cp-item-date">Inscrit le ' + dateInscrit + '</span>' +
           '</div>' +
           '<div class="cp-item-right">' +
-            '<span class="cp-role-badge cp-role-' + m.role + '">' + roleLabel + '</span>' +
-            (!m.actif ? '<span class="cp-statut-badge cp-statut-pending">⏳ En attente</span>' : '') +
-          '</div>' +
-        '</div>';
-      }).join('');
+            '<span class="cp-role-badge cp-role-' + escHtml(m.role) + '">' + escHtml(roleLabel) + '</span>' +
+            (!m.actif ? '<span class="cp-statut-badge cp-statut-pending">En attente</span>' : '') +
+          '</div>';
+
+        div.addEventListener('click', function() { selectionnerMembre(m.id); });
+        container.appendChild(div);
+      });
     }
 
-    // ─── SÉLECTION MEMBRE ────────────────────────────────────────────
+    // SÉLECTION
     function selectionnerMembre(id) {
-      membreSelectionne = membres.find(m => m.id === id);
-      document.querySelectorAll('.cp-item').forEach(el => {
-        el.classList.toggle('cp-item-active', el.dataset.id === id);
+      membreSelectionne = membres.find(function(m) { return m.id === id; });
+      document.querySelectorAll('.cp-item').forEach(function(el) {
+        el.classList.toggle('cp-item-active', el.getAttribute('data-id') === id);
       });
       afficherDetail(membreSelectionne);
     }
@@ -297,138 +274,136 @@
 
     function afficherDetail(m) {
       document.getElementById('cpDetailIdle').style.display = 'none';
-      const body = document.getElementById('cpDetailBody');
+      var body = document.getElementById('cpDetailBody');
       body.style.display = 'block';
 
-      const initiale = (m.nom || m.email || '?')[0].toUpperCase();
-      const dateInscrit = new Date(m.created_at).toLocaleDateString('fr-FR', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-      });
-      const estMoi = m.id === currentUser.id;
-      const roleLabel = { admin: '⚙ Admin', preparateur: '🕊️ Préparateur', membre: '♪ Membre' }[m.role] || m.role;
+      var initiale = (m.nom || m.email || '?')[0].toUpperCase();
+      var dateInscrit = new Date(m.created_at).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+      var estMoi = m.id === currentUser.id;
+      var roleLabel = { admin:'Admin', preparateur:'Préparateur', membre:'Membre' }[m.role] || m.role;
 
-      let actionsHtml = '';
+      var actionsHtml = '';
 
       if (!m.actif) {
-        actionsHtml = '<div class="cp-actions-section">' +
-          '<div class="cp-actions-title">Actions</div>' +
-          '<div class="cp-actions-grid">' +
-            '<button class="cp-action-btn cp-action-valider" onclick="demanderAction(\'valider\')">' +
-              '<span class="cp-action-icon">✅</span>' +
-              '<span>Valider le compte</span>' +
-            '</button>' +
-            '<button class="cp-action-btn cp-action-rejeter" onclick="demanderAction(\'rejeter\')">' +
-              '<span class="cp-action-icon">🗑️</span>' +
-              '<span>Rejeter</span>' +
-            '</button>' +
-          '</div>' +
-        '</div>';
+        actionsHtml =
+          '<div class="cp-actions-section">' +
+            '<div class="cp-actions-title">Actions</div>' +
+            '<div class="cp-actions-grid">' +
+              '<button class="cp-action-btn cp-action-valider" id="btnValider">✅ Valider le compte</button>' +
+              '<button class="cp-action-btn cp-action-rejeter" id="btnRejeter">🗑️ Rejeter</button>' +
+            '</div>' +
+          '</div>';
       } else if (!estMoi) {
-        const roles = ['membre', 'preparateur', 'admin'];
-        const roleOptions = roles.map(r => {
-          const labels = { admin: '⚙ Admin', preparateur: '🕊️ Préparateur', membre: '♪ Membre' };
-          const selected = m.role === r ? ' cp-role-option-active' : '';
-          return '<button class="cp-role-option' + selected + '" onclick="demanderAction(\'role\', \'' + r + '\')">' +
-            labels[r] + '</button>';
+        var roles = ['membre','preparateur','admin'];
+        var roleLabels = { admin:'Admin', preparateur:'Préparateur', membre:'Membre' };
+        var roleButtons = roles.map(function(r) {
+          return '<button class="cp-role-option' + (m.role === r ? ' cp-role-option-active' : '') + '" data-role="' + r + '">' + roleLabels[r] + '</button>';
         }).join('');
 
-        actionsHtml = '<div class="cp-actions-section">' +
-          '<div class="cp-actions-title">Changer le rôle</div>' +
-          '<div class="cp-roles-grid">' + roleOptions + '</div>' +
-        '</div>' +
-        '<div class="cp-actions-section">' +
-          '<div class="cp-actions-title">Gestion du compte</div>' +
-          '<button class="cp-action-btn cp-action-desactiver" onclick="demanderAction(\'desactiver\')">' +
-            '<span class="cp-action-icon">🔒</span>' +
-            '<span>Désactiver le compte</span>' +
-          '</button>' +
-        '</div>';
+        actionsHtml =
+          '<div class="cp-actions-section">' +
+            '<div class="cp-actions-title">Changer le rôle</div>' +
+            '<div class="cp-roles-grid" id="cpRolesGrid">' + roleButtons + '</div>' +
+          '</div>' +
+          '<div class="cp-actions-section">' +
+            '<div class="cp-actions-title">Gestion du compte</div>' +
+            '<button class="cp-action-btn cp-action-desactiver" id="btnDesactiver">🔒 Désactiver le compte</button>' +
+          '</div>';
       } else {
         actionsHtml = '<div class="cp-info-moi">C\'est votre propre compte. Vous ne pouvez pas le modifier.</div>';
       }
 
+      var avatarHtml = m.photo_url
+        ? '<img src="' + escHtml(m.photo_url) + '" class="cp-detail-avatar" alt="" />'
+        : '<div class="cp-detail-avatar-fallback">' + initiale + '</div>';
+
       body.innerHTML =
         '<div class="cp-detail-profil">' +
-          (m.photo_url
-            ? '<img src="' + escHtml(m.photo_url) + '" class="cp-detail-avatar" alt="" />'
-            : '<div class="cp-detail-avatar-fallback">' + initiale + '</div>') +
+          avatarHtml +
           '<div class="cp-detail-info">' +
             '<h2 class="cp-detail-nom">' + escHtml(m.nom || 'Sans nom') + '</h2>' +
             '<span class="cp-detail-email">' + escHtml(m.email) + '</span>' +
           '</div>' +
         '</div>' +
         '<div class="cp-detail-meta">' +
-          '<div class="cp-meta-row">' +
-            '<span class="cp-meta-label">Statut</span>' +
+          '<div class="cp-meta-row"><span class="cp-meta-label">Statut</span>' +
             '<span class="cp-meta-val ' + (m.actif ? 'cp-val-actif' : 'cp-val-pending') + '">' +
-              (m.actif ? '✅ Actif' : '⏳ En attente de validation') +
-            '</span>' +
-          '</div>' +
-          '<div class="cp-meta-row">' +
-            '<span class="cp-meta-label">Rôle</span>' +
-            '<span class="cp-role-badge cp-role-' + m.role + '">' + roleLabel + '</span>' +
-          '</div>' +
-          '<div class="cp-meta-row">' +
-            '<span class="cp-meta-label">Inscription</span>' +
-            '<span class="cp-meta-val">' + dateInscrit + '</span>' +
-          '</div>' +
+              (m.actif ? 'Actif' : 'En attente de validation') + '</span></div>' +
+          '<div class="cp-meta-row"><span class="cp-meta-label">Rôle</span>' +
+            '<span class="cp-role-badge cp-role-' + escHtml(m.role) + '">' + escHtml(roleLabel) + '</span></div>' +
+          '<div class="cp-meta-row"><span class="cp-meta-label">Inscription</span>' +
+            '<span class="cp-meta-val">' + dateInscrit + '</span></div>' +
         '</div>' +
         actionsHtml;
+
+      // Attacher les listeners après injection HTML
+      var btnValider = document.getElementById('btnValider');
+      if (btnValider) btnValider.addEventListener('click', function() { demanderAction('valider'); });
+
+      var btnRejeter = document.getElementById('btnRejeter');
+      if (btnRejeter) btnRejeter.addEventListener('click', function() { demanderAction('rejeter'); });
+
+      var btnDesactiver = document.getElementById('btnDesactiver');
+      if (btnDesactiver) btnDesactiver.addEventListener('click', function() { demanderAction('desactiver'); });
+
+      var cpRolesGrid = document.getElementById('cpRolesGrid');
+      if (cpRolesGrid) {
+        cpRolesGrid.addEventListener('click', function(e) {
+          var btn = e.target.closest('[data-role]');
+          if (btn) demanderAction('role', btn.getAttribute('data-role'));
+        });
+      }
     }
 
-    // ─── MODAL ACTION ────────────────────────────────────────────────
-    const actionConfigs = {
+    // MODAL ACTION
+    var actionConfigs = {
       valider: {
         icon: '✅', titre: 'Valider ce compte ?',
-        msg: (m) => m.nom + ' pourra accéder à Mélodie\'s Book. Choisissez son rôle ci-dessous.',
+        msg: function(m) { return (m.nom || m.email) + ' pourra accéder à Mélodie\'s Book. Choisissez son rôle ci-dessous.'; },
         btnClass: 'btn-primary', btnLabel: 'Valider',
-        exec: async (m) => {
-          const role = document.getElementById('modalRoleSelect').value;
+        exec: async function(m) {
+          var role = document.getElementById('modalRoleSelect').value;
           return sb.from('profils').update({ actif: true, role: role }).eq('id', m.id);
         }
       },
       rejeter: {
         icon: '🗑️', titre: 'Rejeter ce compte ?',
-        msg: () => 'Le profil sera supprimé. Cette action est irréversible.',
+        msg: function() { return 'Le profil sera supprimé. Cette action est irréversible.'; },
         btnClass: 'btn-danger', btnLabel: 'Rejeter',
-        exec: async (m) => sb.from('profils').delete().eq('id', m.id)
+        exec: async function(m) { return sb.from('profils').delete().eq('id', m.id); }
       },
       desactiver: {
         icon: '🔒', titre: 'Désactiver ce compte ?',
-        msg: (m) => (m.nom || m.email) + ' ne pourra plus accéder à l\'application.',
+        msg: function(m) { return (m.nom || m.email) + ' ne pourra plus accéder à l\'application.'; },
         btnClass: 'btn-danger', btnLabel: 'Désactiver',
-        exec: async (m) => sb.from('profils').update({ actif: false }).eq('id', m.id)
+        exec: async function(m) { return sb.from('profils').update({ actif: false }).eq('id', m.id); }
       },
       role: {
         icon: '🔄', titre: 'Changer le rôle ?',
-        msg: (m, data) => {
-          const labels = { admin: 'Admin', preparateur: 'Préparateur', membre: 'Membre' };
+        msg: function(m, data) {
+          var labels = { admin:'Admin', preparateur:'Préparateur', membre:'Membre' };
           return (m.nom || m.email) + ' aura désormais le rôle ' + (labels[data] || data) + '.';
         },
         btnClass: 'btn-primary', btnLabel: 'Confirmer',
-        exec: async (m, data) => sb.from('profils').update({ role: data }).eq('id', m.id)
+        exec: async function(m, data) { return sb.from('profils').update({ role: data }).eq('id', m.id); }
       }
     };
 
-    function demanderAction(type, data = null) {
+    function demanderAction(type, data) {
       if (!membreSelectionne) return;
-      const config = actionConfigs[type];
+      var config = actionConfigs[type];
       if (!config) return;
+      actionEnCours = { type: type, membre: membreSelectionne, data: data || null };
 
-      actionEnCours = { type, membre: membreSelectionne, data };
-
-      document.getElementById('modalActionIcon').textContent = config.icon;
+      document.getElementById('modalActionIcon').textContent  = config.icon;
       document.getElementById('modalActionTitle').textContent = config.titre;
-      document.getElementById('modalActionMsg').textContent = config.msg(membreSelectionne, data);
+      document.getElementById('modalActionMsg').textContent   = config.msg(membreSelectionne, data);
 
-      // Afficher le sélecteur de rôle uniquement pour la validation
-      const roleWrap = document.getElementById('modalRoleWrap');
+      var roleWrap = document.getElementById('modalRoleWrap');
       roleWrap.style.display = (type === 'valider') ? 'block' : 'none';
-      if (type === 'valider') {
-        document.getElementById('modalRoleSelect').value = 'membre'; // défaut : membre
-      }
+      if (type === 'valider') document.getElementById('modalRoleSelect').value = 'membre';
 
-      const btn = document.getElementById('btnConfirmerAction');
+      var btn = document.getElementById('btnConfirmerAction');
       btn.className = config.btnClass;
       btn.textContent = config.btnLabel;
 
@@ -440,29 +415,28 @@
       actionEnCours = null;
     }
 
-    document.getElementById('modalAction').addEventListener('click', (e) => {
+    document.getElementById('btnAnnulerModalAction').addEventListener('click', fermerModalAction);
+
+    document.getElementById('modalAction').addEventListener('click', function(e) {
       if (e.target === document.getElementById('modalAction')) fermerModalAction();
     });
 
-    document.getElementById('btnConfirmerAction').addEventListener('click', async () => {
+    document.getElementById('btnConfirmerAction').addEventListener('click', async function() {
       if (!actionEnCours) return;
-      const { type, membre, data } = actionEnCours;
-      const config = actionConfigs[type];
-      const btn = document.getElementById('btnConfirmerAction');
+      var type = actionEnCours.type;
+      var membre = actionEnCours.membre;
+      var data = actionEnCours.data;
+      var config = actionConfigs[type];
+      var btn = document.getElementById('btnConfirmerAction');
       btn.disabled = true;
 
-      const { error } = await config.exec(membre, data);
+      var res = await config.exec(membre, data);
       btn.disabled = false;
       fermerModalAction();
 
-      if (error) { showToast('Erreur lors de l\'action.', 'error'); console.error(error); return; }
+      if (res.error) { showToast('Erreur lors de l\'action.', 'error'); return; }
 
-      const msgs = {
-        valider: 'Compte validé avec succès.',
-        rejeter: 'Compte rejeté et supprimé.',
-        desactiver: 'Compte désactivé.',
-        role: 'Rôle mis à jour.'
-      };
+      var msgs = { valider:'Compte validé.', rejeter:'Compte rejeté et supprimé.', desactiver:'Compte désactivé.', role:'Rôle mis à jour.' };
       showToast(msgs[type] || 'Action effectuée.', 'success');
 
       if (type === 'rejeter') { resetDetail(); membreSelectionne = null; }
@@ -470,24 +444,10 @@
       await chargerMembres();
 
       if (membreSelectionne && type !== 'rejeter') {
-        membreSelectionne = membres.find(m => m.id === membreSelectionne.id);
+        membreSelectionne = membres.find(function(m) { return m.id === membreSelectionne.id; });
         if (membreSelectionne) afficherDetail(membreSelectionne);
       }
     });
-
-    // ─── LOGOUT + NAV ────────────────────────────────────────────────
-    document.getElementById('btnLogout').addEventListener('click', async () => {
-      await sb.auth.signOut();
-      window.location.href = 'index.html';
-    });
-    document.getElementById('navToggle').addEventListener('click', () => {
-      document.getElementById('navLinks').classList.toggle('open');
-    });
-
-    function escHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
 
     init();
   </script>
