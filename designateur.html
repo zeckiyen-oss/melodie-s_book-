@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="navbar.js"></script>
 </head>
 <body class="page-designateur">
 
@@ -23,27 +24,7 @@
   <!-- TOAST -->
   <div id="toast" class="toast" aria-live="polite"></div>
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a href="dashboard.html" class="navbar-brand">
-      <span class="navbar-logo">♪</span>
-      <span class="navbar-title">Mélodie's Book</span>
-    </a>
-    <div class="navbar-links" id="navLinks">
-      <a href="dashboard.html">Accueil</a>
-      <a href="repertoire.html">Répertoire</a>
-      <a href="themes.html">Thèmes</a>
-      <a href="bibliotheque.html">Bibliothèque</a>
-      <a href="historique.html">Historique</a>
-      <a href="proposer.html">Proposer</a>
-    </div>
-    <div class="navbar-user" id="navUser">
-      <img id="userAvatar" src="" alt="Avatar" class="avatar-sm" />
-      <span id="userName"></span>
-      <button class="btn-logout" id="btnLogout">Déconnexion</button>
-    </div>
-    <button class="navbar-toggle" id="navToggle" aria-label="Menu">&#9776;</button>
-  </nav>
+  <!-- NAVBAR injectée par navbar.js -->
 
   <!-- HERO -->
   <header class="ds-hero">
@@ -64,16 +45,12 @@
   <main class="ds-main">
     <div class="ds-layout">
 
-      <!-- COLONNE GAUCHE : créer un culte -->
       <section class="ds-left">
 
-        <!-- Cultes en préparation -->
         <div class="ds-section-title">
           <span class="ds-section-icon">🕊️</span>
           <h2>Cultes en préparation</h2>
-          <button class="btn-primary ds-btn-creer" id="btnNouveauCulte">
-            <span>✦</span> Nouveau culte
-          </button>
+          <button class="btn-primary ds-btn-creer" id="btnNouveauCulte">✦ Nouveau culte</button>
         </div>
 
         <div class="ds-cultes-list" id="dsCultesList">
@@ -81,7 +58,6 @@
           <div class="ds-skeleton"></div>
         </div>
 
-        <!-- Formulaire nouveau culte (caché par défaut) -->
         <div class="ds-form-card" id="dsFormCulte" style="display:none;">
           <div class="ds-form-header">
             <h3 id="dsFormCulteTitle">Nouveau culte</h3>
@@ -91,23 +67,17 @@
           <input type="hidden" id="culteId" />
 
           <div class="form-group">
-            <label for="culteTheme" class="form-label">
-              Thème du culte <span class="required">*</span>
-            </label>
-            <input type="text" id="culteTheme" class="form-input" placeholder="Ex: La grâce de Dieu, La foi en action…" />
+            <label for="culteTheme" class="form-label">Thème du culte <span class="required">*</span></label>
+            <input type="text" id="culteTheme" class="form-input" placeholder="Ex: La grâce de Dieu…" />
           </div>
 
           <div class="form-group">
-            <label for="culteDate" class="form-label">
-              Date du culte <span class="required">*</span>
-            </label>
+            <label for="culteDate" class="form-label">Date du culte <span class="required">*</span></label>
             <input type="date" id="culteDate" class="form-input" />
           </div>
 
           <div class="form-group">
-            <label for="cultePreparateur" class="form-label">
-              Désigner le préparateur <span class="required">*</span>
-            </label>
+            <label for="cultePreparateur" class="form-label">Désigner le préparateur <span class="required">*</span></label>
             <div class="select-wrapper">
               <select id="cultePreparateur" class="form-select">
                 <option value="">— Choisir un membre —</option>
@@ -118,30 +88,23 @@
 
           <div class="ds-form-actions">
             <button class="btn-secondary" id="btnAnnulerFormCulte">Annuler</button>
-            <button class="btn-primary" id="btnSauvegarderCulte">
-              <span>💾</span> Enregistrer & Désigner
-            </button>
+            <button class="btn-primary" id="btnSauvegarderCulte">💾 Enregistrer et Désigner</button>
           </div>
         </div>
 
       </section>
 
-      <!-- COLONNE DROITE : membres disponibles -->
       <aside class="ds-aside">
 
         <div class="ds-aside-card">
-          <h3 class="ds-aside-title">
-            <span>👥</span> Membres actifs
-          </h3>
+          <h3 class="ds-aside-title"><span>👥</span> Membres actifs</h3>
           <div class="ds-membres-list" id="dsMembresList">
             <div class="ds-loading">Chargement…</div>
           </div>
         </div>
 
         <div class="ds-aside-card ds-aside-info">
-          <h3 class="ds-aside-title">
-            <span>ℹ️</span> Rôle du préparateur
-          </h3>
+          <h3 class="ds-aside-title"><span>ℹ️</span> Rôle du préparateur</h3>
           <ul class="ds-info-list">
             <li>Accède à la page de préparation de culte</li>
             <li>Sélectionne les chansons par rubrique</li>
@@ -156,17 +119,15 @@
     </div>
   </main>
 
-  <!-- MODAL CONFIRMATION DÉSIGNATION -->
+  <!-- MODAL DÉSIGNATION -->
   <div id="modalDesigner" class="modal-overlay" style="display:none;">
     <div class="modal-box">
       <div class="modal-success-icon">🕊️</div>
       <h3>Confirmer la désignation ?</h3>
       <p id="modalDesignerMsg">Ce membre sera désigné comme préparateur pour ce culte.</p>
       <div class="modal-actions">
-        <button class="btn-secondary" onclick="fermerModalDesigner()">Annuler</button>
-        <button class="btn-primary" id="btnConfirmerDesignation">
-          <span>✦</span> Confirmer
-        </button>
+        <button class="btn-secondary" id="btnAnnulerDesignation">Annuler</button>
+        <button class="btn-primary" id="btnConfirmerDesignation">✦ Confirmer</button>
       </div>
     </div>
   </div>
@@ -178,76 +139,72 @@
       <h3>Supprimer ce culte ?</h3>
       <p>Le programme associé sera également supprimé. Cette action est irréversible.</p>
       <div class="modal-actions">
-        <button class="btn-secondary" onclick="fermerModalSupprimerCulte()">Annuler</button>
+        <button class="btn-secondary" id="btnAnnulerSupprimerCulte">Annuler</button>
         <button class="btn-danger" id="btnConfirmerSupprimerCulte">Supprimer</button>
       </div>
     </div>
   </div>
 
   <script>
-    // ─── SUPABASE ───────────────────────────────────────────────────
-    const SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+    var SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+    var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+    var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    window._sb = sb;
 
-    let currentUser = null;
-    let membres = [];
-    let cultes = [];
-    let culteASupprimer = null;
-    let pendingSave = null; // données en attente de confirmation
+    var currentUser = null;
+    var membres = [];
+    var cultes = [];
+    var culteASupprimer = null;
+    var pendingSave = null;
 
-    // ─── INIT ────────────────────────────────────────────────────────
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function hideLoader() {
+      document.getElementById('loader').style.opacity = '0';
+      setTimeout(function() { document.getElementById('loader').style.display = 'none'; }, 400);
+    }
+
+    function showToast(msg, type) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast toast-' + (type || 'info') + ' show';
+      setTimeout(function() { t.classList.remove('show'); }, 3500);
+    }
+
+    // INIT
     async function init() {
-      const { data: { session } } = await sb.auth.getSession();
+      var sessionData = await sb.auth.getSession();
+      var session = sessionData.data.session;
       if (!session) { window.location.href = 'index.html'; return; }
       currentUser = session.user;
 
-      const { data: profil } = await sb.from('profils')
-        .select('*').eq('id', currentUser.id).single();
-
+      var profilData = await sb.from('profils').select('*').eq('id', currentUser.id).single();
+      var profil = profilData.data;
       if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
       if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
 
-      document.getElementById('userAvatar').src = profil.photo_url || '';
-      document.getElementById('userName').textContent = profil.nom || profil.email;
-
+      buildSharedNavbar(profil, 'designateur');
       await Promise.all([chargerMembres(), chargerCultes()]);
       hideLoader();
     }
 
-    // ─── LOADER / TOAST ──────────────────────────────────────────────
-    function hideLoader() {
-      document.getElementById('loader').style.opacity = '0';
-      setTimeout(() => document.getElementById('loader').style.display = 'none', 400);
-    }
-
-    function showToast(msg, type = 'info') {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.className = `toast toast-${type} show`;
-      setTimeout(() => t.classList.remove('show'), 3500);
-    }
-
-    // ─── MEMBRES ─────────────────────────────────────────────────────
+    // MEMBRES
     async function chargerMembres() {
-      const { data, error } = await sb.from('profils')
-        .select('*')
-        .eq('actif', true)
-        .order('nom');
-
-      if (error) { showToast('Erreur chargement membres.', 'error'); return; }
-      membres = data || [];
+      var res = await sb.from('profils').select('*').eq('actif', true).order('nom');
+      if (res.error) { showToast('Erreur chargement membres.', 'error'); return; }
+      membres = res.data || [];
       peuplerSelectPreparateur();
       renderMembres();
     }
 
     function peuplerSelectPreparateur() {
-      const select = document.getElementById('cultePreparateur');
-      // Garder l'option vide
+      var select = document.getElementById('cultePreparateur');
       select.innerHTML = '<option value="">— Choisir un membre —</option>';
-      membres.forEach(m => {
-        const opt = document.createElement('option');
+      membres.forEach(function(m) {
+        var opt = document.createElement('option');
         opt.value = m.id;
         opt.textContent = m.nom || m.email;
         select.appendChild(opt);
@@ -255,93 +212,92 @@
     }
 
     function renderMembres() {
-      const container = document.getElementById('dsMembresList');
+      var container = document.getElementById('dsMembresList');
       if (membres.length === 0) {
         container.innerHTML = '<p class="ds-empty-sm">Aucun membre actif.</p>';
         return;
       }
-      container.innerHTML = membres.map(m => {
-        const roleLabel = { admin: '⚙ Admin', preparateur: '🕊️ Prép.', membre: '♪ Membre' }[m.role] || m.role;
-        return `
-        <div class="ds-membre-item">
-          ${m.photo_url
-            ? `<img src="${escHtml(m.photo_url)}" class="ds-membre-avatar" alt="" />`
-            : `<div class="ds-membre-avatar-fallback">${(m.nom || m.email || '?')[0].toUpperCase()}</div>`}
-          <div class="ds-membre-info">
-            <span class="ds-membre-nom">${escHtml(m.nom || m.email)}</span>
-            <span class="ds-membre-email">${escHtml(m.email)}</span>
-          </div>
-          <span class="ds-role-badge ds-role-${m.role}">${roleLabel}</span>
-        </div>`;
+      container.innerHTML = membres.map(function(m) {
+        var roleLabel = { admin:'Admin', preparateur:'Prép.', membre:'Membre' }[m.role] || m.role;
+        var avatarHtml = m.photo_url
+          ? '<img src="' + escHtml(m.photo_url) + '" class="ds-membre-avatar" alt="" />'
+          : '<div class="ds-membre-avatar-fallback">' + (m.nom || m.email || '?')[0].toUpperCase() + '</div>';
+        return '<div class="ds-membre-item">' +
+          avatarHtml +
+          '<div class="ds-membre-info">' +
+            '<span class="ds-membre-nom">' + escHtml(m.nom || m.email) + '</span>' +
+            '<span class="ds-membre-email">' + escHtml(m.email) + '</span>' +
+          '</div>' +
+          '<span class="ds-role-badge ds-role-' + escHtml(m.role) + '">' + escHtml(roleLabel) + '</span>' +
+        '</div>';
       }).join('');
     }
 
-    // ─── CULTES ──────────────────────────────────────────────────────
+    // CULTES
     async function chargerCultes() {
-      const { data, error } = await sb.from('cultes')
+      var res = await sb.from('cultes')
         .select('*, profils(nom, email, photo_url)')
         .in('statut', ['en_preparation'])
         .order('date_culte', { ascending: true });
-
-      if (error) { showToast('Erreur chargement cultes.', 'error'); return; }
-      cultes = data || [];
+      if (res.error) { showToast('Erreur chargement cultes.', 'error'); return; }
+      cultes = res.data || [];
       renderCultes();
     }
 
     function renderCultes() {
-      const container = document.getElementById('dsCultesList');
-
+      var container = document.getElementById('dsCultesList');
       if (cultes.length === 0) {
-        container.innerHTML = `
-          <div class="ds-empty">
-            <span>🕊️</span>
-            <p>Aucun culte en préparation.<br>Créez le premier en cliquant sur « Nouveau culte ».</p>
-          </div>`;
+        container.innerHTML =
+          '<div class="ds-empty"><span>🕊️</span>' +
+          '<p>Aucun culte en préparation.<br>Créez le premier en cliquant sur Nouveau culte.</p></div>';
         return;
       }
 
-      container.innerHTML = cultes.map(c => {
-        const preparateur = c.profils;
-        const dateStr = new Date(c.date_culte).toLocaleDateString('fr-FR', {
-          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-        });
-        const auj = new Date(); auj.setHours(0,0,0,0);
-        const diff = Math.ceil((new Date(c.date_culte) - auj) / 86400000);
-        const countdown = diff > 0 ? `J-${diff}` : diff === 0 ? "Aujourd'hui" : 'Passé';
+      container.innerHTML = '';
+      cultes.forEach(function(c) {
+        var preparateur = c.profils;
+        var dateStr = new Date(c.date_culte).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+        var auj = new Date(); auj.setHours(0,0,0,0);
+        var diff = Math.ceil((new Date(c.date_culte) - auj) / 86400000);
+        var countdown = diff > 0 ? 'J-' + diff : diff === 0 ? "Aujourd'hui" : 'Passé';
 
-        return `
-        <div class="ds-culte-card">
-          <div class="ds-culte-top">
-            <div class="ds-culte-theme">${escHtml(c.theme)}</div>
-            <span class="ds-culte-countdown ${diff <= 0 ? 'ds-countdown-passe' : ''}">${countdown}</span>
-          </div>
-          <div class="ds-culte-date">📅 ${dateStr}</div>
+        var prepHtml = preparateur
+          ? (preparateur.photo_url
+              ? '<img src="' + escHtml(preparateur.photo_url) + '" class="ds-prep-avatar" alt="" />'
+              : '<div class="ds-prep-avatar-fallback">' + (preparateur.nom || preparateur.email || '?')[0].toUpperCase() + '</div>') +
+            '<span>Préparé par <strong>' + escHtml(preparateur.nom || preparateur.email) + '</strong></span>'
+          : '<span class="ds-no-prep">Aucun préparateur désigné</span>';
 
-          <div class="ds-culte-preparateur">
-            ${preparateur
-              ? `${preparateur.photo_url
-                  ? `<img src="${escHtml(preparateur.photo_url)}" class="ds-prep-avatar" alt="" />`
-                  : `<div class="ds-prep-avatar-fallback">${(preparateur.nom || preparateur.email || '?')[0].toUpperCase()}</div>`}
-                <span>Préparé par <strong>${escHtml(preparateur.nom || preparateur.email)}</strong></span>`
-              : `<span class="ds-no-prep">⚠ Aucun préparateur désigné</span>`}
-          </div>
+        var div = document.createElement('div');
+        div.className = 'ds-culte-card';
+        div.innerHTML =
+          '<div class="ds-culte-top">' +
+            '<div class="ds-culte-theme">' + escHtml(c.theme) + '</div>' +
+            '<span class="ds-culte-countdown' + (diff <= 0 ? ' ds-countdown-passe' : '') + '">' + countdown + '</span>' +
+          '</div>' +
+          '<div class="ds-culte-date">📅 ' + dateStr + '</div>' +
+          '<div class="ds-culte-preparateur">' + prepHtml + '</div>' +
+          '<div class="ds-culte-actions">' +
+            '<button class="btn-secondary ds-btn-sm btn-edit-culte" data-id="' + c.id + '">✏️ Modifier</button>' +
+            '<button class="btn-secondary ds-btn-sm ds-btn-danger btn-del-culte" data-id="' + c.id + '">🗑️ Supprimer</button>' +
+            '<a href="preparation-culte.html?id=' + escHtml(c.id) + '" class="btn-primary ds-btn-sm">🕊️ Voir prog.</a>' +
+          '</div>';
+        container.appendChild(div);
+      });
 
-          <div class="ds-culte-actions">
-            <button class="btn-secondary ds-btn-sm" onclick="editerCulte('${c.id}')">✏️ Modifier</button>
-            <button class="btn-secondary ds-btn-sm ds-btn-danger" onclick="demanderSupprimerCulte('${c.id}')">🗑️ Supprimer</button>
-            <a href="preparation-culte.html?id=${c.id}" class="btn-primary ds-btn-sm">
-              🕊️ Voir prog.
-            </a>
-          </div>
-        </div>`;
-      }).join('');
+      // Listeners sur les boutons des cartes
+      container.querySelectorAll('.btn-edit-culte').forEach(function(btn) {
+        btn.addEventListener('click', function() { editerCulte(btn.getAttribute('data-id')); });
+      });
+      container.querySelectorAll('.btn-del-culte').forEach(function(btn) {
+        btn.addEventListener('click', function() { demanderSupprimerCulte(btn.getAttribute('data-id')); });
+      });
     }
 
-    // ─── FORMULAIRE ──────────────────────────────────────────────────
-    function ouvrirFormulaire(culte = null) {
+    // FORMULAIRE
+    function ouvrirFormulaire(culte) {
       document.getElementById('dsFormCulte').style.display = 'block';
-      document.getElementById('dsFormCulte').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
+      document.getElementById('dsFormCulte').scrollIntoView({ behavior:'smooth', block:'nearest' });
       if (culte) {
         document.getElementById('dsFormCulteTitle').textContent = 'Modifier le culte';
         document.getElementById('culteId').value = culte.id;
@@ -362,77 +318,74 @@
     }
 
     function editerCulte(id) {
-      const culte = cultes.find(c => c.id === id);
+      var culte = cultes.find(function(c) { return c.id === id; });
       if (culte) ouvrirFormulaire(culte);
     }
 
-    // ─── SAUVEGARDER (avec confirmation) ─────────────────────────────
-    document.getElementById('btnSauvegarderCulte').addEventListener('click', () => {
-      const theme = document.getElementById('culteTheme').value.trim();
-      const date_culte = document.getElementById('culteDate').value;
-      const preparateur_id = document.getElementById('cultePreparateur').value;
+    // SAUVEGARDER
+    document.getElementById('btnSauvegarderCulte').addEventListener('click', function() {
+      var theme          = document.getElementById('culteTheme').value.trim();
+      var date_culte     = document.getElementById('culteDate').value;
+      var preparateur_id = document.getElementById('cultePreparateur').value;
 
-      if (!theme) { showToast('Le thème est obligatoire.', 'error'); return; }
-      if (!date_culte) { showToast('La date est obligatoire.', 'error'); return; }
+      if (!theme)          { showToast('Le thème est obligatoire.', 'error'); return; }
+      if (!date_culte)     { showToast('La date est obligatoire.', 'error'); return; }
       if (!preparateur_id) { showToast('Veuillez désigner un préparateur.', 'error'); return; }
 
-      const membre = membres.find(m => m.id === preparateur_id);
-      const id = document.getElementById('culteId').value;
+      var membre = membres.find(function(m) { return m.id === preparateur_id; });
+      var id = document.getElementById('culteId').value;
+      pendingSave = { id: id, theme: theme, date_culte: date_culte, preparateur_id: preparateur_id };
 
-      pendingSave = { id, theme, date_culte, preparateur_id };
-
+      var dateStr = new Date(date_culte).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
       document.getElementById('modalDesignerMsg').textContent =
-        `${membre?.nom || membre?.email || 'Ce membre'} sera désigné comme préparateur pour le culte « ${theme} » du ${
-          new Date(date_culte).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-        }.`;
+        (membre ? (membre.nom || membre.email) : 'Ce membre') +
+        ' sera désigné comme préparateur pour le culte "' + theme + '" du ' + dateStr + '.';
 
       document.getElementById('modalDesigner').style.display = 'flex';
     });
 
-    // ─── MODAL DÉSIGNATION ───────────────────────────────────────────
+    // MODAL DÉSIGNATION
     function fermerModalDesigner() {
       document.getElementById('modalDesigner').style.display = 'none';
       pendingSave = null;
     }
 
-    document.getElementById('modalDesigner').addEventListener('click', (e) => {
+    document.getElementById('btnAnnulerDesignation').addEventListener('click', fermerModalDesigner);
+    document.getElementById('modalDesigner').addEventListener('click', function(e) {
       if (e.target === document.getElementById('modalDesigner')) fermerModalDesigner();
     });
 
-    document.getElementById('btnConfirmerDesignation').addEventListener('click', async () => {
+    document.getElementById('btnConfirmerDesignation').addEventListener('click', async function() {
       if (!pendingSave) return;
-      const { id, theme, date_culte, preparateur_id } = pendingSave;
-      const btn = document.getElementById('btnConfirmerDesignation');
+      var id = pendingSave.id;
+      var theme = pendingSave.theme;
+      var date_culte = pendingSave.date_culte;
+      var preparateur_id = pendingSave.preparateur_id;
+      var btn = document.getElementById('btnConfirmerDesignation');
       btn.disabled = true;
 
-      let error;
+      var res;
       if (id) {
-        ({ error } = await sb.from('cultes')
-          .update({ theme, date_culte, preparateur_id, statut: 'en_preparation' })
-          .eq('id', id));
+        res = await sb.from('cultes').update({ theme: theme, date_culte: date_culte, preparateur_id: preparateur_id, statut: 'en_preparation' }).eq('id', id);
       } else {
-        ({ error } = await sb.from('cultes')
-          .insert({ theme, date_culte, preparateur_id, statut: 'en_preparation' }));
+        res = await sb.from('cultes').insert({ theme: theme, date_culte: date_culte, preparateur_id: preparateur_id, statut: 'en_preparation' });
       }
 
-      // Mettre à jour le rôle du membre en "preparateur"
-      if (!error) {
-        await sb.from('profils')
-          .update({ role: 'preparateur' })
-          .eq('id', preparateur_id);
+      if (!res.error) {
+        await sb.from('profils').update({ role: 'preparateur' }).eq('id', preparateur_id);
       }
 
       btn.disabled = false;
       fermerModalDesigner();
 
-      if (error) { showToast('Erreur lors de la sauvegarde.', 'error'); return; }
+      if (res.error) { showToast('Erreur lors de la sauvegarde.', 'error'); return; }
 
       showToast(id ? 'Culte modifié et préparateur désigné.' : 'Culte créé et préparateur désigné.', 'success');
       fermerFormulaire();
       await Promise.all([chargerMembres(), chargerCultes()]);
     });
 
-    // ─── SUPPRIMER CULTE ─────────────────────────────────────────────
+    // SUPPRIMER CULTE
     function demanderSupprimerCulte(id) {
       culteASupprimer = id;
       document.getElementById('modalSupprimerCulte').style.display = 'flex';
@@ -443,46 +396,27 @@
       culteASupprimer = null;
     }
 
-    document.getElementById('modalSupprimerCulte').addEventListener('click', (e) => {
+    document.getElementById('btnAnnulerSupprimerCulte').addEventListener('click', fermerModalSupprimerCulte);
+    document.getElementById('modalSupprimerCulte').addEventListener('click', function(e) {
       if (e.target === document.getElementById('modalSupprimerCulte')) fermerModalSupprimerCulte();
     });
 
-    document.getElementById('btnConfirmerSupprimerCulte').addEventListener('click', async () => {
+    document.getElementById('btnConfirmerSupprimerCulte').addEventListener('click', async function() {
       if (!culteASupprimer) return;
-
-      // Supprimer d'abord le programme lié
       await sb.from('programme_culte').delete().eq('culte_id', culteASupprimer);
-      const { error } = await sb.from('cultes').delete().eq('id', culteASupprimer);
-
-      if (error) { showToast('Erreur lors de la suppression.', 'error'); return; }
-
+      var res = await sb.from('cultes').delete().eq('id', culteASupprimer);
+      if (res.error) { showToast('Erreur lors de la suppression.', 'error'); return; }
       showToast('Culte supprimé.', 'success');
       fermerModalSupprimerCulte();
       await chargerCultes();
     });
 
-    // ─── BOUTONS ─────────────────────────────────────────────────────
-    document.getElementById('btnNouveauCulte').addEventListener('click', () => ouvrirFormulaire());
+    // BOUTONS
+    document.getElementById('btnNouveauCulte').addEventListener('click', function() { ouvrirFormulaire(null); });
     document.getElementById('btnFermerFormCulte').addEventListener('click', fermerFormulaire);
     document.getElementById('btnAnnulerFormCulte').addEventListener('click', fermerFormulaire);
-
-    // ─── LOGOUT + NAV ────────────────────────────────────────────────
-    document.getElementById('btnLogout').addEventListener('click', async () => {
-      await sb.auth.signOut();
-      window.location.href = 'index.html';
-    });
-    document.getElementById('navToggle').addEventListener('click', () => {
-      document.getElementById('navLinks').classList.toggle('open');
-    });
-
-    // ─── UTILS ───────────────────────────────────────────────────────
-    function escHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
 
     init();
   </script>
 </body>
-  </html>
-  
+</html>
