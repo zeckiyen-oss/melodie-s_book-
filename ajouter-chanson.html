@@ -10,27 +10,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="navbar.js"></script>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/ajouter-chanson.css" />
 </head>
 <body class="page-ajouter">
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a href="dashboard.html" class="nav-logo">
-      <span class="nav-logo-icon">♪</span>
-      <span class="nav-logo-text">Mélodie's Book</span>
-    </a>
-    <div class="nav-links">
-      <a href="repertoire.html" class="nav-link">Répertoire</a>
-      <a href="ajouter-chanson.html" class="nav-link active">+ Ajouter</a>
-    </div>
-    <div class="nav-user">
-      <img id="navAvatar" src="" alt="" class="nav-avatar" />
-      <span id="navNom" class="nav-nom"></span>
-      <button class="btn-deconnexion" id="btnDeconnexion">Quitter</button>
-    </div>
-  </nav>
+  <!-- NAVBAR injectée par navbar.js -->
 
   <!-- LOADER -->
   <div id="loader" class="page-loader">
@@ -53,7 +39,7 @@
     <!-- FORMULAIRE -->
     <div class="form-container">
 
-      <!-- ══ SECTION 1 : INFOS GÉNÉRALES ══ -->
+      <!-- SECTION 1 : INFOS GÉNÉRALES -->
       <section class="form-section">
         <div class="section-header">
           <span class="section-num">01</span>
@@ -61,47 +47,42 @@
         </div>
 
         <div class="form-grid-2">
-          <!-- Numéro -->
           <div class="field-group">
             <label class="field-label" for="numero">Numéro <span class="opt">(optionnel)</span></label>
             <input type="number" id="numero" class="field-input" placeholder="ex: 42" min="1" />
             <span class="field-hint">Numéro dans le recueil ou registre</span>
           </div>
 
-          <!-- Titre -->
           <div class="field-group field-span2">
             <label class="field-label" for="titre">Titre <span class="req">*</span></label>
-            <input type="text" id="titre" class="field-input" placeholder="ex: À toi la gloire" required />
+            <input type="text" id="titre" class="field-input" placeholder="ex: A toi la gloire" required />
           </div>
 
-          <!-- Rubrique -->
           <div class="field-group">
             <label class="field-label" for="rubrique">Rubrique <span class="req">*</span></label>
             <select id="rubrique" class="field-select" required>
               <option value="">— Choisir —</option>
-              <option value="Adoration">🙏 Adoration</option>
-              <option value="Louange">🎉 Louange</option>
-              <option value="Prélude">🌅 Prélude</option>
-              <option value="Offrande">🤲 Offrande</option>
-              <option value="Méditation">🕊️ Méditation</option>
-              <option value="Envoi">✨ Envoi</option>
+              <option value="Adoration">Adoration</option>
+              <option value="Louange">Louange</option>
+              <option value="Prélude">Prélude</option>
+              <option value="Offrande">Offrande</option>
+              <option value="Méditation">Méditation</option>
+              <option value="Envoi">Envoi</option>
             </select>
             <span class="field-hint" id="rubriqueHint"></span>
           </div>
 
-          <!-- Langue -->
           <div class="field-group">
             <label class="field-label" for="langue">Langue <span class="req">*</span></label>
             <select id="langue" class="field-select" required>
               <option value="">— Choisir —</option>
-              <option value="fr">🇫🇷 Français</option>
-              <option value="en">🇬🇧 Anglais</option>
-              <option value="lingala">🌍 Lingala</option>
-              <option value="autre">🌐 Autre</option>
+              <option value="fr">Français</option>
+              <option value="en">Anglais</option>
+              <option value="lingala">Lingala</option>
+              <option value="autre">Autre</option>
             </select>
           </div>
 
-          <!-- Style -->
           <div class="field-group">
             <label class="field-label" for="style">Style musical</label>
             <select id="style" class="field-select">
@@ -115,7 +96,7 @@
         </div>
       </section>
 
-      <!-- ══ SECTION 2 : THÈMES ══ -->
+      <!-- SECTION 2 : THÈMES -->
       <section class="form-section">
         <div class="section-header">
           <span class="section-num">02</span>
@@ -127,61 +108,43 @@
         <p class="field-hint">Sélectionne un ou plusieurs thèmes</p>
       </section>
 
-      <!-- ══ SECTION 3 : PAROLES ══ -->
+      <!-- SECTION 3 : PAROLES -->
       <section class="form-section">
         <div class="section-header">
           <span class="section-num">03</span>
           <h2 class="section-titre">Paroles</h2>
         </div>
 
-        <!-- Barre d'outils éditeur -->
         <div class="editeur-toolbar">
-          <button type="button" class="toolbar-btn" onclick="insererBloc('couplet')">
-            📝 Couplet
-          </button>
-          <button type="button" class="toolbar-btn" onclick="insererBloc('refrain')">
-            🔁 Refrain
-          </button>
-          <button type="button" class="toolbar-btn" onclick="insererBloc('pont')">
-            🌉 Pont
-          </button>
-          <button type="button" class="toolbar-btn" onclick="insererBloc('bridge')">
-            🎶 Bridge
-          </button>
+          <button type="button" class="toolbar-btn" id="btnCouplet">📝 Couplet</button>
+          <button type="button" class="toolbar-btn" id="btnRefrain">🔁 Refrain</button>
+          <button type="button" class="toolbar-btn" id="btnPont">🌉 Pont</button>
+          <button type="button" class="toolbar-btn" id="btnBridge">🎶 Bridge</button>
           <div class="toolbar-sep"></div>
-          <button type="button" class="toolbar-btn toolbar-btn-sm" onclick="formatTexte('**')">
-            <strong>G</strong>
-          </button>
-          <button type="button" class="toolbar-btn toolbar-btn-sm" onclick="formatTexte('_')">
-            <em>I</em>
-          </button>
+          <button type="button" class="toolbar-btn toolbar-btn-sm" id="btnGras"><strong>G</strong></button>
+          <button type="button" class="toolbar-btn toolbar-btn-sm" id="btnItalique"><em>I</em></button>
           <div class="toolbar-sep"></div>
-          <button type="button" class="toolbar-btn toolbar-btn-sm" id="btnApercu" onclick="toggleApercu()">
-            👁 Aperçu
-          </button>
+          <button type="button" class="toolbar-btn toolbar-btn-sm" id="btnApercu">👁 Aperçu</button>
         </div>
 
-        <!-- Guide -->
         <div class="editeur-guide" id="editeurGuide">
-          <span>💡 Sépare chaque couplet/refrain par une <strong>ligne vide</strong>. Les boutons ci-dessus insèrent les étiquettes automatiquement.</span>
+          <span>💡 Sépare chaque couplet/refrain par une <strong>ligne vide</strong>.</span>
         </div>
 
-        <!-- Zone de saisie -->
         <textarea
           id="paroles"
           class="field-textarea paroles-textarea"
-          placeholder="[Couplet 1]&#10;Paroles du premier couplet ici…&#10;&#10;[Refrain]&#10;Paroles du refrain…&#10;&#10;[Couplet 2]&#10;…"
+          placeholder="[Couplet 1]&#10;Paroles du premier couplet ici…&#10;&#10;[Refrain]&#10;Paroles du refrain…"
           rows="16"
         ></textarea>
 
-        <!-- Aperçu paroles -->
         <div class="paroles-apercu" id="parolesApercu" style="display:none">
           <div class="apercu-header">Aperçu des paroles</div>
           <div class="apercu-contenu" id="apercuContenu"></div>
         </div>
       </section>
 
-      <!-- ══ SECTION 4 : MÉDIAS ══ -->
+      <!-- SECTION 4 : MÉDIAS -->
       <section class="form-section">
         <div class="section-header">
           <span class="section-num">04</span>
@@ -189,33 +152,31 @@
         </div>
 
         <div class="form-grid-2">
-          <!-- Audio -->
           <div class="field-group field-span2">
             <label class="field-label" for="audioUrl">🎵 URL Audio</label>
             <div class="url-input-wrap">
-              <input type="url" id="audioUrl" class="field-input" placeholder="https://drive.google.com/… ou lien direct mp3" />
-              <button type="button" class="btn-tester" id="btnTesterAudio" onclick="testerAudio()">Tester</button>
+              <input type="url" id="audioUrl" class="field-input" placeholder="https://drive.google.com/…" />
+              <button type="button" class="btn-tester" id="btnTesterAudio">Tester</button>
             </div>
-            <span class="field-hint">Google Drive, Dropbox, serveur perso… (lien de partage public)</span>
+            <span class="field-hint">Google Drive, Dropbox, lien direct mp3…</span>
             <audio id="audioTest" controls style="display:none; margin-top:.6rem; width:100%; border-radius:8px;"></audio>
           </div>
 
-          <!-- Partition -->
           <div class="field-group field-span2">
             <label class="field-label" for="partitionUrl">📄 URL Partition</label>
             <div class="url-input-wrap">
-              <input type="url" id="partitionUrl" class="field-input" placeholder="https://drive.google.com/… ou lien direct PDF/image" />
-              <a id="btnTesterPartition" href="#" target="_blank" class="btn-tester" onclick="return testerPartition()">Tester</a>
+              <input type="url" id="partitionUrl" class="field-input" placeholder="https://drive.google.com/…" />
+              <a id="btnTesterPartition" href="#" target="_blank" class="btn-tester">Tester</a>
             </div>
             <span class="field-hint">PDF, PNG, JPG — lien de partage public</span>
           </div>
         </div>
       </section>
 
-      <!-- ══ BOUTONS ══ -->
+      <!-- BOUTONS -->
       <div class="form-actions">
         <a href="repertoire.html" class="btn-annuler">Annuler</a>
-        <button type="button" class="btn-sauvegarder" id="btnSauvegarder" onclick="sauvegarder()">
+        <button type="button" class="btn-sauvegarder" id="btnSauvegarder">
           <span class="btn-icon">✦</span>
           Enregistrer la chanson
         </button>
@@ -223,58 +184,61 @@
 
     </div><!-- /form-container -->
 
-    <!-- Verset -->
     <div class="verset-bloc">
-      <p class="verset-texte">« Qu'il habite parmi vous richement la parole de Christ ; instruisez-vous et exhortez-vous les uns les autres en toute sagesse, par des psaumes, par des hymnes, par des cantiques spirituels. »</p>
+      <p class="verset-texte">« Que la parole de Christ habite parmi vous abondamment. »</p>
       <p class="verset-ref">— Colossiens 3 : 16</p>
     </div>
 
   </main>
 
-  <!-- Toast -->
   <div class="toast" id="toast"></div>
 
   <script>
-  // ── CONFIG ──
-  const SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  // CONFIG
+  var SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+  var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  window._sb = sb;
 
-  // ── HINTS PAR RUBRIQUE ──
-  const rubriquesInfo = {
-    Adoration:  '🙏 Chants intimes de dévotion — souvent sans structure couplet/refrain',
-    Louange:    '🎉 Chants joyeux et dynamiques — couplets et refrains fréquents',
-    Prélude:    '🌅 Chant d\'ouverture du culte',
-    Offrande:   '🤲 Chant pendant la collecte',
-    Méditation: '🕊️ Chant contemplatif — peut avoir un texte libre',
-    Envoi:      '✨ Chant de clôture et envoi en mission',
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // HINTS PAR RUBRIQUE
+  var rubriquesInfo = {
+    'Adoration':  'Chants intimes de dévotion',
+    'Louange':    'Chants joyeux et dynamiques',
+    'Prélude':    'Chant ouverture du culte',
+    'Offrande':   'Chant pendant la collecte',
+    'Méditation': 'Chant contemplatif',
+    'Envoi':      'Chant de clôture',
   };
 
   document.getElementById('rubrique').addEventListener('change', function() {
     document.getElementById('rubriqueHint').textContent = rubriquesInfo[this.value] || '';
   });
 
-  // ── TOAST ──
-  function showToast(msg, type = 'info') {
-    const t = document.getElementById('toast');
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
     t.textContent = msg;
-    t.className = `toast toast-${type} show`;
-    setTimeout(() => t.classList.remove('show'), 3500);
+    t.className = 'toast toast-' + (type || 'info') + ' show';
+    setTimeout(function() { t.classList.remove('show'); }, 3500);
   }
 
-  // ── PROTECTION ROUTE (admin seulement) ──
+  // INIT
   async function initPage() {
-    const { data: { session } } = await sb.auth.getSession();
+    var sessionData = await sb.auth.getSession();
+    var session = sessionData.data.session;
     if (!session) { window.location.href = 'index.html'; return; }
 
-    const { data: profil } = await sb
-      .from('profils').select('*').eq('id', session.user.id).single();
+    var profilData = await sb.from('profils').select('*').eq('id', session.user.id).single();
+    var profil = profilData.data;
 
     if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
     if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
 
-    document.getElementById('navAvatar').src = profil.photo_url || '';
-    document.getElementById('navNom').textContent = profil.nom || profil.email;
+    buildSharedNavbar(profil, 'ajouter-chanson');
 
     await chargerThemes();
 
@@ -282,98 +246,90 @@
     document.getElementById('mainContent').style.display = 'block';
   }
 
-  // ── CHARGER THÈMES ──
-  let themesSelectionnes = new Set();
+  // THÈMES
+  var themesSelectionnes = new Set();
 
   async function chargerThemes() {
-    const { data, error } = await sb.from('themes').select('*').order('nom');
-    const picker = document.getElementById('themesPicker');
+    var res = await sb.from('themes').select('*').order('nom');
+    var picker = document.getElementById('themesPicker');
 
-    if (error || !data || data.length === 0) {
-      picker.innerHTML = `
-        <p class="themes-vide">Aucun thème disponible.
-          <a href="gestion-themes.html">Créer des thèmes d'abord →</a>
-        </p>`;
+    if (res.error || !res.data || res.data.length === 0) {
+      picker.innerHTML = '<p class="themes-vide">Aucun thème disponible. <a href="gestion-themes.html">Créer des thèmes →</a></p>';
       return;
     }
 
-    picker.innerHTML = data.map(t => `
-      <button type="button"
-        class="theme-chip"
-        data-id="${t.id}"
-        onclick="toggleTheme(this, '${t.id}')">
-        ${t.nom}
-      </button>
-    `).join('');
+    picker.innerHTML = res.data.map(function(t) {
+      return '<button type="button" class="theme-chip" data-id="' + t.id + '">' + escHtml(t.nom) + '</button>';
+    }).join('');
+
+    picker.querySelectorAll('.theme-chip').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var id = btn.getAttribute('data-id');
+        if (themesSelectionnes.has(id)) {
+          themesSelectionnes.delete(id);
+          btn.classList.remove('theme-chip-actif');
+        } else {
+          themesSelectionnes.add(id);
+          btn.classList.add('theme-chip-actif');
+        }
+      });
+    });
   }
 
-  function toggleTheme(btn, id) {
-    if (themesSelectionnes.has(id)) {
-      themesSelectionnes.delete(id);
-      btn.classList.remove('theme-chip-actif');
-    } else {
-      themesSelectionnes.add(id);
-      btn.classList.add('theme-chip-actif');
-    }
-  }
-
-  // ── ÉDITEUR PAROLES ──
+  // ÉDITEUR PAROLES
   function insererBloc(type) {
-    const ta = document.getElementById('paroles');
-    const etiquettes = {
-      couplet: '[Couplet]',
-      refrain:  '[Refrain]',
-      pont:     '[Pont]',
-      bridge:   '[Bridge]',
-    };
-
-    // Compter combien de fois ce bloc existe pour numéroter
-    const texte = ta.value;
-    const regex = new RegExp(`\\[${type.charAt(0).toUpperCase() + type.slice(1)}`, 'gi');
-    const count = (texte.match(regex) || []).length + 1;
-    const label = type === 'refrain' || type === 'pont' || type === 'bridge'
-      ? etiquettes[type]
-      : `[${type.charAt(0).toUpperCase() + type.slice(1)} ${count}]`;
-
-    const pos = ta.selectionStart;
-    const avant = texte.substring(0, pos);
-    const apres = texte.substring(pos);
-    const separation = (avant.length > 0 && !avant.endsWith('\n\n')) ? '\n\n' : '';
-    ta.value = avant + separation + label + '\n' + apres;
+    var ta = document.getElementById('paroles');
+    var texte = ta.value;
+    var regex = new RegExp('\\[' + type.charAt(0).toUpperCase() + type.slice(1), 'gi');
+    var count = (texte.match(regex) || []).length + 1;
+    var label = (type === 'refrain' || type === 'pont' || type === 'bridge')
+      ? '[' + type.charAt(0).toUpperCase() + type.slice(1) + ']'
+      : '[' + type.charAt(0).toUpperCase() + type.slice(1) + ' ' + count + ']';
+    var pos = ta.selectionStart;
+    var avant = texte.substring(0, pos);
+    var apres = texte.substring(pos);
+    var sep = (avant.length > 0 && !avant.endsWith('\n\n')) ? '\n\n' : '';
+    ta.value = avant + sep + label + '\n' + apres;
     ta.focus();
-    const newPos = avant.length + separation.length + label.length + 1;
+    var newPos = avant.length + sep.length + label.length + 1;
     ta.setSelectionRange(newPos, newPos);
   }
 
   function formatTexte(marqueur) {
-    const ta = document.getElementById('paroles');
-    const debut = ta.selectionStart;
-    const fin = ta.selectionEnd;
-    const selection = ta.value.substring(debut, fin);
+    var ta = document.getElementById('paroles');
+    var debut = ta.selectionStart;
+    var fin = ta.selectionEnd;
+    var selection = ta.value.substring(debut, fin);
     if (!selection) { showToast('Sélectionne du texte d\'abord', 'info'); return; }
-    const remplace = marqueur + selection + marqueur;
+    var remplace = marqueur + selection + marqueur;
     ta.value = ta.value.substring(0, debut) + remplace + ta.value.substring(fin);
     ta.setSelectionRange(debut, debut + remplace.length);
     ta.focus();
   }
 
-  let apercuVisible = false;
-  function toggleApercu() {
-    apercuVisible = !apercuVisible;
-    const apercuDiv = document.getElementById('parolesApercu');
-    const ta = document.getElementById('paroles');
+  document.getElementById('btnCouplet').addEventListener('click', function() { insererBloc('couplet'); });
+  document.getElementById('btnRefrain').addEventListener('click', function() { insererBloc('refrain'); });
+  document.getElementById('btnPont').addEventListener('click', function() { insererBloc('pont'); });
+  document.getElementById('btnBridge').addEventListener('click', function() { insererBloc('bridge'); });
+  document.getElementById('btnGras').addEventListener('click', function() { formatTexte('**'); });
+  document.getElementById('btnItalique').addEventListener('click', function() { formatTexte('_'); });
 
+  var apercuVisible = false;
+  document.getElementById('btnApercu').addEventListener('click', function() {
+    apercuVisible = !apercuVisible;
+    var apercuDiv = document.getElementById('parolesApercu');
+    var ta = document.getElementById('paroles');
     if (apercuVisible) {
-      const blocs = ta.value.split(/\n{2,}/);
-      document.getElementById('apercuContenu').innerHTML = blocs.map(bloc => {
-        const lignes = bloc.trim().split('\n');
-        const isEtiquette = lignes[0].match(/^\[.+\]$/);
-        return `<div class="apercu-strophe ${isEtiquette ? 'apercu-avec-label' : ''}">
-          ${lignes.map((l, i) => {
-            if (i === 0 && isEtiquette) return `<span class="apercu-label">${l}</span>`;
-            return `<span>${l.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/_(.+?)_/g, '<em>$1</em>')}</span>`;
-          }).join('')}
-        </div>`;
+      var blocs = ta.value.split(/\n{2,}/);
+      document.getElementById('apercuContenu').innerHTML = blocs.map(function(bloc) {
+        var lignes = bloc.trim().split('\n');
+        var isEtiquette = lignes[0].match(/^\[.+\]$/);
+        return '<div class="apercu-strophe' + (isEtiquette ? ' apercu-avec-label' : '') + '">' +
+          lignes.map(function(l, i) {
+            if (i === 0 && isEtiquette) return '<span class="apercu-label">' + escHtml(l) + '</span>';
+            return '<span>' + escHtml(l).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/_(.+?)_/g, '<em>$1</em>') + '</span>';
+          }).join('') +
+        '</div>';
       }).join('');
       apercuDiv.style.display = 'block';
       document.getElementById('btnApercu').classList.add('toolbar-btn-actif');
@@ -381,44 +337,42 @@
       apercuDiv.style.display = 'none';
       document.getElementById('btnApercu').classList.remove('toolbar-btn-actif');
     }
-  }
+  });
 
-  // ── TESTER MÉDIAS ──
-  function testerAudio() {
-    const url = document.getElementById('audioUrl').value.trim();
+  // MÉDIAS
+  document.getElementById('btnTesterAudio').addEventListener('click', function() {
+    var url = document.getElementById('audioUrl').value.trim();
     if (!url) { showToast('Colle une URL audio d\'abord', 'info'); return; }
-    const audio = document.getElementById('audioTest');
+    var audio = document.getElementById('audioTest');
     audio.src = url;
     audio.style.display = 'block';
     showToast('Lecteur audio affiché — teste la lecture', 'info');
-  }
+  });
 
-  function testerPartition() {
-    const url = document.getElementById('partitionUrl').value.trim();
-    if (!url) { showToast('Colle une URL de partition d\'abord', 'info'); return false; }
+  document.getElementById('btnTesterPartition').addEventListener('click', function(e) {
+    var url = document.getElementById('partitionUrl').value.trim();
+    if (!url) { showToast('Colle une URL de partition d\'abord', 'info'); e.preventDefault(); return; }
     document.getElementById('btnTesterPartition').href = url;
-    return true;
-  }
+  });
 
-  // ── SAUVEGARDER ──
-  async function sauvegarder() {
-    const titre    = document.getElementById('titre').value.trim();
-    const rubrique = document.getElementById('rubrique').value;
-    const langue   = document.getElementById('langue').value;
+  // SAUVEGARDER
+  document.getElementById('btnSauvegarder').addEventListener('click', async function() {
+    var titre    = document.getElementById('titre').value.trim();
+    var rubrique = document.getElementById('rubrique').value;
+    var langue   = document.getElementById('langue').value;
 
-    // Validation
     if (!titre)    { showToast('Le titre est obligatoire', 'error'); document.getElementById('titre').focus(); return; }
     if (!rubrique) { showToast('Choisis une rubrique', 'error'); return; }
     if (!langue)   { showToast('Choisis une langue', 'error'); return; }
 
-    const btn = document.getElementById('btnSauvegarder');
+    var btn = document.getElementById('btnSauvegarder');
     btn.disabled = true;
-    btn.textContent = '⏳ Enregistrement…';
+    btn.textContent = 'Enregistrement…';
 
-    const chansonData = {
-      titre,
-      rubrique,
-      langue,
+    var chansonData = {
+      titre:         titre,
+      rubrique:      rubrique,
+      langue:        langue,
       numero:        document.getElementById('numero').value || null,
       style:         document.getElementById('style').value || null,
       paroles:       document.getElementById('paroles').value.trim() || null,
@@ -426,42 +380,30 @@
       partition_url: document.getElementById('partitionUrl').value.trim() || null,
     };
 
-    // Insérer la chanson
-    const { data: chanson, error } = await sb
-      .from('chansons')
-      .insert([chansonData])
-      .select()
-      .single();
+    var res = await sb.from('chansons').insert([chansonData]).select().single();
 
-    if (error) {
-      showToast('Erreur : ' + error.message, 'error');
+    if (res.error) {
+      showToast('Erreur : ' + res.error.message, 'error');
       btn.disabled = false;
       btn.innerHTML = '<span class="btn-icon">✦</span> Enregistrer la chanson';
       return;
     }
 
-    // Associer les thèmes
+    var chanson = res.data;
+
     if (themesSelectionnes.size > 0) {
-      const liens = [...themesSelectionnes].map(tid => ({
-        chanson_id: chanson.id,
-        theme_id: tid,
-      }));
+      var liens = Array.from(themesSelectionnes).map(function(tid) {
+        return { chanson_id: chanson.id, theme_id: tid };
+      });
       await sb.from('chansons_themes').insert(liens);
     }
 
-    showToast('✓ Chanson enregistrée avec succès !', 'success');
-    setTimeout(() => {
-      window.location.href = `chanson.html?id=${chanson.id}`;
+    showToast('Chanson enregistrée avec succès !', 'success');
+    setTimeout(function() {
+      window.location.href = 'chanson.html?id=' + chanson.id;
     }, 1500);
-  }
-
-  // ── DÉCONNEXION ──
-  document.getElementById('btnDeconnexion').addEventListener('click', async () => {
-    await sb.auth.signOut();
-    window.location.href = 'index.html';
   });
 
-  // ── INIT ──
   initPage();
   </script>
 
