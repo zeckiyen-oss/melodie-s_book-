@@ -4,45 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Historique des cultes — Mélodie's Book</title>
-
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="navbar.js"></script>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/historique.css" />
 </head>
 <body class="page-historique">
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a href="dashboard.html" class="nav-logo">
-      <span class="nav-logo-icon">♪</span>
-      <span class="nav-logo-text">Mélodie's Book</span>
-    </a>
-    <div class="nav-links">
-      <a href="repertoire.html" class="nav-link">Répertoire</a>
-      <a href="themes.html" class="nav-link">Thèmes</a>
-      <a href="historique.html" class="nav-link active">Historique</a>
-    </div>
-    <div class="nav-user">
-      <img id="navAvatar" src="" alt="" class="nav-avatar" />
-      <span id="navNom" class="nav-nom"></span>
-      <button class="btn-deconnexion" id="btnDeconnexion">Quitter</button>
-    </div>
-  </nav>
+  <!-- NAVBAR injectée par navbar.js -->
 
-  <!-- LOADER -->
   <div id="loader" class="page-loader">
     <div class="loader-cross">✝</div>
     <p class="loader-text">Chargement…</p>
   </div>
 
-  <!-- MAIN -->
   <main class="histo-main" id="mainContent" style="display:none">
 
-    <!-- En-tête -->
     <div class="histo-header">
       <div class="histo-header-left">
         <div class="histo-header-icon">📅</div>
@@ -51,60 +31,37 @@
           <p class="histo-sous-titre">Tous les programmes de culte archivés</p>
         </div>
       </div>
-      <!-- Bouton admin -->
       <a href="preparation-culte.html" class="btn-nouveau-culte" id="btnNouveauCulte" style="display:none">
         ✦ Nouveau culte
       </a>
     </div>
 
-    <!-- Stats -->
     <div class="histo-stats">
-      <div class="hstat-pill">
-        <span class="hstat-num" id="statTotal">—</span>
-        <span class="hstat-label">cultes</span>
-      </div>
-      <div class="hstat-pill hstat-valide">
-        <span class="hstat-num" id="statValides">—</span>
-        <span class="hstat-label">validés</span>
-      </div>
-      <div class="hstat-pill hstat-prep">
-        <span class="hstat-num" id="statPrep">—</span>
-        <span class="hstat-label">en préparation</span>
-      </div>
-      <div class="hstat-pill hstat-archive">
-        <span class="hstat-num" id="statArchives">—</span>
-        <span class="hstat-label">archivés</span>
-      </div>
+      <div class="hstat-pill"><span class="hstat-num" id="statTotal">—</span><span class="hstat-label">cultes</span></div>
+      <div class="hstat-pill hstat-valide"><span class="hstat-num" id="statValides">—</span><span class="hstat-label">validés</span></div>
+      <div class="hstat-pill hstat-prep"><span class="hstat-num" id="statPrep">—</span><span class="hstat-label">en préparation</span></div>
+      <div class="hstat-pill hstat-archive"><span class="hstat-num" id="statArchives">—</span><span class="hstat-label">archivés</span></div>
     </div>
 
-    <!-- Filtres -->
     <div class="histo-filtres">
       <div class="filtre-recherche">
         <span>🔍</span>
-        <input type="text" id="searchInput" placeholder="Rechercher par thème…" oninput="filtrer()" />
+        <input type="text" id="searchInput" placeholder="Rechercher par thème…" />
       </div>
-
-      <div class="filtre-tabs">
-        <button class="ftab ftab-actif" onclick="setFiltreStatut('tous', this)">Tous</button>
-        <button class="ftab ftab-valide" onclick="setFiltreStatut('valide', this)">✓ Validés</button>
-        <button class="ftab ftab-prep" onclick="setFiltreStatut('en_preparation', this)">⏳ En préparation</button>
-        <button class="ftab ftab-archive" onclick="setFiltreStatut('archive', this)">📦 Archivés</button>
+      <div class="filtre-tabs" id="filtreTabs">
+        <button class="ftab ftab-actif" data-statut="tous">Tous</button>
+        <button class="ftab ftab-valide" data-statut="valide">✓ Validés</button>
+        <button class="ftab ftab-prep" data-statut="en_preparation">⏳ En préparation</button>
+        <button class="ftab ftab-archive" data-statut="archive">📦 Archivés</button>
       </div>
-
-      <select id="filtreAnnee" class="filtre-select" onchange="filtrer()">
+      <select id="filtreAnnee" class="filtre-select">
         <option value="">Toutes années</option>
       </select>
     </div>
 
-    <!-- Compteur -->
     <div class="histo-compteur" id="histoCompteur"></div>
+    <div class="histo-timeline" id="histoTimeline"></div>
 
-    <!-- Timeline des cultes -->
-    <div class="histo-timeline" id="histoTimeline">
-      <!-- injecté via JS -->
-    </div>
-
-    <!-- État vide -->
     <div class="histo-vide" id="histoVide" style="display:none">
       <div class="vide-icon">📭</div>
       <p class="vide-titre">Aucun culte trouvé</p>
@@ -114,7 +71,6 @@
     <!-- PANNEAU DÉTAIL CULTE -->
     <div class="culte-overlay" id="culteOverlay" style="display:none">
       <div class="culte-panel" id="cultePanel">
-
         <div class="cpanel-header">
           <div class="cpanel-header-left">
             <div class="cpanel-date" id="cpanelDate">—</div>
@@ -123,29 +79,22 @@
               <div class="cpanel-badges" id="cpanelBadges"></div>
             </div>
           </div>
-          <button class="cpanel-fermer" onclick="fermerCulte()">✕</button>
+          <button class="cpanel-fermer" id="btnFermerCulte">✕</button>
         </div>
-
         <div class="cpanel-preparateur" id="cpanelPreparateur" style="display:none">
           <span class="prep-label">Préparé par</span>
           <span class="prep-nom" id="prepNom">—</span>
         </div>
-
-        <!-- Programme par rubrique -->
         <div class="cpanel-programme" id="cpanelProgramme">
           <p class="chargement-txt">Chargement du programme…</p>
         </div>
-
-        <!-- Actions admin -->
         <div class="cpanel-actions" id="cpanelActions" style="display:none">
           <a href="#" class="btn-cpanel-modifier" id="btnModifierCulte">✏️ Modifier</a>
-          <button class="btn-cpanel-archiver" id="btnArchiverCulte" onclick="archiverCulte()">📦 Archiver</button>
+          <button class="btn-cpanel-archiver" id="btnArchiverCulte">📦 Archiver</button>
         </div>
-
       </div>
     </div>
 
-    <!-- Verset -->
     <div class="verset-bloc">
       <p class="verset-texte">« Souviens-toi des jours d'autrefois, considère les années des générations passées. »</p>
       <p class="verset-ref">— Deutéronome 32 : 7</p>
@@ -156,40 +105,38 @@
   <div class="toast" id="toast"></div>
 
   <script>
-  const SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  var SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+  var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  window._sb = sb;
 
-  let tousCultes = [];
-  let filtreStatut = 'tous';
-  let isAdmin = false;
-  let culteOuvert = null;
+  var tousCultes = [];
+  var filtreStatut = 'tous';
+  var isAdmin = false;
+  var culteOuvert = null;
 
-  const ORDRE_RUBRIQUES = ['Prélude','Adoration','Louange','Méditation','Offrande','Envoi'];
-
-  const STATUT_CONFIG = {
-    valide:         { label: 'Validé',         cls: 'badge-valide',  icon: '✓' },
-    en_preparation: { label: 'En préparation', cls: 'badge-prep',    icon: '⏳' },
-    archive:        { label: 'Archivé',        cls: 'badge-archive', icon: '📦' },
+  var ORDRE_RUBRIQUES = ['Prélude','Adoration','Louange','Méditation','Offrande','Envoi'];
+  var STATUT_CONFIG = {
+    valide:         { label:'Validé',          cls:'badge-valide',  icon:'✓' },
+    en_preparation: { label:'En préparation',  cls:'badge-prep',    icon:'⏳' },
+    archive:        { label:'Archivé',         cls:'badge-archive', icon:'📦' },
   };
 
-  function showToast(msg, type = 'info') {
-    const t = document.getElementById('toast');
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
     t.textContent = msg;
-    t.className = 'toast toast-' + type + ' show';
-    setTimeout(() => t.classList.remove('show'), 3000);
+    t.className = 'toast toast-' + (type || 'info') + ' show';
+    setTimeout(function() { t.classList.remove('show'); }, 3000);
   }
 
   function formatDate(str) {
     if (!str) return '—';
-    const d = new Date(str);
-    return d.toLocaleDateString('fr-FR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
-  }
-
-  function formatDateCourt(str) {
-    if (!str) return '—';
-    const d = new Date(str);
-    return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+    return new Date(str).toLocaleDateString('fr-FR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
   }
 
   function getAnnee(str) {
@@ -197,49 +144,44 @@
     return new Date(str).getFullYear().toString();
   }
 
-  // ── INIT ──
   async function initPage() {
-    const { data: { session } } = await sb.auth.getSession();
+    var sessionData = await sb.auth.getSession();
+    var session = sessionData.data.session;
     if (!session) { window.location.href = 'index.html'; return; }
 
-    const { data: profil } = await sb.from('profils').select('*').eq('id', session.user.id).single();
+    var profilData = await sb.from('profils').select('*').eq('id', session.user.id).single();
+    var profil = profilData.data;
     if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
 
     isAdmin = profil.role === 'admin';
-    document.getElementById('navAvatar').src = profil.photo_url || '';
-    document.getElementById('navNom').textContent = profil.nom || profil.email;
+    buildSharedNavbar(profil, 'historique');
 
-    if (isAdmin) {
-      document.getElementById('btnNouveauCulte').style.display = 'inline-flex';
-    }
+    if (isAdmin) document.getElementById('btnNouveauCulte').style.display = 'inline-flex';
 
     await chargerCultes();
-
     document.getElementById('loader').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
   }
 
-  // ── CHARGER CULTES ──
   async function chargerCultes() {
-    const { data, error } = await sb
-      .from('cultes')
-      .select('*, profils(nom, photo_url)')
-      .order('date_culte', { ascending: false });
+    var res = await sb.from('cultes').select('*, profils(nom, photo_url)').order('date_culte', { ascending: false });
+    if (res.error) { showToast('Erreur de chargement', 'error'); return; }
+    tousCultes = res.data || [];
 
-    if (error) { showToast('Erreur de chargement', 'error'); return; }
-    tousCultes = data || [];
-
-    // Stats
     document.getElementById('statTotal').textContent   = tousCultes.length;
-    document.getElementById('statValides').textContent  = tousCultes.filter(c => c.statut === 'valide').length;
-    document.getElementById('statPrep').textContent     = tousCultes.filter(c => c.statut === 'en_preparation').length;
-    document.getElementById('statArchives').textContent = tousCultes.filter(c => c.statut === 'archive').length;
+    document.getElementById('statValides').textContent  = tousCultes.filter(function(c) { return c.statut === 'valide'; }).length;
+    document.getElementById('statPrep').textContent     = tousCultes.filter(function(c) { return c.statut === 'en_preparation'; }).length;
+    document.getElementById('statArchives').textContent = tousCultes.filter(function(c) { return c.statut === 'archive'; }).length;
 
-    // Remplir le filtre années
-    const annees = [...new Set(tousCultes.map(c => getAnnee(c.date_culte)))].sort().reverse();
-    const sel = document.getElementById('filtreAnnee');
-    annees.forEach(a => {
-      const opt = document.createElement('option');
+    var annees = [];
+    tousCultes.forEach(function(c) {
+      var a = getAnnee(c.date_culte);
+      if (annees.indexOf(a) === -1) annees.push(a);
+    });
+    annees.sort().reverse();
+    var sel = document.getElementById('filtreAnnee');
+    annees.forEach(function(a) {
+      var opt = document.createElement('option');
       opt.value = a; opt.textContent = a;
       sel.appendChild(opt);
     });
@@ -247,197 +189,173 @@
     filtrer();
   }
 
-  // ── FILTRE STATUT ──
-  function setFiltreStatut(val, btn) {
-    filtreStatut = val;
-    document.querySelectorAll('.ftab').forEach(b => b.classList.remove('ftab-actif'));
+  // Filtres tabs
+  document.getElementById('filtreTabs').addEventListener('click', function(e) {
+    var btn = e.target.closest('.ftab');
+    if (!btn) return;
+    document.querySelectorAll('.ftab').forEach(function(b) { b.classList.remove('ftab-actif'); });
     btn.classList.add('ftab-actif');
+    filtreStatut = btn.getAttribute('data-statut');
     filtrer();
-  }
+  });
+  document.getElementById('searchInput').addEventListener('input', filtrer);
+  document.getElementById('filtreAnnee').addEventListener('change', filtrer);
 
-  // ── FILTRER ──
   function filtrer() {
-    const q     = document.getElementById('searchInput').value.toLowerCase().trim();
-    const annee = document.getElementById('filtreAnnee').value;
-
-    const liste = tousCultes.filter(c => {
+    var q     = document.getElementById('searchInput').value.toLowerCase().trim();
+    var annee = document.getElementById('filtreAnnee').value;
+    var liste = tousCultes.filter(function(c) {
       if (q && !(c.theme || '').toLowerCase().includes(q)) return false;
       if (annee && getAnnee(c.date_culte) !== annee) return false;
       if (filtreStatut !== 'tous' && c.statut !== filtreStatut) return false;
       return true;
     });
-
     afficherTimeline(liste);
   }
 
-  // ── AFFICHER TIMELINE ──
   function afficherTimeline(liste) {
-    const tl   = document.getElementById('histoTimeline');
-    const vide = document.getElementById('histoVide');
-    const cpt  = document.getElementById('histoCompteur');
-
+    var tl   = document.getElementById('histoTimeline');
+    var vide = document.getElementById('histoVide');
+    var cpt  = document.getElementById('histoCompteur');
     cpt.textContent = liste.length + ' culte' + (liste.length > 1 ? 's' : '');
 
-    if (liste.length === 0) {
-      tl.style.display   = 'none';
-      vide.style.display = 'flex';
-      return;
-    }
+    if (liste.length === 0) { tl.style.display = 'none'; vide.style.display = 'flex'; return; }
+    tl.style.display = 'block'; vide.style.display = 'none';
 
-    tl.style.display   = 'block';
-    vide.style.display = 'none';
-
-    // Grouper par année/mois
-    const groupes = {};
-    liste.forEach(c => {
-      const d = c.date_culte ? new Date(c.date_culte) : null;
-      const cle = d
-        ? d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
-        : 'Date inconnue';
+    var groupes = {};
+    liste.forEach(function(c) {
+      var d = c.date_culte ? new Date(c.date_culte) : null;
+      var cle = d ? d.toLocaleDateString('fr-FR', { month:'long', year:'numeric' }) : 'Date inconnue';
       if (!groupes[cle]) groupes[cle] = [];
       groupes[cle].push(c);
     });
 
-    tl.innerHTML = Object.entries(groupes).map(([mois, cultes]) => `
-      <div class="tl-groupe">
-        <div class="tl-mois-label">${mois}</div>
-        <div class="tl-items">
-          ${cultes.map(c => renderCulteCard(c)).join('')}
-        </div>
-      </div>
-    `).join('');
+    tl.innerHTML = '';
+    Object.keys(groupes).forEach(function(mois) {
+      var section = document.createElement('div');
+      section.className = 'tl-groupe';
+      section.innerHTML = '<div class="tl-mois-label">' + mois + '</div><div class="tl-items" id="tl-items-' + mois.replace(/\s/g,'_') + '"></div>';
+      tl.appendChild(section);
+
+      var itemsDiv = section.querySelector('.tl-items');
+      groupes[mois].forEach(function(c) {
+        var cfg = STATUT_CONFIG[c.statut] || { label: c.statut, cls: 'badge-archive', icon: '—' };
+        var d = c.date_culte ? new Date(c.date_culte) : null;
+        var jour = d ? d.toLocaleDateString('fr-FR', { weekday:'short' }) : '';
+        var num  = d ? d.getDate() : '—';
+
+        var card = document.createElement('div');
+        card.className = 'tl-card';
+        card.innerHTML = '<div class="tl-card-date"><span class="tl-jour">' + jour + '</span><span class="tl-num">' + num + '</span></div>'
+          + '<div class="tl-card-info">'
+          + '<span class="tl-theme">' + escHtml(c.theme || 'Sans thème') + '</span>'
+          + '<span class="tl-prep-nom">' + (c.profils && c.profils.nom ? 'Par ' + escHtml(c.profils.nom) : '') + '</span>'
+          + '</div>'
+          + '<div class="tl-card-right">'
+          + '<span class="tl-badge ' + cfg.cls + '">' + cfg.icon + ' ' + cfg.label + '</span>'
+          + '<span class="tl-arrow">›</span>'
+          + '</div>';
+
+        (function(culteId) {
+          card.addEventListener('click', function() { ouvrirCulte(culteId); });
+        })(c.id);
+
+        itemsDiv.appendChild(card);
+      });
+    });
   }
 
-  // ── CARD CULTE ──
-  function renderCulteCard(c) {
-    const cfg = STATUT_CONFIG[c.statut] || { label: c.statut, cls: 'badge-archive', icon: '—' };
-    const d = c.date_culte ? new Date(c.date_culte) : null;
-    const jour = d ? d.toLocaleDateString('fr-FR', { weekday:'short' }) : '';
-    const num  = d ? d.getDate() : '—';
-    return `
-      <div class="tl-card" onclick="ouvrirCulte('${c.id}')">
-        <div class="tl-card-date">
-          <span class="tl-jour">${jour}</span>
-          <span class="tl-num">${num}</span>
-        </div>
-        <div class="tl-card-info">
-          <span class="tl-theme">${c.theme || 'Sans thème'}</span>
-          <span class="tl-prep-nom">${c.profils?.nom ? 'Par ' + c.profils.nom : ''}</span>
-        </div>
-        <div class="tl-card-right">
-          <span class="tl-badge ${cfg.cls}">${cfg.icon} ${cfg.label}</span>
-          <span class="tl-arrow">›</span>
-        </div>
-      </div>
-    `;
-  }
-
-  // ── OUVRIR CULTE ──
   async function ouvrirCulte(id) {
-    culteOuvert = tousCultes.find(c => c.id === id);
+    culteOuvert = tousCultes.find(function(c) { return c.id === id; });
     if (!culteOuvert) return;
-
-    const c = culteOuvert;
-    const cfg = STATUT_CONFIG[c.statut] || {};
+    var c = culteOuvert;
+    var cfg = STATUT_CONFIG[c.statut] || {};
 
     document.getElementById('cpanelDate').textContent  = formatDate(c.date_culte);
     document.getElementById('cpanelTheme').textContent = c.theme || 'Sans thème';
-    document.getElementById('cpanelBadges').innerHTML  =
-      `<span class="tl-badge ${cfg.cls || ''}">${cfg.icon || ''} ${cfg.label || c.statut}</span>`;
+    document.getElementById('cpanelBadges').innerHTML  = '<span class="tl-badge ' + (cfg.cls || '') + '">' + (cfg.icon || '') + ' ' + (cfg.label || c.statut) + '</span>';
 
-    // Préparateur
-    const prepDiv = document.getElementById('cpanelPreparateur');
-    if (c.profils?.nom) {
+    var prepDiv = document.getElementById('cpanelPreparateur');
+    if (c.profils && c.profils.nom) {
       document.getElementById('prepNom').textContent = c.profils.nom;
       prepDiv.style.display = 'flex';
     } else {
       prepDiv.style.display = 'none';
     }
 
-    // Actions admin
-    const actDiv = document.getElementById('cpanelActions');
+    var actDiv = document.getElementById('cpanelActions');
     if (isAdmin) {
       actDiv.style.display = 'flex';
       document.getElementById('btnModifierCulte').href = 'preparation-culte.html?id=' + id;
-      document.getElementById('btnArchiverCulte').style.display =
-        c.statut !== 'archive' ? 'inline-flex' : 'none';
+      document.getElementById('btnArchiverCulte').style.display = c.statut !== 'archive' ? 'inline-flex' : 'none';
     }
 
     document.getElementById('cpanelProgramme').innerHTML = '<p class="chargement-txt">Chargement…</p>';
     document.getElementById('culteOverlay').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
-    // Charger le programme
-    const { data } = await sb
-      .from('programme_culte')
+    var res = await sb.from('programme_culte')
       .select('ordre, rubrique, chansons(id, numero, titre, langue)')
       .eq('culte_id', id)
       .order('ordre');
 
-    const div = document.getElementById('cpanelProgramme');
-
-    if (!data || data.length === 0) {
+    var div = document.getElementById('cpanelProgramme');
+    if (!res.data || res.data.length === 0) {
       div.innerHTML = '<p class="no-chansons">Aucune chanson dans ce programme.</p>';
       return;
     }
 
-    // Grouper par rubrique
-    const parRubrique = {};
-    data.forEach(p => {
-      const r = p.rubrique || 'Autre';
+    var parRubrique = {};
+    res.data.forEach(function(p) {
+      var r = p.rubrique || 'Autre';
       if (!parRubrique[r]) parRubrique[r] = [];
       parRubrique[r].push(p);
     });
 
-    const ordre = [...ORDRE_RUBRIQUES, 'Autre'];
-    div.innerHTML = `
-      <div class="prog-titre-label">Programme</div>
-      ${ordre.filter(r => parRubrique[r]).map(r => `
-        <div class="prog-rubrique">
-          <div class="prog-rubrique-label">${r}</div>
-          ${parRubrique[r].map(p => `
-            <a href="chanson.html?id=${p.chansons?.id}" class="prog-chanson" onclick="fermerCulte()">
-              <span class="prog-ordre">${p.ordre || ''}</span>
-              ${p.chansons?.numero ? '<span class="prog-num">#' + p.chansons.numero + '</span>' : ''}
-              <span class="prog-chanson-titre">${p.chansons?.titre || '—'}</span>
-              <span class="prog-langue">${p.chansons?.langue || ''}</span>
-            </a>
-          `).join('')}
-        </div>
-      `).join('')}
-    `;
+    var ordre = ORDRE_RUBRIQUES.concat(['Autre']);
+    var html = '<div class="prog-titre-label">Programme</div>';
+    ordre.filter(function(r) { return parRubrique[r]; }).forEach(function(r) {
+      html += '<div class="prog-rubrique"><div class="prog-rubrique-label">' + escHtml(r) + '</div>';
+      parRubrique[r].forEach(function(p) {
+        var ch = p.chansons || {};
+        html += '<a href="chanson.html?id=' + escHtml(ch.id || '') + '" class="prog-chanson" id="prog-lien-' + escHtml(ch.id || '') + '">'
+          + '<span class="prog-ordre">' + (p.ordre || '') + '</span>'
+          + (ch.numero ? '<span class="prog-num">#' + escHtml(String(ch.numero)) + '</span>' : '')
+          + '<span class="prog-chanson-titre">' + escHtml(ch.titre || '—') + '</span>'
+          + '<span class="prog-langue">' + escHtml(ch.langue || '') + '</span>'
+          + '</a>';
+      });
+      html += '</div>';
+    });
+    div.innerHTML = html;
+
+    // Fermer le panel quand on clique un lien chanson
+    div.querySelectorAll('.prog-chanson').forEach(function(a) {
+      a.addEventListener('click', fermerCulte);
+    });
   }
 
-  // ── ARCHIVER CULTE ──
   async function archiverCulte() {
     if (!culteOuvert) return;
-    const { error } = await sb
-      .from('cultes').update({ statut: 'archive' }).eq('id', culteOuvert.id);
-    if (error) { showToast('Erreur lors de l\'archivage', 'error'); return; }
+    var res = await sb.from('cultes').update({ statut: 'archive' }).eq('id', culteOuvert.id);
+    if (res.error) { showToast('Erreur lors de l\'archivage', 'error'); return; }
     showToast('Culte archivé ✓', 'success');
     fermerCulte();
     await chargerCultes();
   }
 
-  // ── FERMER ──
   function fermerCulte() {
     document.getElementById('culteOverlay').style.display = 'none';
     document.body.style.overflow = '';
     culteOuvert = null;
   }
 
-  document.getElementById('culteOverlay').addEventListener('click', function(e) {
-    if (e.target === this) fermerCulte();
-  });
-
-  document.getElementById('btnDeconnexion').addEventListener('click', async () => {
-    await sb.auth.signOut();
-    window.location.href = 'index.html';
-  });
+  document.getElementById('btnFermerCulte').addEventListener('click', fermerCulte);
+  document.getElementById('btnArchiverCulte').addEventListener('click', archiverCulte);
+  document.getElementById('culteOverlay').addEventListener('click', function(e) { if (e.target === this) fermerCulte(); });
 
   initPage();
   </script>
 
 </body>
-  </html>
-  
+</html>
