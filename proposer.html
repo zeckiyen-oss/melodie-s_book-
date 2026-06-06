@@ -9,43 +9,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="navbar.js"></script>
 </head>
 <body class="page-proposer">
 
-  <!-- LOADER -->
   <div id="loader" class="loader-overlay">
-    <div class="loader-cross">
-      <div class="loader-bar loader-bar-h"></div>
-      <div class="loader-bar loader-bar-v"></div>
-    </div>
+    <div class="loader-cross"><div class="loader-bar loader-bar-h"></div><div class="loader-bar loader-bar-v"></div></div>
   </div>
 
-  <!-- TOAST -->
   <div id="toast" class="toast" aria-live="polite"></div>
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a href="dashboard.html" class="navbar-brand">
-      <span class="navbar-logo">♪</span>
-      <span class="navbar-title">Mélodie's Book</span>
-    </a>
-    <div class="navbar-links" id="navLinks">
-      <a href="dashboard.html">Accueil</a>
-      <a href="repertoire.html">Répertoire</a>
-      <a href="themes.html">Thèmes</a>
-      <a href="bibliotheque.html">Bibliothèque</a>
-      <a href="historique.html">Historique</a>
-      <a href="proposer.html" class="active">Proposer</a>
-    </div>
-    <div class="navbar-user" id="navUser">
-      <img id="userAvatar" src="" alt="Avatar" class="avatar-sm" />
-      <span id="userName"></span>
-      <button class="btn-logout" id="btnLogout">Déconnexion</button>
-    </div>
-    <button class="navbar-toggle" id="navToggle" aria-label="Menu">&#9776;</button>
-  </nav>
+  <!-- NAVBAR injectée par navbar.js -->
 
-  <!-- HERO HEADER -->
   <header class="proposer-hero">
     <div class="proposer-hero-bg"></div>
     <div class="proposer-hero-content">
@@ -60,107 +35,74 @@
     <div class="proposer-hero-ornement"></div>
   </header>
 
-  <!-- CONTENU PRINCIPAL -->
   <main class="proposer-main">
     <div class="proposer-layout">
 
-      <!-- FORMULAIRE -->
       <section class="proposer-form-section">
         <div class="form-card">
           <div class="form-card-header">
             <span class="form-card-icon">🎵</span>
             <h2>Informations de la chanson</h2>
           </div>
-
           <div class="form-body">
 
-            <!-- Titre -->
             <div class="form-group">
-              <label for="titre" class="form-label">
-                Titre de la chanson <span class="required">*</span>
-              </label>
+              <label for="titre" class="form-label">Titre de la chanson <span class="required">*</span></label>
               <input type="text" id="titre" class="form-input" placeholder="Ex: Amazing Grace" required />
             </div>
 
-            <!-- Artiste -->
             <div class="form-group">
               <label for="artiste" class="form-label">Artiste / Auteur</label>
               <input type="text" id="artiste" class="form-input" placeholder="Ex: John Newton" />
             </div>
 
-            <!-- Ligne : Langue + Rubrique -->
             <div class="form-row">
               <div class="form-group">
-                <label for="langue" class="form-label">
-                  Langue <span class="required">*</span>
-                </label>
+                <label for="langue" class="form-label">Langue <span class="required">*</span></label>
                 <div class="select-wrapper">
                   <select id="langue" class="form-select" required>
                     <option value="">— Choisir —</option>
-                    <option value="Français">🇫🇷 Français</option>
-                    <option value="Anglais">🇬🇧 Anglais</option>
-                    <option value="Lingala">🎵 Lingala</option>
-                    <option value="Swahili">🎵 Swahili</option>
-                    <option value="Autre">✦ Autre</option>
+                    <option value="Français">Français</option>
+                    <option value="Anglais">Anglais</option>
+                    <option value="Lingala">Lingala</option>
+                    <option value="Swahili">Swahili</option>
+                    <option value="Autre">Autre</option>
                   </select>
                   <span class="select-arrow">▾</span>
                 </div>
               </div>
-
               <div class="form-group">
-                <label for="rubrique" class="form-label">
-                  Rubrique <span class="required">*</span>
-                </label>
+                <label for="rubrique" class="form-label">Rubrique <span class="required">*</span></label>
                 <div class="select-wrapper">
                   <select id="rubrique" class="form-select" required>
                     <option value="">— Choisir —</option>
-                    <option value="Adoration">🙏 Adoration</option>
-                    <option value="Louange">🎉 Louange</option>
-                    <option value="Prélude">🌅 Prélude</option>
-                    <option value="Offrande">💛 Offrande</option>
-                    <option value="Méditation">🕊️ Méditation</option>
-                    <option value="Envoi">🌟 Envoi</option>
+                    <option value="Adoration">Adoration</option>
+                    <option value="Louange">Louange</option>
+                    <option value="Prélude">Prélude</option>
+                    <option value="Offrande">Offrande</option>
+                    <option value="Méditation">Méditation</option>
+                    <option value="Envoi">Envoi</option>
                   </select>
                   <span class="select-arrow">▾</span>
                 </div>
               </div>
             </div>
 
-            <!-- PAROLES -->
             <div class="form-group">
-              <label for="paroles" class="form-label">
-                Paroles de la chanson
-                <span style="font-weight:400; font-style:italic; text-transform:none; font-size:0.75rem; color:#78909C; margin-left:4px;">(optionnel)</span>
-              </label>
-              <textarea id="paroles" class="form-textarea prop-paroles-input" rows="8"
-                placeholder="Collez ou tapez les paroles ici...
-
-Couplet 1 :
-...
-
-Refrain :
-..."></textarea>
+              <label for="paroles" class="form-label">Paroles <span style="font-weight:400;font-style:italic;font-size:0.75rem;color:#78909C;">(optionnel)</span></label>
+              <textarea id="paroles" class="form-textarea prop-paroles-input" rows="8" placeholder="Collez ou tapez les paroles ici…"></textarea>
               <div class="form-hint">Séparez les couplets et refrains par une ligne vide.</div>
             </div>
 
-            <!-- Commentaire -->
             <div class="form-group">
-              <label for="commentaire" class="form-label">
-                Commentaire / Contexte d'utilisation
-              </label>
-              <textarea id="commentaire" class="form-textarea" rows="3"
-                placeholder="Pourquoi proposez-vous cette chanson ? Dans quel contexte la voyez-vous utilisée ?"></textarea>
-              <div class="form-hint">Précisez si vous avez une partition ou un enregistrement disponible.</div>
+              <label for="commentaire" class="form-label">Commentaire / Contexte d'utilisation</label>
+              <textarea id="commentaire" class="form-textarea" rows="3" placeholder="Pourquoi proposez-vous cette chanson ?"></textarea>
             </div>
 
-            <!-- Boutons -->
             <div class="form-actions">
-              <button class="btn-secondary" type="button" onclick="window.history.back()">
-                ← Annuler
-              </button>
+              <button class="btn-secondary" type="button" id="btnAnnuler">← Annuler</button>
               <button class="btn-primary btn-submit" id="btnSoumettre" type="button">
-                <span class="btn-icon">✦</span>
-                Soumettre la proposition
+                <span class="btn-icon">✦</span> Soumettre la proposition
               </button>
             </div>
 
@@ -168,54 +110,29 @@ Refrain :
         </div>
       </section>
 
-      <!-- PANNEAU LATÉRAL -->
       <aside class="proposer-aside">
-
         <div class="aside-card aside-info">
-          <h3 class="aside-card-title">
-            <span>ℹ️</span> Comment ça marche ?
-          </h3>
+          <h3 class="aside-card-title"><span>ℹ️</span> Comment ça marche ?</h3>
           <ol class="aside-steps">
-            <li>
-              <span class="step-num">1</span>
-              <div>
-                <strong>Vous proposez</strong>
-                <p>Remplissez le formulaire avec les informations de la chanson.</p>
-              </div>
-            </li>
-            <li>
-              <span class="step-num">2</span>
-              <div>
-                <strong>L'admin examine</strong>
-                <p>Votre proposition est soumise à l'examen de l'administrateur.</p>
-              </div>
-            </li>
-            <li>
-              <span class="step-num">3</span>
-              <div>
-                <strong>Ajout au répertoire</strong>
-                <p>Si acceptée, la chanson intègre notre bibliothèque musicale.</p>
-              </div>
-            </li>
+            <li><span class="step-num">1</span><div><strong>Vous proposez</strong><p>Remplissez le formulaire avec les informations de la chanson.</p></div></li>
+            <li><span class="step-num">2</span><div><strong>L'admin examine</strong><p>Votre proposition est soumise à l'examen de l'administrateur.</p></div></li>
+            <li><span class="step-num">3</span><div><strong>Ajout au répertoire</strong><p>Si acceptée, la chanson intègre notre bibliothèque musicale.</p></div></li>
           </ol>
         </div>
 
-        <!-- Mes propositions -->
         <div class="aside-card aside-mes-props">
-          <h3 class="aside-card-title">
-            <span>📋</span> Mes propositions
-          </h3>
+          <h3 class="aside-card-title"><span>📋</span> Mes propositions</h3>
           <div id="mesPropositions" class="mes-props-list">
             <div class="props-loading">Chargement…</div>
           </div>
         </div>
 
         <div class="aside-verset">
-          <em>« Que la parole de Christ habite parmi vous en abondance, en toute sagesse. Enseignez-vous et exhortez-vous les uns les autres par des psaumes, des hymnes et des cantiques spirituels. »</em>
+          <em>« Que la parole de Christ habite parmi vous en abondance. »</em>
           <span class="aside-verset-ref">Colossiens 3:16</span>
         </div>
-
       </aside>
+
     </div>
   </main>
 
@@ -226,170 +143,120 @@ Refrain :
       <h3>Proposition envoyée !</h3>
       <p>Votre proposition a bien été soumise. L'administrateur l'examinera prochainement.</p>
       <div class="modal-actions">
-        <button class="btn-secondary" onclick="closeModal()">Faire une autre proposition</button>
+        <button class="btn-secondary" id="btnFermerModal">Faire une autre proposition</button>
         <a href="repertoire.html" class="btn-primary">Voir le répertoire</a>
       </div>
     </div>
   </div>
 
-  <script>
-    var SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
-    var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
-    var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-
-    var currentUser = null;
-    var currentProfil = null;
-
-    // ─── INIT ────────────────────────────────────────────────────────
-    async function init() {
-      var r = await sb.auth.getSession();
-      if (!r.data.session) { window.location.href = 'index.html'; return; }
-      currentUser = r.data.session.user;
-
-      var p = await sb.from('profils').select('*').eq('id', currentUser.id).single();
-      if (!p.data || !p.data.actif) { window.location.href = 'index.html'; return; }
-      currentProfil = p.data;
-
-      document.getElementById('userAvatar').src = currentProfil.photo_url || '';
-      document.getElementById('userName').textContent = currentProfil.nom || currentProfil.email;
-
-      hideLoader();
-      chargerMesPropositions();
-    }
-
-    function hideLoader() {
-      document.getElementById('loader').style.opacity = '0';
-      setTimeout(function() { document.getElementById('loader').style.display = 'none'; }, 400);
-    }
-
-    function showToast(msg, type) {
-      type = type || 'info';
-      var t = document.getElementById('toast');
-      t.textContent = msg;
-      t.className = 'toast toast-' + type + ' show';
-      setTimeout(function() { t.classList.remove('show'); }, 3500);
-    }
-
-    // ─── MES PROPOSITIONS ────────────────────────────────────────────
-    async function chargerMesPropositions() {
-      var res = await sb.from('propositions')
-        .select('*')
-        .eq('propose_par', currentUser.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      var container = document.getElementById('mesPropositions');
-
-      if (res.error || !res.data || res.data.length === 0) {
-        container.innerHTML = '<p class="props-empty">Vous n\'avez pas encore fait de proposition.</p>';
-        return;
-      }
-
-      var html = '';
-      res.data.forEach(function(p) {
-        var labels = { en_attente: '⏳ En attente', accepte: '✅ Accepté', refuse: '❌ Refusé' };
-        html += '<div class="prop-item prop-' + p.statut + '">'
-          + '<div class="prop-item-info">'
-          + '<span class="prop-item-titre">' + escHtml(p.titre) + '</span>'
-          + '<span class="prop-item-artiste">' + escHtml(p.artiste || '—') + '</span>'
-          + '</div>'
-          + '<span class="prop-badge prop-badge-' + p.statut + '">' + (labels[p.statut] || p.statut) + '</span>'
-          + '</div>';
-      });
-      container.innerHTML = html;
-    }
-
-    // ─── SOUMISSION ──────────────────────────────────────────────────
-    document.getElementById('btnSoumettre').addEventListener('click', async function() {
-      var titre = document.getElementById('titre').value.trim();
-      var artiste = document.getElementById('artiste').value.trim();
-      var langue = document.getElementById('langue').value;
-      var rubrique = document.getElementById('rubrique').value;
-      var paroles = document.getElementById('paroles').value.trim();
-      var commentaire = document.getElementById('commentaire').value.trim();
-
-      if (!titre) { showToast('Le titre est obligatoire.', 'error'); return; }
-      if (!langue) { showToast('Veuillez choisir une langue.', 'error'); return; }
-      if (!rubrique) { showToast('Veuillez choisir une rubrique.', 'error'); return; }
-
-      var btn = document.getElementById('btnSoumettre');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="btn-icon">↻</span> Envoi…';
-
-      var res = await sb.from('propositions').insert({
-        titre: titre,
-        artiste: artiste || null,
-        langue: langue,
-        rubrique: rubrique,
-        paroles: paroles || null,
-        commentaire: commentaire || null,
-        statut: 'en_attente',
-        propose_par: currentUser.id
-      });
-
-      btn.disabled = false;
-      btn.innerHTML = '<span class="btn-icon">✦</span> Soumettre la proposition';
-
-      if (res.error) {
-        showToast('Erreur lors de l\'envoi. Réessayez.', 'error');
-        console.error(res.error);
-        return;
-      }
-
-      // Réinitialiser
-      document.getElementById('titre').value = '';
-      document.getElementById('artiste').value = '';
-      document.getElementById('langue').value = '';
-      document.getElementById('rubrique').value = '';
-      document.getElementById('paroles').value = '';
-      document.getElementById('commentaire').value = '';
-
-      document.getElementById('modalConfirm').style.display = 'flex';
-      chargerMesPropositions();
-    });
-
-    // ─── MODAL ───────────────────────────────────────────────────────
-    function closeModal() {
-      document.getElementById('modalConfirm').style.display = 'none';
-    }
-
-    document.getElementById('modalConfirm').addEventListener('click', function(e) {
-      if (e.target === document.getElementById('modalConfirm')) closeModal();
-    });
-
-    // ─── LOGOUT + NAV ────────────────────────────────────────────────
-    document.getElementById('btnLogout').addEventListener('click', async function() {
-      await sb.auth.signOut();
-      window.location.href = 'index.html';
-    });
-
-    document.getElementById('navToggle').addEventListener('click', function() {
-      document.getElementById('navLinks').classList.toggle('open');
-    });
-
-    function escHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    init();
-  </script>
-
   <style>
-    /* Champ paroles spécifique */
-    .prop-paroles-input {
-      font-family: 'Playfair Display', serif;
-      font-size: 0.92rem;
-      line-height: 1.8;
-      min-height: 200px;
-      resize: vertical;
-    }
-    .prop-paroles-input::placeholder {
-      font-family: 'Lato', sans-serif;
-      font-size: 0.85rem;
-      color: rgba(250,246,237,0.25);
-    }
+    .prop-paroles-input { font-family:'Playfair Display',serif; font-size:0.92rem; line-height:1.8; min-height:200px; resize:vertical; }
+    .prop-paroles-input::placeholder { font-family:'Lato',sans-serif; font-size:0.85rem; color:rgba(250,246,237,0.25); }
   </style>
+
+  <script>
+  var SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+  var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  window._sb = sb;
+
+  var currentUser = null;
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast toast-' + (type || 'info') + ' show';
+    setTimeout(function() { t.classList.remove('show'); }, 3500);
+  }
+
+  function hideLoader() {
+    document.getElementById('loader').style.opacity = '0';
+    setTimeout(function() { document.getElementById('loader').style.display = 'none'; }, 400);
+  }
+
+  async function init() {
+    var r = await sb.auth.getSession();
+    if (!r.data.session) { window.location.href = 'index.html'; return; }
+    currentUser = r.data.session.user;
+
+    var p = await sb.from('profils').select('*').eq('id', currentUser.id).single();
+    if (!p.data || !p.data.actif) { window.location.href = 'index.html'; return; }
+
+    buildSharedNavbar(p.data, 'proposer');
+    hideLoader();
+    chargerMesPropositions();
+  }
+
+  async function chargerMesPropositions() {
+    var res = await sb.from('propositions').select('*').eq('propose_par', currentUser.id).order('created_at', { ascending: false }).limit(5);
+    var container = document.getElementById('mesPropositions');
+    if (res.error || !res.data || res.data.length === 0) {
+      container.innerHTML = '<p class="props-empty">Vous n\'avez pas encore fait de proposition.</p>';
+      return;
+    }
+    var labels = { en_attente:'⏳ En attente', accepte:'✅ Accepté', refuse:'❌ Refusé' };
+    container.innerHTML = res.data.map(function(p) {
+      return '<div class="prop-item prop-' + p.statut + '">'
+        + '<div class="prop-item-info">'
+        + '<span class="prop-item-titre">' + escHtml(p.titre) + '</span>'
+        + '<span class="prop-item-artiste">' + escHtml(p.artiste || '—') + '</span>'
+        + '</div>'
+        + '<span class="prop-badge prop-badge-' + p.statut + '">' + (labels[p.statut] || p.statut) + '</span>'
+        + '</div>';
+    }).join('');
+  }
+
+  document.getElementById('btnSoumettre').addEventListener('click', async function() {
+    var titre      = document.getElementById('titre').value.trim();
+    var artiste    = document.getElementById('artiste').value.trim();
+    var langue     = document.getElementById('langue').value;
+    var rubrique   = document.getElementById('rubrique').value;
+    var paroles    = document.getElementById('paroles').value.trim();
+    var commentaire = document.getElementById('commentaire').value.trim();
+
+    if (!titre)    { showToast('Le titre est obligatoire.', 'error'); return; }
+    if (!langue)   { showToast('Veuillez choisir une langue.', 'error'); return; }
+    if (!rubrique) { showToast('Veuillez choisir une rubrique.', 'error'); return; }
+
+    var btn = document.getElementById('btnSoumettre');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-icon">↻</span> Envoi…';
+
+    var res = await sb.from('propositions').insert({
+      titre: titre, artiste: artiste || null, langue: langue, rubrique: rubrique,
+      paroles: paroles || null, commentaire: commentaire || null,
+      statut: 'en_attente', propose_par: currentUser.id
+    });
+
+    btn.disabled = false;
+    btn.innerHTML = '<span class="btn-icon">✦</span> Soumettre la proposition';
+
+    if (res.error) { showToast('Erreur lors de l\'envoi. Réessayez.', 'error'); return; }
+
+    document.getElementById('titre').value = '';
+    document.getElementById('artiste').value = '';
+    document.getElementById('langue').value = '';
+    document.getElementById('rubrique').value = '';
+    document.getElementById('paroles').value = '';
+    document.getElementById('commentaire').value = '';
+
+    document.getElementById('modalConfirm').style.display = 'flex';
+    chargerMesPropositions();
+  });
+
+  document.getElementById('btnAnnuler').addEventListener('click', function() { window.history.back(); });
+
+  function fermerModal() { document.getElementById('modalConfirm').style.display = 'none'; }
+  document.getElementById('btnFermerModal').addEventListener('click', fermerModal);
+  document.getElementById('modalConfirm').addEventListener('click', function(e) { if (e.target === this) fermerModal(); });
+
+  init();
+  </script>
 
 </body>
 </html>
