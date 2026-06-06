@@ -4,43 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Modifier une chanson — Mélodie's Book</title>
-
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="navbar.js"></script>
   <link rel="stylesheet" href="css/style.css" />
-  <!-- Réutilise le même CSS que ajouter-chanson -->
+  <link rel="stylesheet" href="css/ajouter-chanson.css" />
 </head>
 <body class="page-ajouter">
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a href="dashboard.html" class="nav-logo">
-      <span class="nav-logo-icon">♪</span>
-      <span class="nav-logo-text">Mélodie's Book</span>
-    </a>
-    <div class="nav-links">
-      <a href="repertoire.html" class="nav-link">Répertoire</a>
-    </div>
-    <div class="nav-user">
-      <img id="navAvatar" src="" alt="" class="nav-avatar" />
-      <span id="navNom" class="nav-nom"></span>
-      <button class="btn-deconnexion" id="btnDeconnexion">Quitter</button>
-    </div>
-  </nav>
+  <!-- NAVBAR injectée par navbar.js -->
 
-  <!-- LOADER -->
   <div id="loader" class="page-loader">
     <div class="loader-cross">✝</div>
     <p class="loader-text">Chargement…</p>
   </div>
 
-  <!-- MAIN -->
   <main class="ajouter-main" id="mainContent" style="display:none">
 
-    <!-- En-tête -->
     <div class="page-header">
       <div class="page-header-icon">✏️</div>
       <div>
@@ -49,59 +31,52 @@
       </div>
     </div>
 
-    <!-- Bandeau info -->
     <div class="bandeau-info">
       <span class="bandeau-icon">💡</span>
-      Les champs marqués d'un <span class="req">*</span> sont obligatoires. Les autres sont modifiables librement.
+      Les champs marqués d'un <span class="req">*</span> sont obligatoires.
     </div>
 
-    <!-- FORMULAIRE -->
     <div class="form-container">
 
-      <!-- ══ SECTION 1 : INFOS GÉNÉRALES ══ -->
+      <!-- SECTION 1 -->
       <section class="form-section">
         <div class="section-header">
           <span class="section-num">01</span>
           <h2 class="section-titre">Informations générales</h2>
         </div>
-
         <div class="form-grid-2">
           <div class="field-group">
             <label class="field-label" for="numero">Numéro <span class="opt">(optionnel)</span></label>
             <input type="number" id="numero" class="field-input" placeholder="ex: 42" min="1" />
             <span class="field-hint">Numéro dans le recueil ou registre</span>
           </div>
-
           <div class="field-group field-span2">
             <label class="field-label" for="titre">Titre <span class="req">*</span></label>
-            <input type="text" id="titre" class="field-input" placeholder="ex: À toi la gloire" required />
+            <input type="text" id="titre" class="field-input" required />
           </div>
-
           <div class="field-group">
             <label class="field-label" for="rubrique">Rubrique <span class="req">*</span></label>
             <select id="rubrique" class="field-select" required>
               <option value="">— Choisir —</option>
-              <option value="Adoration">🙏 Adoration</option>
-              <option value="Louange">🎉 Louange</option>
-              <option value="Prélude">🌅 Prélude</option>
-              <option value="Offrande">🤲 Offrande</option>
-              <option value="Méditation">🕊️ Méditation</option>
-              <option value="Envoi">✨ Envoi</option>
+              <option value="Adoration">Adoration</option>
+              <option value="Louange">Louange</option>
+              <option value="Prélude">Prélude</option>
+              <option value="Offrande">Offrande</option>
+              <option value="Méditation">Méditation</option>
+              <option value="Envoi">Envoi</option>
             </select>
             <span class="field-hint" id="rubriqueHint"></span>
           </div>
-
           <div class="field-group">
             <label class="field-label" for="langue">Langue <span class="req">*</span></label>
             <select id="langue" class="field-select" required>
               <option value="">— Choisir —</option>
-              <option value="fr">🇫🇷 Français</option>
-              <option value="en">🇬🇧 Anglais</option>
-              <option value="lingala">🌍 Lingala</option>
-              <option value="autre">🌐 Autre</option>
+              <option value="fr">Français</option>
+              <option value="en">Anglais</option>
+              <option value="lingala">Lingala</option>
+              <option value="autre">Autre</option>
             </select>
           </div>
-
           <div class="field-group">
             <label class="field-label" for="style">Style musical</label>
             <select id="style" class="field-select">
@@ -115,7 +90,7 @@
         </div>
       </section>
 
-      <!-- ══ SECTION 2 : THÈMES ══ -->
+      <!-- SECTION 2 : THÈMES -->
       <section class="form-section">
         <div class="section-header">
           <span class="section-num">02</span>
@@ -127,165 +102,143 @@
         <p class="field-hint">Clique pour sélectionner / désélectionner</p>
       </section>
 
-      <!-- ══ SECTION 3 : PAROLES ══ -->
+      <!-- SECTION 3 : PAROLES -->
       <section class="form-section">
         <div class="section-header">
           <span class="section-num">03</span>
           <h2 class="section-titre">Paroles</h2>
         </div>
-
         <div class="editeur-toolbar">
-          <button type="button" class="toolbar-btn" onclick="insererBloc('couplet')">📝 Couplet</button>
-          <button type="button" class="toolbar-btn" onclick="insererBloc('refrain')">🔁 Refrain</button>
-          <button type="button" class="toolbar-btn" onclick="insererBloc('pont')">🌉 Pont</button>
-          <button type="button" class="toolbar-btn" onclick="insererBloc('bridge')">🎶 Bridge</button>
+          <button type="button" class="toolbar-btn" id="btnCouplet">📝 Couplet</button>
+          <button type="button" class="toolbar-btn" id="btnRefrain">🔁 Refrain</button>
+          <button type="button" class="toolbar-btn" id="btnPont">🌉 Pont</button>
+          <button type="button" class="toolbar-btn" id="btnBridge">🎶 Bridge</button>
           <div class="toolbar-sep"></div>
-          <button type="button" class="toolbar-btn toolbar-btn-sm" onclick="formatTexte('**')"><strong>G</strong></button>
-          <button type="button" class="toolbar-btn toolbar-btn-sm" onclick="formatTexte('_')"><em>I</em></button>
+          <button type="button" class="toolbar-btn toolbar-btn-sm" id="btnGras"><strong>G</strong></button>
+          <button type="button" class="toolbar-btn toolbar-btn-sm" id="btnItalique"><em>I</em></button>
           <div class="toolbar-sep"></div>
-          <button type="button" class="toolbar-btn toolbar-btn-sm" id="btnApercu" onclick="toggleApercu()">👁 Aperçu</button>
+          <button type="button" class="toolbar-btn toolbar-btn-sm" id="btnApercu">👁 Aperçu</button>
         </div>
-
         <div class="editeur-guide">
           <span>💡 Sépare chaque couplet/refrain par une <strong>ligne vide</strong>.</span>
         </div>
-
-        <textarea
-          id="paroles"
-          class="field-textarea paroles-textarea"
-          placeholder="[Couplet 1]&#10;Paroles du premier couplet…&#10;&#10;[Refrain]&#10;Paroles du refrain…"
-          rows="16"
-        ></textarea>
-
+        <textarea id="paroles" class="field-textarea paroles-textarea" rows="16"></textarea>
         <div class="paroles-apercu" id="parolesApercu" style="display:none">
           <div class="apercu-header">Aperçu des paroles</div>
           <div class="apercu-contenu" id="apercuContenu"></div>
         </div>
       </section>
 
-      <!-- ══ SECTION 4 : MÉDIAS ══ -->
+      <!-- SECTION 4 : MÉDIAS -->
       <section class="form-section">
         <div class="section-header">
           <span class="section-num">04</span>
           <h2 class="section-titre">Médias <span class="opt">(optionnel)</span></h2>
         </div>
-
         <div class="form-grid-2">
           <div class="field-group field-span2">
             <label class="field-label" for="audioUrl">🎵 URL Audio</label>
             <div class="url-input-wrap">
               <input type="url" id="audioUrl" class="field-input" placeholder="https://drive.google.com/…" />
-              <button type="button" class="btn-tester" onclick="testerAudio()">Tester</button>
+              <button type="button" class="btn-tester" id="btnTesterAudio">Tester</button>
             </div>
-            <span class="field-hint">Google Drive, Dropbox, lien direct mp3…</span>
             <audio id="audioTest" controls style="display:none; margin-top:.6rem; width:100%; border-radius:8px;"></audio>
           </div>
-
           <div class="field-group field-span2">
             <label class="field-label" for="partitionUrl">📄 URL Partition</label>
             <div class="url-input-wrap">
               <input type="url" id="partitionUrl" class="field-input" placeholder="https://drive.google.com/…" />
-              <a id="btnTesterPartition" href="#" target="_blank" class="btn-tester" onclick="return testerPartition()">Tester</a>
+              <a id="btnTesterPartition" href="#" target="_blank" class="btn-tester">Tester</a>
             </div>
-            <span class="field-hint">PDF, PNG, JPG — lien de partage public</span>
           </div>
         </div>
       </section>
 
-      <!-- ══ BOUTONS ══ -->
+      <!-- BOUTONS -->
       <div class="form-actions">
         <a href="#" class="btn-annuler" id="btnAnnuler">Annuler</a>
-        <button type="button" class="btn-sauvegarder" id="btnSauvegarder" onclick="sauvegarder()">
-          <span class="btn-icon">✦</span>
-          Enregistrer les modifications
+        <button type="button" class="btn-sauvegarder" id="btnSauvegarder">
+          <span class="btn-icon">✦</span> Enregistrer les modifications
         </button>
       </div>
 
-    </div><!-- /form-container -->
+    </div>
 
-    <!-- Verset -->
     <div class="verset-bloc">
-      <p class="verset-texte">« Rendez grâces à l'Éternel, invoquez son nom, faites connaître ses œuvres parmi les peuples ! »</p>
+      <p class="verset-texte">« Rendez grâces à l'Éternel, invoquez son nom. »</p>
       <p class="verset-ref">— 1 Chroniques 16 : 8</p>
     </div>
 
   </main>
 
-  <!-- Toast -->
   <div class="toast" id="toast"></div>
 
   <script>
-  const SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  var SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+  var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  window._sb = sb;
 
-  let chansonId = null;
-  let themesSelectionnes = new Set();
+  var chansonId = null;
+  var themesSelectionnes = new Set();
 
-  const rubriquesInfo = {
-    Adoration:  '🙏 Chants intimes de dévotion',
-    Louange:    '🎉 Chants joyeux et dynamiques',
-    Prélude:    '🌅 Chant d\'ouverture du culte',
-    Offrande:   '🤲 Chant pendant la collecte',
-    Méditation: '🕊️ Chant contemplatif',
-    Envoi:      '✨ Chant de clôture',
+  var rubriquesInfo = {
+    'Adoration':'Chants intimes de dévotion', 'Louange':'Chants joyeux et dynamiques',
+    'Prélude':'Chant ouverture du culte', 'Offrande':'Chant pendant la collecte',
+    'Méditation':'Chant contemplatif', 'Envoi':'Chant de clôture'
   };
 
-  function showToast(msg, type = 'info') {
-    const t = document.getElementById('toast');
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
     t.textContent = msg;
-    t.className = `toast toast-${type} show`;
-    setTimeout(() => t.classList.remove('show'), 3500);
+    t.className = 'toast toast-' + (type || 'info') + ' show';
+    setTimeout(function() { t.classList.remove('show'); }, 3500);
   }
 
-  function setLoader(v) {
-    document.getElementById('loader').style.display = v ? 'flex' : 'none';
-    document.getElementById('mainContent').style.display = v ? 'none' : 'block';
-  }
+  document.getElementById('rubrique').addEventListener('change', function() {
+    document.getElementById('rubriqueHint').textContent = rubriquesInfo[this.value] || '';
+  });
 
-  // ── PROTECTION ROUTE ──
   async function initPage() {
-    const { data: { session } } = await sb.auth.getSession();
+    var sessionData = await sb.auth.getSession();
+    var session = sessionData.data.session;
     if (!session) { window.location.href = 'index.html'; return; }
 
-    const { data: profil } = await sb
-      .from('profils').select('*').eq('id', session.user.id).single();
-
+    var profilData = await sb.from('profils').select('*').eq('id', session.user.id).single();
+    var profil = profilData.data;
     if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
     if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
 
-    document.getElementById('navAvatar').src = profil.photo_url || '';
-    document.getElementById('navNom').textContent = profil.nom || profil.email;
+    buildSharedNavbar(profil, 'modifier-chanson');
 
-    // Récupérer l'ID depuis l'URL
-    const params = new URLSearchParams(window.location.search);
+    var params = new URLSearchParams(window.location.search);
     chansonId = params.get('id');
     if (!chansonId) { window.location.href = 'repertoire.html'; return; }
 
     await chargerThemes();
     await chargerChanson();
 
-    setLoader(false);
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
   }
 
-  // ── CHARGER LA CHANSON ──
   async function chargerChanson() {
-    const { data: ch, error } = await sb
-      .from('chansons').select('*').eq('id', chansonId).single();
-
-    if (error || !ch) {
+    var res = await sb.from('chansons').select('*').eq('id', chansonId).single();
+    if (res.error || !res.data) {
       showToast('Chanson introuvable.', 'error');
-      setTimeout(() => window.location.href = 'repertoire.html', 2000);
+      setTimeout(function() { window.location.href = 'repertoire.html'; }, 2000);
       return;
     }
-
-    // Titre page
-    document.title = `Modifier — ${ch.titre}`;
-    document.getElementById('pageTitre').textContent = `Modifier : ${ch.titre}`;
+    var ch = res.data;
+    document.title = 'Modifier — ' + ch.titre;
+    document.getElementById('pageTitre').textContent    = 'Modifier : ' + ch.titre;
     document.getElementById('pageSousTitre').textContent = ch.rubrique || '';
-    document.getElementById('btnAnnuler').href = `chanson.html?id=${chansonId}`;
-
-    // Remplir les champs
+    document.getElementById('btnAnnuler').href           = 'chanson.html?id=' + chansonId;
     document.getElementById('numero').value    = ch.numero    || '';
     document.getElementById('titre').value     = ch.titre     || '';
     document.getElementById('langue').value    = ch.langue    || '';
@@ -293,101 +246,92 @@
     document.getElementById('paroles').value   = ch.paroles   || '';
     document.getElementById('audioUrl').value  = ch.audio_url || '';
     document.getElementById('partitionUrl').value = ch.partition_url || '';
-
-    // Rubrique + hint
     if (ch.rubrique) {
       document.getElementById('rubrique').value = ch.rubrique;
       document.getElementById('rubriqueHint').textContent = rubriquesInfo[ch.rubrique] || '';
     }
 
-    // Thèmes déjà associés
-    const { data: liensThemes } = await sb
-      .from('chansons_themes').select('theme_id').eq('chanson_id', chansonId);
-
-    if (liensThemes) {
-      liensThemes.forEach(l => {
+    var liensRes = await sb.from('chansons_themes').select('theme_id').eq('chanson_id', chansonId);
+    if (liensRes.data) {
+      liensRes.data.forEach(function(l) {
         themesSelectionnes.add(l.theme_id);
-        const btn = document.querySelector(`.theme-chip[data-id="${l.theme_id}"]`);
+        var btn = document.querySelector('.theme-chip[data-id="' + l.theme_id + '"]');
         if (btn) btn.classList.add('theme-chip-actif');
       });
     }
   }
 
-  // ── CHARGER THÈMES ──
   async function chargerThemes() {
-    const { data } = await sb.from('themes').select('*').order('nom');
-    const picker = document.getElementById('themesPicker');
-
-    if (!data || data.length === 0) {
-      picker.innerHTML = `<p class="themes-vide">Aucun thème. <a href="gestion-themes.html">Créer des thèmes →</a></p>`;
+    var res = await sb.from('themes').select('*').order('nom');
+    var picker = document.getElementById('themesPicker');
+    if (!res.data || res.data.length === 0) {
+      picker.innerHTML = '<p class="themes-vide">Aucun thème. <a href="gestion-themes.html">Créer des thèmes →</a></p>';
       return;
     }
-
-    picker.innerHTML = data.map(t => `
-      <button type="button" class="theme-chip" data-id="${t.id}" onclick="toggleTheme(this, '${t.id}')">
-        ${t.nom}
-      </button>
-    `).join('');
+    picker.innerHTML = res.data.map(function(t) {
+      return '<button type="button" class="theme-chip" data-id="' + t.id + '">' + escHtml(t.nom) + '</button>';
+    }).join('');
+    picker.querySelectorAll('.theme-chip').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var id = btn.getAttribute('data-id');
+        if (themesSelectionnes.has(id)) { themesSelectionnes.delete(id); btn.classList.remove('theme-chip-actif'); }
+        else { themesSelectionnes.add(id); btn.classList.add('theme-chip-actif'); }
+      });
+    });
   }
 
-  function toggleTheme(btn, id) {
-    if (themesSelectionnes.has(id)) {
-      themesSelectionnes.delete(id);
-      btn.classList.remove('theme-chip-actif');
-    } else {
-      themesSelectionnes.add(id);
-      btn.classList.add('theme-chip-actif');
-    }
-  }
-
-  // ── ÉDITEUR PAROLES ──
+  // Éditeur paroles
   function insererBloc(type) {
-    const ta = document.getElementById('paroles');
-    const texte = ta.value;
-    const regex = new RegExp(`\\[${type.charAt(0).toUpperCase() + type.slice(1)}`, 'gi');
-    const count = (texte.match(regex) || []).length + 1;
-    const label = (type === 'refrain' || type === 'pont' || type === 'bridge')
-      ? `[${type.charAt(0).toUpperCase() + type.slice(1)}]`
-      : `[${type.charAt(0).toUpperCase() + type.slice(1)} ${count}]`;
-
-    const pos = ta.selectionStart;
-    const avant = texte.substring(0, pos);
-    const apres = texte.substring(pos);
-    const sep = (avant.length > 0 && !avant.endsWith('\n\n')) ? '\n\n' : '';
+    var ta = document.getElementById('paroles');
+    var texte = ta.value;
+    var regex = new RegExp('\\[' + type.charAt(0).toUpperCase() + type.slice(1), 'gi');
+    var count = (texte.match(regex) || []).length + 1;
+    var label = (type === 'refrain' || type === 'pont' || type === 'bridge')
+      ? '[' + type.charAt(0).toUpperCase() + type.slice(1) + ']'
+      : '[' + type.charAt(0).toUpperCase() + type.slice(1) + ' ' + count + ']';
+    var pos = ta.selectionStart;
+    var avant = texte.substring(0, pos);
+    var apres = texte.substring(pos);
+    var sep = (avant.length > 0 && !avant.endsWith('\n\n')) ? '\n\n' : '';
     ta.value = avant + sep + label + '\n' + apres;
     ta.focus();
-    const newPos = avant.length + sep.length + label.length + 1;
+    var newPos = avant.length + sep.length + label.length + 1;
     ta.setSelectionRange(newPos, newPos);
   }
 
   function formatTexte(marqueur) {
-    const ta = document.getElementById('paroles');
-    const debut = ta.selectionStart;
-    const fin = ta.selectionEnd;
-    const sel = ta.value.substring(debut, fin);
+    var ta = document.getElementById('paroles');
+    var debut = ta.selectionStart, fin = ta.selectionEnd;
+    var sel = ta.value.substring(debut, fin);
     if (!sel) { showToast('Sélectionne du texte d\'abord', 'info'); return; }
-    const remplace = marqueur + sel + marqueur;
+    var remplace = marqueur + sel + marqueur;
     ta.value = ta.value.substring(0, debut) + remplace + ta.value.substring(fin);
     ta.setSelectionRange(debut, debut + remplace.length);
     ta.focus();
   }
 
-  let apercuVisible = false;
-  function toggleApercu() {
+  document.getElementById('btnCouplet').addEventListener('click', function() { insererBloc('couplet'); });
+  document.getElementById('btnRefrain').addEventListener('click', function() { insererBloc('refrain'); });
+  document.getElementById('btnPont').addEventListener('click', function() { insererBloc('pont'); });
+  document.getElementById('btnBridge').addEventListener('click', function() { insererBloc('bridge'); });
+  document.getElementById('btnGras').addEventListener('click', function() { formatTexte('**'); });
+  document.getElementById('btnItalique').addEventListener('click', function() { formatTexte('_'); });
+
+  var apercuVisible = false;
+  document.getElementById('btnApercu').addEventListener('click', function() {
     apercuVisible = !apercuVisible;
-    const div = document.getElementById('parolesApercu');
-    const ta = document.getElementById('paroles');
+    var div = document.getElementById('parolesApercu');
+    var ta  = document.getElementById('paroles');
     if (apercuVisible) {
-      const blocs = ta.value.split(/\n{2,}/);
-      document.getElementById('apercuContenu').innerHTML = blocs.map(bloc => {
-        const lignes = bloc.trim().split('\n');
-        const isEtiq = lignes[0].match(/^\[.+\]$/);
-        return `<div class="apercu-strophe ${isEtiq ? 'apercu-avec-label' : ''}">
-          ${lignes.map((l, i) => {
-            if (i === 0 && isEtiq) return `<span class="apercu-label">${l}</span>`;
-            return `<span>${l.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/_(.+?)_/g,'<em>$1</em>')}</span>`;
-          }).join('')}
-        </div>`;
+      var blocs = ta.value.split(/\n{2,}/);
+      document.getElementById('apercuContenu').innerHTML = blocs.map(function(bloc) {
+        var lignes = bloc.trim().split('\n');
+        var isEtiq = lignes[0].match(/^\[.+\]$/);
+        return '<div class="apercu-strophe' + (isEtiq ? ' apercu-avec-label' : '') + '">' +
+          lignes.map(function(l, i) {
+            if (i === 0 && isEtiq) return '<span class="apercu-label">' + escHtml(l) + '</span>';
+            return '<span>' + escHtml(l).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/_(.+?)_/g,'<em>$1</em>') + '</span>';
+          }).join('') + '</div>';
       }).join('');
       div.style.display = 'block';
       document.getElementById('btnApercu').classList.add('toolbar-btn-actif');
@@ -395,48 +339,34 @@
       div.style.display = 'none';
       document.getElementById('btnApercu').classList.remove('toolbar-btn-actif');
     }
-  }
-
-  // ── MÉDIAS ──
-  function testerAudio() {
-    const url = document.getElementById('audioUrl').value.trim();
-    if (!url) { showToast('Colle une URL audio d\'abord', 'info'); return; }
-    const audio = document.getElementById('audioTest');
-    audio.src = url;
-    audio.style.display = 'block';
-  }
-
-  function testerPartition() {
-    const url = document.getElementById('partitionUrl').value.trim();
-    if (!url) { showToast('Colle une URL de partition d\'abord', 'info'); return false; }
-    document.getElementById('btnTesterPartition').href = url;
-    return true;
-  }
-
-  // ── HINT RUBRIQUE ──
-  document.getElementById('rubrique').addEventListener('change', function() {
-    document.getElementById('rubriqueHint').textContent = rubriquesInfo[this.value] || '';
   });
 
-  // ── SAUVEGARDER (UPDATE) ──
-  async function sauvegarder() {
-    const titre    = document.getElementById('titre').value.trim();
-    const rubrique = document.getElementById('rubrique').value;
-    const langue   = document.getElementById('langue').value;
+  document.getElementById('btnTesterAudio').addEventListener('click', function() {
+    var url = document.getElementById('audioUrl').value.trim();
+    if (!url) { showToast('Colle une URL audio d\'abord', 'info'); return; }
+    var audio = document.getElementById('audioTest');
+    audio.src = url; audio.style.display = 'block';
+  });
 
+  document.getElementById('btnTesterPartition').addEventListener('click', function(e) {
+    var url = document.getElementById('partitionUrl').value.trim();
+    if (!url) { showToast('Colle une URL de partition d\'abord', 'info'); e.preventDefault(); return; }
+    document.getElementById('btnTesterPartition').href = url;
+  });
+
+  document.getElementById('btnSauvegarder').addEventListener('click', async function() {
+    var titre    = document.getElementById('titre').value.trim();
+    var rubrique = document.getElementById('rubrique').value;
+    var langue   = document.getElementById('langue').value;
     if (!titre)    { showToast('Le titre est obligatoire', 'error'); return; }
     if (!rubrique) { showToast('Choisis une rubrique', 'error'); return; }
     if (!langue)   { showToast('Choisis une langue', 'error'); return; }
 
-    const btn = document.getElementById('btnSauvegarder');
-    btn.disabled = true;
-    btn.textContent = '⏳ Enregistrement…';
+    var btn = document.getElementById('btnSauvegarder');
+    btn.disabled = true; btn.textContent = 'Enregistrement…';
 
-    // UPDATE la chanson
-    const { error } = await sb.from('chansons').update({
-      titre,
-      rubrique,
-      langue,
+    var res = await sb.from('chansons').update({
+      titre: titre, rubrique: rubrique, langue: langue,
       numero:        document.getElementById('numero').value || null,
       style:         document.getElementById('style').value || null,
       paroles:       document.getElementById('paroles').value.trim() || null,
@@ -444,41 +374,24 @@
       partition_url: document.getElementById('partitionUrl').value.trim() || null,
     }).eq('id', chansonId);
 
-    if (error) {
-      showToast('Erreur : ' + error.message, 'error');
-      btn.disabled = false;
-      btn.innerHTML = '<span class="btn-icon">✦</span> Enregistrer les modifications';
+    if (res.error) {
+      showToast('Erreur : ' + res.error.message, 'error');
+      btn.disabled = false; btn.innerHTML = '<span class="btn-icon">✦</span> Enregistrer les modifications';
       return;
     }
 
-    // Resynchroniser les thèmes :
-    // 1. Supprimer tous les anciens liens
     await sb.from('chansons_themes').delete().eq('chanson_id', chansonId);
-
-    // 2. Réinsérer les thèmes sélectionnés
     if (themesSelectionnes.size > 0) {
-      const liens = [...themesSelectionnes].map(tid => ({
-        chanson_id: chansonId,
-        theme_id: tid,
-      }));
+      var liens = Array.from(themesSelectionnes).map(function(tid) { return { chanson_id: chansonId, theme_id: tid }; });
       await sb.from('chansons_themes').insert(liens);
     }
 
-    showToast('✓ Modifications enregistrées !', 'success');
-    setTimeout(() => {
-      window.location.href = `chanson.html?id=${chansonId}`;
-    }, 1500);
-  }
-
-  // ── DÉCONNEXION ──
-  document.getElementById('btnDeconnexion').addEventListener('click', async () => {
-    await sb.auth.signOut();
-    window.location.href = 'index.html';
+    showToast('Modifications enregistrées !', 'success');
+    setTimeout(function() { window.location.href = 'chanson.html?id=' + chansonId; }, 1500);
   });
 
   initPage();
   </script>
 
 </body>
-      </html>
-  
+</html>
