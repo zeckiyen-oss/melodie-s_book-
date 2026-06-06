@@ -4,45 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Thèmes — Mélodie's Book</title>
-
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="navbar.js"></script>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/themes.css" />
 </head>
 <body class="page-themes">
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a href="dashboard.html" class="nav-logo">
-      <span class="nav-logo-icon">♪</span>
-      <span class="nav-logo-text">Mélodie's Book</span>
-    </a>
-    <div class="nav-links">
-      <a href="repertoire.html" class="nav-link">Répertoire</a>
-      <a href="themes.html" class="nav-link active">Thèmes</a>
-      <a href="bibliotheque.html" class="nav-link">Bibliothèque</a>
-    </div>
-    <div class="nav-user">
-      <img id="navAvatar" src="" alt="" class="nav-avatar" />
-      <span id="navNom" class="nav-nom"></span>
-      <button class="btn-deconnexion" id="btnDeconnexion">Quitter</button>
-    </div>
-  </nav>
+  <!-- NAVBAR injectée par navbar.js -->
 
-  <!-- LOADER -->
   <div id="loader" class="page-loader">
     <div class="loader-cross">✝</div>
     <p class="loader-text">Chargement…</p>
   </div>
 
-  <!-- MAIN -->
   <main class="themes-main" id="mainContent" style="display:none">
 
-    <!-- En-tête -->
     <div class="themes-header">
       <div class="themes-header-left">
         <div class="themes-header-icon">🏷️</div>
@@ -51,46 +31,29 @@
           <p class="themes-sous-titre">Explorez le répertoire par thème spirituel</p>
         </div>
       </div>
-      <!-- Bouton admin -->
       <a href="gestion-themes.html" class="btn-gerer" id="btnGerer" style="display:none">
         ⚙️ Gérer les thèmes
       </a>
     </div>
 
-    <!-- Barre de recherche -->
     <div class="themes-recherche">
       <span class="recherche-icon">🔍</span>
-      <input
-        type="text"
-        id="searchInput"
-        class="recherche-input"
-        placeholder="Rechercher un thème…"
-        oninput="filtrerThemes()"
-      />
+      <input type="text" id="searchInput" class="recherche-input" placeholder="Rechercher un thème…" />
     </div>
 
-    <!-- Compteur -->
     <div class="themes-compteur" id="themesCompteur"></div>
+    <div class="themes-grille" id="themesGrille"></div>
 
-    <!-- ── VUE : GRILLE DES THÈMES ── -->
-    <div class="themes-grille" id="themesGrille">
-      <!-- injecté via JS -->
-    </div>
-
-    <!-- État vide -->
     <div class="themes-vide" id="themesVide" style="display:none">
       <div class="vide-icon">🏷️</div>
       <p class="vide-titre">Aucun thème trouvé</p>
       <p class="vide-desc" id="videDesc">Aucun thème n'a encore été créé.</p>
-      <a href="gestion-themes.html" class="btn-creer-theme" id="btnCreerTheme" style="display:none">
-        + Créer le premier thème
-      </a>
+      <a href="gestion-themes.html" class="btn-creer-theme" id="btnCreerTheme" style="display:none">+ Créer le premier thème</a>
     </div>
 
-    <!-- ── PANNEAU DÉTAIL D'UN THÈME ── -->
+    <!-- PANNEAU DÉTAIL -->
     <div class="theme-detail-overlay" id="themeDetailOverlay" style="display:none">
       <div class="theme-detail-panel" id="themeDetailPanel">
-
         <div class="detail-header">
           <div class="detail-header-left">
             <div class="detail-badge">🏷️</div>
@@ -99,26 +62,18 @@
               <p class="detail-compteur" id="detailCompteur">— chansons</p>
             </div>
           </div>
-          <button class="detail-fermer" onclick="fermerDetail()">✕</button>
+          <button class="detail-fermer" id="btnFermerDetail">✕</button>
         </div>
-
         <p class="detail-description" id="detailDescription"></p>
-
-        <!-- Chansons du thème par rubrique -->
         <div class="detail-chansons" id="detailChansons">
           <p class="chargement-txt">Chargement des chansons…</p>
         </div>
-
         <div class="detail-actions">
-          <a href="#" class="btn-voir-repertoire" id="btnVoirRepertoire">
-            Voir dans le répertoire →
-          </a>
+          <a href="#" class="btn-voir-repertoire" id="btnVoirRepertoire">Voir dans le répertoire →</a>
         </div>
-
       </div>
     </div>
 
-    <!-- Verset -->
     <div class="verset-bloc">
       <p class="verset-texte">« Tout ce qui est vrai, tout ce qui est honnête, tout ce qui est juste… pensez à ces choses. »</p>
       <p class="verset-ref">— Philippiens 4 : 8</p>
@@ -129,219 +84,198 @@
   <div class="toast" id="toast"></div>
 
   <script>
-  const SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
-  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  var SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+  var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  window._sb = sb;
 
-  let tousLesThemes = [];
-  let isAdmin = false;
+  var tousLesThemes = [];
+  var isAdmin = false;
 
-  function showToast(msg, type = 'info') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = `toast toast-${type} show`;
-    setTimeout(() => t.classList.remove('show'), 3000);
-  }
-
-  // ── COULEURS PAR INDEX ──
-  const PALETTE = [
-    { bg: 'rgba(201,168,76,.12)',  border: 'rgba(201,168,76,.4)',  text: '#F0D98A' },
-    { bg: 'rgba(93,173,226,.1)',   border: 'rgba(93,173,226,.35)', text: '#7FB3D3' },
-    { bg: 'rgba(39,174,96,.1)',    border: 'rgba(39,174,96,.35)',  text: '#7DCEA0' },
-    { bg: 'rgba(155,89,182,.12)',  border: 'rgba(155,89,182,.4)',  text: '#AF7AC5' },
-    { bg: 'rgba(231,76,60,.1)',    border: 'rgba(231,76,60,.35)',  text: '#F1948A' },
-    { bg: 'rgba(230,126,34,.1)',   border: 'rgba(230,126,34,.35)', text: '#F0B27A' },
-    { bg: 'rgba(26,188,156,.1)',   border: 'rgba(26,188,156,.35)', text: '#76D7C4' },
-    { bg: 'rgba(241,196,15,.1)',   border: 'rgba(241,196,15,.35)', text: '#F7DC6F' },
+  var PALETTE = [
+    { bg:'rgba(201,168,76,.12)',  border:'rgba(201,168,76,.4)',  text:'#F0D98A' },
+    { bg:'rgba(93,173,226,.1)',   border:'rgba(93,173,226,.35)', text:'#7FB3D3' },
+    { bg:'rgba(39,174,96,.1)',    border:'rgba(39,174,96,.35)',  text:'#7DCEA0' },
+    { bg:'rgba(155,89,182,.12)',  border:'rgba(155,89,182,.4)',  text:'#AF7AC5' },
+    { bg:'rgba(231,76,60,.1)',    border:'rgba(231,76,60,.35)',  text:'#F1948A' },
+    { bg:'rgba(230,126,34,.1)',   border:'rgba(230,126,34,.35)', text:'#F0B27A' },
+    { bg:'rgba(26,188,156,.1)',   border:'rgba(26,188,156,.35)', text:'#76D7C4' },
+    { bg:'rgba(241,196,15,.1)',   border:'rgba(241,196,15,.35)', text:'#F7DC6F' },
   ];
 
-  function couleur(i) { return PALETTE[i % PALETTE.length]; }
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 
-  // ── INIT ──
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast toast-' + (type || 'info') + ' show';
+    setTimeout(function() { t.classList.remove('show'); }, 3000);
+  }
+
   async function initPage() {
-    const { data: { session } } = await sb.auth.getSession();
+    var sessionData = await sb.auth.getSession();
+    var session = sessionData.data.session;
     if (!session) { window.location.href = 'index.html'; return; }
 
-    const { data: profil } = await sb
-      .from('profils').select('*').eq('id', session.user.id).single();
+    var profilData = await sb.from('profils').select('*').eq('id', session.user.id).single();
+    var profil = profilData.data;
     if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
 
     isAdmin = profil.role === 'admin';
-    document.getElementById('navAvatar').src = profil.photo_url || '';
-    document.getElementById('navNom').textContent = profil.nom || profil.email;
+    buildSharedNavbar(profil, 'themes');
 
     if (isAdmin) {
       document.getElementById('btnGerer').style.display = 'inline-flex';
       document.getElementById('btnCreerTheme').style.display = 'inline-block';
     }
 
-    // Vérifier si un thème est demandé dans l'URL
-    const params = new URLSearchParams(window.location.search);
-    const themeIdUrl = params.get('id');
-
+    var params = new URLSearchParams(window.location.search);
+    var themeIdUrl = params.get('id');
     await chargerThemes(themeIdUrl);
 
     document.getElementById('loader').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
   }
 
-  // ── CHARGER TOUS LES THÈMES ──
-  async function chargerThemes(ouvrirId = null) {
-    const { data: themes, error } = await sb
-      .from('themes').select('*').order('nom');
+  async function chargerThemes(ouvrirId) {
+    var res = await sb.from('themes').select('*').order('nom');
+    if (res.error) { showToast('Erreur de chargement', 'error'); return; }
 
-    if (error) { showToast('Erreur de chargement', 'error'); return; }
+    var liensRes = await sb.from('chansons_themes').select('theme_id');
+    var comptages = {};
+    if (liensRes.data) {
+      liensRes.data.forEach(function(l) {
+        comptages[l.theme_id] = (comptages[l.theme_id] || 0) + 1;
+      });
+    }
 
-    // Compter les chansons par thème
-    const { data: liens } = await sb
-      .from('chansons_themes').select('theme_id');
-
-    const comptages = {};
-    if (liens) liens.forEach(l => {
-      comptages[l.theme_id] = (comptages[l.theme_id] || 0) + 1;
+    tousLesThemes = (res.data || []).map(function(t, i) {
+      return Object.assign({}, t, { nb_chansons: comptages[t.id] || 0, couleur: PALETTE[i % PALETTE.length] });
     });
-
-    tousLesThemes = (themes || []).map((t, i) => ({
-      ...t,
-      nb_chansons: comptages[t.id] || 0,
-      couleur: couleur(i),
-    }));
 
     afficherThemes(tousLesThemes);
 
-    // Ouvrir automatiquement si ID dans l'URL
     if (ouvrirId) {
-      const theme = tousLesThemes.find(t => t.id === ouvrirId);
-      if (theme) setTimeout(() => ouvrirDetail(theme), 300);
+      var theme = tousLesThemes.find(function(t) { return t.id === ouvrirId; });
+      if (theme) setTimeout(function() { ouvrirDetail(theme); }, 300);
     }
   }
 
-  // ── AFFICHER LA GRILLE ──
   function afficherThemes(liste) {
-    const grille = document.getElementById('themesGrille');
-    const vide   = document.getElementById('themesVide');
-    const compteur = document.getElementById('themesCompteur');
-
-    compteur.textContent = `${liste.length} thème${liste.length > 1 ? 's' : ''}`;
+    var grille  = document.getElementById('themesGrille');
+    var vide    = document.getElementById('themesVide');
+    var compteur = document.getElementById('themesCompteur');
+    compteur.textContent = liste.length + ' thème' + (liste.length > 1 ? 's' : '');
 
     if (liste.length === 0) {
-      grille.style.display = 'none';
-      vide.style.display = 'flex';
-      document.getElementById('videDesc').textContent =
-        document.getElementById('searchInput').value
-          ? 'Aucun thème ne correspond à votre recherche.'
-          : 'Aucun thème n\'a encore été créé.';
+      grille.style.display = 'none'; vide.style.display = 'flex';
+      document.getElementById('videDesc').textContent = document.getElementById('searchInput').value
+        ? 'Aucun thème ne correspond à votre recherche.'
+        : 'Aucun thème n\'a encore été créé.';
       return;
     }
 
-    grille.style.display = 'grid';
-    vide.style.display = 'none';
+    grille.style.display = 'grid'; vide.style.display = 'none';
+    grille.innerHTML = '';
 
-    grille.innerHTML = liste.map(t => `
-      <div class="theme-card"
-        style="--card-bg:${t.couleur.bg}; --card-border:${t.couleur.border}; --card-text:${t.couleur.text}"
-        onclick="ouvrirDetail(${JSON.stringify(t).replace(/"/g, '&quot;')})"
-      >
-        <div class="theme-card-top">
-          <span class="theme-card-nom">${t.nom}</span>
-          <span class="theme-card-nb">${t.nb_chansons}</span>
-        </div>
-        ${t.description ? `<p class="theme-card-desc">${t.description}</p>` : ''}
-        <div class="theme-card-footer">
-          <span class="theme-card-label">${t.nb_chansons} chanson${t.nb_chansons > 1 ? 's' : ''}</span>
-          <span class="theme-card-arrow">→</span>
-        </div>
-      </div>
-    `).join('');
+    liste.forEach(function(t) {
+      var card = document.createElement('div');
+      card.className = 'theme-card';
+      card.style.setProperty('--card-bg',     t.couleur.bg);
+      card.style.setProperty('--card-border', t.couleur.border);
+      card.style.setProperty('--card-text',   t.couleur.text);
+      card.innerHTML =
+        '<div class="theme-card-top">'
+        + '<span class="theme-card-nom">' + escHtml(t.nom) + '</span>'
+        + '<span class="theme-card-nb">' + t.nb_chansons + '</span>'
+        + '</div>'
+        + (t.description ? '<p class="theme-card-desc">' + escHtml(t.description) + '</p>' : '')
+        + '<div class="theme-card-footer">'
+        + '<span class="theme-card-label">' + t.nb_chansons + ' chanson' + (t.nb_chansons > 1 ? 's' : '') + '</span>'
+        + '<span class="theme-card-arrow">→</span>'
+        + '</div>';
+
+      (function(theme) {
+        card.addEventListener('click', function() { ouvrirDetail(theme); });
+      })(t);
+
+      grille.appendChild(card);
+    });
   }
 
-  // ── FILTRER ──
-  function filtrerThemes() {
-    const q = document.getElementById('searchInput').value.toLowerCase().trim();
-    const filtrés = q
-      ? tousLesThemes.filter(t =>
-          t.nom.toLowerCase().includes(q) ||
-          (t.description && t.description.toLowerCase().includes(q))
-        )
-      : tousLesThemes;
-    afficherThemes(filtrés);
-  }
+  document.getElementById('searchInput').addEventListener('input', function() {
+    var q = this.value.toLowerCase().trim();
+    var filtres = q ? tousLesThemes.filter(function(t) {
+      return t.nom.toLowerCase().includes(q) || (t.description && t.description.toLowerCase().includes(q));
+    }) : tousLesThemes;
+    afficherThemes(filtres);
+  });
 
-  // ── OUVRIR LE DÉTAIL ──
   async function ouvrirDetail(theme) {
     document.getElementById('detailTitre').textContent      = theme.nom;
     document.getElementById('detailDescription').textContent = theme.description || '';
-    document.getElementById('detailCompteur').textContent   = `${theme.nb_chansons} chanson${theme.nb_chansons > 1 ? 's' : ''}`;
-    document.getElementById('btnVoirRepertoire').href       = `repertoire.html?theme=${theme.id}`;
+    document.getElementById('detailCompteur').textContent   = theme.nb_chansons + ' chanson' + (theme.nb_chansons > 1 ? 's' : '');
+    document.getElementById('btnVoirRepertoire').href       = 'repertoire.html?theme=' + theme.id;
     document.getElementById('detailChansons').innerHTML     = '<p class="chargement-txt">Chargement…</p>';
-
     document.getElementById('themeDetailOverlay').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
-    // Charger les chansons de ce thème
-    const { data, error } = await sb
-      .from('chansons_themes')
-      .select('chansons(id, numero, titre, rubrique, langue)')
-      .eq('theme_id', theme.id);
+    var res = await sb.from('chansons_themes').select('chansons(id, numero, titre, rubrique, langue)').eq('theme_id', theme.id);
+    var div = document.getElementById('detailChansons');
 
-    const div = document.getElementById('detailChansons');
-
-    if (error || !data || data.length === 0) {
+    if (res.error || !res.data || res.data.length === 0) {
       div.innerHTML = '<p class="no-chansons">Aucune chanson associée à ce thème.</p>';
       return;
     }
 
-    // Grouper par rubrique
-    const parRubrique = {};
-    data.forEach(d => {
-      const ch = d.chansons;
+    var parRubrique = {};
+    res.data.forEach(function(d) {
+      var ch = d.chansons;
       if (!ch) return;
-      const r = ch.rubrique || 'Autre';
+      var r = ch.rubrique || 'Autre';
       if (!parRubrique[r]) parRubrique[r] = [];
       parRubrique[r].push(ch);
     });
 
-    const ordreRubriques = ['Prélude','Adoration','Louange','Méditation','Offrande','Envoi','Autre'];
+    var ordreRubriques = ['Prélude','Adoration','Louange','Méditation','Offrande','Envoi','Autre'];
+    div.innerHTML = '';
 
-    div.innerHTML = ordreRubriques
-      .filter(r => parRubrique[r])
-      .map(r => `
-        <div class="rubrique-groupe">
-          <div class="rubrique-label">${r}</div>
-          <div class="rubrique-chansons">
-            ${parRubrique[r].map(ch => `
-              <a href="chanson.html?id=${ch.id}" class="chanson-ligne" onclick="fermerDetail()">
-                ${ch.numero ? `<span class="ch-num">#${ch.numero}</span>` : ''}
-                <span class="ch-titre">${ch.titre}</span>
-                <span class="ch-langue">${ch.langue || ''}</span>
-                <span class="ch-arrow">›</span>
-              </a>
-            `).join('')}
-          </div>
-        </div>
-      `).join('');
+    ordreRubriques.filter(function(r) { return parRubrique[r]; }).forEach(function(r) {
+      var bloc = document.createElement('div');
+      bloc.className = 'rubrique-groupe';
+      var inner = '<div class="rubrique-label">' + escHtml(r) + '</div><div class="rubrique-chansons">';
+      parRubrique[r].forEach(function(ch) {
+        inner += '<a href="chanson.html?id=' + escHtml(ch.id) + '" class="chanson-ligne" id="lien-' + escHtml(ch.id) + '">'
+          + (ch.numero ? '<span class="ch-num">#' + escHtml(String(ch.numero)) + '</span>' : '')
+          + '<span class="ch-titre">' + escHtml(ch.titre) + '</span>'
+          + '<span class="ch-langue">' + escHtml(ch.langue || '') + '</span>'
+          + '<span class="ch-arrow">›</span>'
+          + '</a>';
+      });
+      inner += '</div>';
+      bloc.innerHTML = inner;
+      div.appendChild(bloc);
+    });
+
+    // Fermer le détail au clic sur un lien
+    div.querySelectorAll('.chanson-ligne').forEach(function(a) {
+      a.addEventListener('click', fermerDetail);
+    });
   }
 
-  // ── FERMER LE DÉTAIL ──
   function fermerDetail() {
     document.getElementById('themeDetailOverlay').style.display = 'none';
     document.body.style.overflow = '';
   }
 
-  // Fermer en cliquant sur l'overlay
-  document.getElementById('themeDetailOverlay').addEventListener('click', function(e) {
-    if (e.target === this) fermerDetail();
-  });
-
-  // ── DÉCONNEXION ──
-  document.getElementById('btnDeconnexion').addEventListener('click', async () => {
-    await sb.auth.signOut();
-    window.location.href = 'index.html';
-  });
+  document.getElementById('btnFermerDetail').addEventListener('click', fermerDetail);
+  document.getElementById('themeDetailOverlay').addEventListener('click', function(e) { if (e.target === this) fermerDetail(); });
 
   initPage();
   </script>
 
 </body>
-        </html>
-                                                                    
+</html>
