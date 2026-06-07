@@ -7,30 +7,20 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="navbar.js"></script>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body class="stats-page">
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <div class="navbar-brand">
-      <span class="navbar-logo">♪</span>
-      <span class="navbar-title">Mélodie's Book</span>
-    </div>
-    <div class="navbar-links" id="navLinks"></div>
-    <div class="navbar-user" id="navUser"></div>
-  </nav>
+  <!-- NAVBAR injectée par navbar.js -->
 
-  <!-- LOADER -->
   <div class="page-loader" id="pageLoader">
     <div class="loader-cross">✦</div>
     <p>Chargement…</p>
   </div>
 
-  <!-- MAIN -->
   <main class="stats-main" id="statsMain" style="display:none;">
 
-    <!-- EN-TÊTE -->
     <header class="stats-header">
       <div class="stats-header-icon">📊</div>
       <div>
@@ -39,138 +29,63 @@
       </div>
     </header>
 
-    <!-- CARTES KPI -->
     <section class="kpi-grid" id="kpiGrid">
-      <div class="kpi-card" id="kpiChansons">
-        <div class="kpi-icon">🎵</div>
-        <div class="kpi-label">Chansons au répertoire</div>
-        <div class="kpi-value" id="valChansons">—</div>
-      </div>
-      <div class="kpi-card" id="kpiThemes">
-        <div class="kpi-icon">🏷️</div>
-        <div class="kpi-label">Thèmes distincts</div>
-        <div class="kpi-value" id="valThemes">—</div>
-      </div>
-      <div class="kpi-card" id="kpiCultes">
-        <div class="kpi-icon">⛪</div>
-        <div class="kpi-label">Cultes organisés</div>
-        <div class="kpi-value" id="valCultes">—</div>
-      </div>
-      <div class="kpi-card" id="kpiMembres">
-        <div class="kpi-icon">👥</div>
-        <div class="kpi-label">Membres actifs</div>
-        <div class="kpi-value" id="valMembres">—</div>
-      </div>
-      <div class="kpi-card" id="kpiPropositions">
-        <div class="kpi-icon">💡</div>
-        <div class="kpi-label">Propositions en attente</div>
-        <div class="kpi-value" id="valPropositions">—</div>
-      </div>
-      <div class="kpi-card" id="kpiEvenements">
-        <div class="kpi-icon">📅</div>
-        <div class="kpi-label">Événements à venir</div>
-        <div class="kpi-value" id="valEvenements">—</div>
-      </div>
+      <div class="kpi-card"><div class="kpi-icon">🎵</div><div class="kpi-label">Chansons au répertoire</div><div class="kpi-value" id="valChansons">—</div></div>
+      <div class="kpi-card"><div class="kpi-icon">🏷️</div><div class="kpi-label">Thèmes distincts</div><div class="kpi-value" id="valThemes">—</div></div>
+      <div class="kpi-card"><div class="kpi-icon">⛪</div><div class="kpi-label">Cultes organisés</div><div class="kpi-value" id="valCultes">—</div></div>
+      <div class="kpi-card"><div class="kpi-icon">👥</div><div class="kpi-label">Membres actifs</div><div class="kpi-value" id="valMembres">—</div></div>
+      <div class="kpi-card"><div class="kpi-icon">💡</div><div class="kpi-label">Propositions en attente</div><div class="kpi-value" id="valPropositions">—</div></div>
+      <div class="kpi-card"><div class="kpi-icon">📅</div><div class="kpi-label">Événements à venir</div><div class="kpi-value" id="valEvenements">—</div></div>
     </section>
 
-    <!-- GRAPHIQUES PRINCIPAUX -->
     <div class="stats-grid-2col">
-
-      <!-- Répartition par rubrique -->
-      <div class="stat-card">
-        <h2 class="stat-card-title">🎼 Chansons par rubrique</h2>
-        <div class="bar-chart" id="chartRubrique"></div>
-      </div>
-
-      <!-- Répartition par langue -->
-      <div class="stat-card">
-        <h2 class="stat-card-title">🌍 Chansons par langue</h2>
-        <div class="donut-wrapper" id="chartLangue"></div>
-      </div>
-
+      <div class="stat-card"><h2 class="stat-card-title">🎼 Chansons par rubrique</h2><div class="bar-chart" id="chartRubrique"></div></div>
+      <div class="stat-card"><h2 class="stat-card-title">🌍 Chansons par langue</h2><div class="donut-wrapper" id="chartLangue"></div></div>
     </div>
 
     <div class="stats-grid-2col">
-
-      <!-- Répartition par style -->
-      <div class="stat-card">
-        <h2 class="stat-card-title">🎸 Chansons par style</h2>
-        <div class="bar-chart" id="chartStyle"></div>
-      </div>
-
-      <!-- Statut des cultes -->
-      <div class="stat-card">
-        <h2 class="stat-card-title">⛪ Statut des cultes</h2>
-        <div class="donut-wrapper" id="chartCultes"></div>
-      </div>
-
+      <div class="stat-card"><h2 class="stat-card-title">🎸 Chansons par style</h2><div class="bar-chart" id="chartStyle"></div></div>
+      <div class="stat-card"><h2 class="stat-card-title">⛪ Statut des cultes</h2><div class="donut-wrapper" id="chartCultes"></div></div>
     </div>
 
-    <!-- TOP CHANSONS LES PLUS PROGRAMMÉES -->
     <div class="stat-card stat-card-full">
       <h2 class="stat-card-title">🏆 Top 10 — Chansons les plus programmées</h2>
-      <div class="top-list" id="topChansons">
-        <p class="stat-empty">Chargement…</p>
-      </div>
+      <div class="top-list" id="topChansons"><p class="stat-empty">Chargement…</p></div>
     </div>
 
-    <!-- ACTIVITÉ PROPOSITIONS -->
     <div class="stats-grid-2col">
-
-      <div class="stat-card">
-        <h2 class="stat-card-title">💡 Propositions par statut</h2>
-        <div class="donut-wrapper" id="chartPropositions"></div>
-      </div>
-
-      <div class="stat-card">
-        <h2 class="stat-card-title">📚 Chansons avec médias</h2>
-        <div class="media-stats" id="mediaStats"></div>
-      </div>
-
+      <div class="stat-card"><h2 class="stat-card-title">💡 Propositions par statut</h2><div class="donut-wrapper" id="chartPropositions"></div></div>
+      <div class="stat-card"><h2 class="stat-card-title">📚 Chansons avec médias</h2><div class="media-stats" id="mediaStats"></div></div>
     </div>
 
-    <!-- TOP THÈMES -->
     <div class="stat-card stat-card-full">
       <h2 class="stat-card-title">🏷️ Thèmes les plus utilisés</h2>
-      <div class="theme-bubbles" id="themeBubbles">
-        <p class="stat-empty">Chargement…</p>
-      </div>
+      <div class="theme-bubbles" id="themeBubbles"><p class="stat-empty">Chargement…</p></div>
     </div>
 
   </main>
 
-  <!-- TOAST -->
   <div class="toast-container" id="toastContainer"></div>
 
   <script>
-    // ─── CONFIG SUPABASE ────────────────────────────────────────────────────────
-    const SUPA_URL = "https://tjqicfxkxhlciebmswqu.supabase.co";
-    const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ";
-    const { createClient } = supabase;
-    const sb = createClient(SUPA_URL, SUPA_KEY);
+    var SUPA_URL = "https://tjqicfxkxhlciebmswqu.supabase.co";
+    var SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ";
+    var sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+    window._sb = sb;
 
-    // ─── HELPERS ────────────────────────────────────────────────────────────────
     function escHtml(str) {
       if (str == null) return "";
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
+      return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     }
 
     function showToast(msg, type) {
-      type = type || "info";
       var tc = document.getElementById("toastContainer");
       var t = document.createElement("div");
-      t.className = "toast toast-" + type;
+      t.className = "toast toast-" + (type || "info");
       t.textContent = msg;
       tc.appendChild(t);
       setTimeout(function() { t.classList.add("toast-show"); }, 10);
-      setTimeout(function() {
-        t.classList.remove("toast-show");
-        setTimeout(function() { tc.removeChild(t); }, 400);
-      }, 3500);
+      setTimeout(function() { t.classList.remove("toast-show"); setTimeout(function() { if(tc.contains(t)) tc.removeChild(t); }, 400); }, 3500);
     }
 
     function hideLoader() {
@@ -178,59 +93,11 @@
       document.getElementById("statsMain").style.display = "block";
     }
 
-    // ─── AUTH GUARD ─────────────────────────────────────────────────────────────
-    async function authGuard() {
-      var r = await sb.auth.getSession();
-      if (!r.data.session) { window.location.href = "index.html"; return null; }
-      var user = r.data.session.user;
-      var p = await sb.from("profils").select("*").eq("id", user.id).single();
-      if (!p.data || !p.data.actif) { window.location.href = "index.html"; return null; }
-      if (p.data.role !== "admin") {
-        showToast("Accès réservé aux administrateurs.", "error");
-        setTimeout(function() { window.location.href = "dashboard.html"; }, 2000);
-        return null;
-      }
-      return p.data;
-    }
+    var PALETTE = ["#C9A84C","#F0D98A","#1A2E45","#4A7FA5","#8AB4CC","#E8C97A","#3D6A8A","#B8860B"];
 
-    // ─── NAVBAR ─────────────────────────────────────────────────────────────────
-    function buildNavbar(profil) {
-      var links = [
-        { href: "dashboard.html", label: "Tableau de bord" },
-        { href: "repertoire.html", label: "Répertoire" },
-        { href: "themes.html", label: "Thèmes" },
-        { href: "bibliotheque.html", label: "Bibliothèque" },
-        { href: "historique.html", label: "Historique" },
-        { href: "statistiques.html", label: "Statistiques", active: true },
-        { href: "comptes.html", label: "Comptes" }
-      ];
-      var navLinks = document.getElementById("navLinks");
-      var html = "";
-      links.forEach(function(l) {
-        html += "<a href=\"" + l.href + "\" class=\"nav-link" + (l.active ? " active" : "") + "\">" + l.label + "</a>";
-      });
-      navLinks.innerHTML = html;
-
-      var navUser = document.getElementById("navUser");
-      navUser.innerHTML = "<span class=\"nav-username\">" + escHtml(profil.nom || profil.email) + "</span>"
-        + "<button class=\"nav-logout\" onclick=\"logout()\">Déconnexion</button>";
-    }
-
-    async function logout() {
-      await sb.auth.signOut();
-      window.location.href = "index.html";
-    }
-
-    // ─── COULEURS PALETTE ────────────────────────────────────────────────────────
-    var PALETTE = ["#C9A84C", "#F0D98A", "#1A2E45", "#4A7FA5", "#8AB4CC", "#E8C97A", "#3D6A8A", "#B8860B"];
-
-    // ─── GRAPHIQUE BARRES ────────────────────────────────────────────────────────
     function renderBarChart(containerId, data, colorMap) {
       var container = document.getElementById(containerId);
-      if (!data || data.length === 0) {
-        container.innerHTML = "<p class=\"stat-empty\">Aucune donnée</p>";
-        return;
-      }
+      if (!data || data.length === 0) { container.innerHTML = "<p class=\"stat-empty\">Aucune donnée</p>"; return; }
       var max = Math.max.apply(null, data.map(function(d) { return d.count; }));
       var html = "";
       data.forEach(function(d, i) {
@@ -238,67 +105,32 @@
         var color = (colorMap && colorMap[d.label]) ? colorMap[d.label] : PALETTE[i % PALETTE.length];
         html += "<div class=\"bar-row\">"
           + "<div class=\"bar-label\">" + escHtml(d.label) + "</div>"
-          + "<div class=\"bar-track\">"
-          + "<div class=\"bar-fill\" style=\"width:" + pct + "%;background:" + color + "\" data-pct=\"" + pct + "\"></div>"
-          + "</div>"
+          + "<div class=\"bar-track\"><div class=\"bar-fill\" style=\"width:" + pct + "%;background:" + color + "\"></div></div>"
           + "<div class=\"bar-count\">" + d.count + "</div>"
           + "</div>";
       });
       container.innerHTML = html;
-      // Animer après injection
-      setTimeout(function() {
-        container.querySelectorAll(".bar-fill").forEach(function(bar) {
-          bar.style.width = bar.getAttribute("data-pct") + "%";
-        });
-      }, 50);
     }
 
-    // ─── GRAPHIQUE DONUT ─────────────────────────────────────────────────────────
     function renderDonut(containerId, data) {
       var container = document.getElementById(containerId);
-      if (!data || data.length === 0) {
-        container.innerHTML = "<p class=\"stat-empty\">Aucune donnée</p>";
-        return;
-      }
+      if (!data || data.length === 0) { container.innerHTML = "<p class=\"stat-empty\">Aucune donnée</p>"; return; }
       var total = data.reduce(function(s, d) { return s + d.count; }, 0);
-      var size = 160;
-      var cx = size / 2, cy = size / 2, r = 60, ri = 38;
+      var size = 160; var cx = size/2; var cy = size/2; var r = 60; var ri = 38;
       var strokeW = r - ri;
-      var circ = 2 * Math.PI * (r - strokeW / 2);
-
-      var offset = 0;
+      var circ = 2 * Math.PI * (r - strokeW/2);
+      var startAngle = -90;
       var segments = "";
       data.forEach(function(d, i) {
         var frac = total > 0 ? d.count / total : 0;
-        var dash = frac * circ;
-        var gap = circ - dash;
-        var color = PALETTE[i % PALETTE.length];
-        segments += "<circle class=\"donut-segment\" cx=\"" + cx + "\" cy=\"" + cy + "\""
-          + " r=\"" + (r - strokeW / 2) + "\""
-          + " fill=\"none\" stroke=\"" + color + "\" stroke-width=\"" + strokeW + "\""
-          + " stroke-dasharray=\"" + dash + " " + gap + "\""
-          + " stroke-dashoffset=\"" + (-offset * circ / (2 * Math.PI * (r - strokeW / 2)) * circ * 0 + (- offset)) + "\""
-          + " transform=\"rotate(" + (offset * 360 / circ + (-90)) + " " + cx + " " + cy + ")\" />";
-        offset += dash;
-      });
-
-      // Recalcul propre avec angles
-      var startAngle = -90;
-      segments = "";
-      data.forEach(function(d, i) {
-        var frac = total > 0 ? d.count / total : 0;
-        var sweep = frac * 360;
-        var color = PALETTE[i % PALETTE.length];
         var dashLen = frac * circ;
         var gapLen = circ - dashLen;
-        segments += "<circle cx=\"" + cx + "\" cy=\"" + cy + "\""
-          + " r=\"" + (r - strokeW / 2) + "\""
-          + " fill=\"none\" stroke=\"" + color + "\" stroke-width=\"" + strokeW + "\""
+        segments += "<circle cx=\"" + cx + "\" cy=\"" + cy + "\" r=\"" + (r - strokeW/2) + "\""
+          + " fill=\"none\" stroke=\"" + PALETTE[i % PALETTE.length] + "\" stroke-width=\"" + strokeW + "\""
           + " stroke-dasharray=\"" + dashLen.toFixed(2) + " " + gapLen.toFixed(2) + "\""
           + " transform=\"rotate(" + startAngle + " " + cx + " " + cy + ")\" />";
-        startAngle += sweep;
+        startAngle += frac * 360;
       });
-
       var legendHtml = "";
       data.forEach(function(d, i) {
         var pct = total > 0 ? Math.round(d.count / total * 100) : 0;
@@ -308,80 +140,58 @@
           + "<span class=\"donut-legend-val\">" + d.count + " (" + pct + "%)</span>"
           + "</div>";
       });
-
       container.innerHTML = "<div class=\"donut-chart\">"
         + "<svg viewBox=\"0 0 " + size + " " + size + "\" width=\"" + size + "\" height=\"" + size + "\">"
-        + "<circle cx=\"" + cx + "\" cy=\"" + cy + "\" r=\"" + (r - strokeW / 2) + "\" fill=\"none\" stroke=\"rgba(201,168,76,0.1)\" stroke-width=\"" + strokeW + "\" />"
+        + "<circle cx=\"" + cx + "\" cy=\"" + cy + "\" r=\"" + (r - strokeW/2) + "\" fill=\"none\" stroke=\"rgba(201,168,76,0.1)\" stroke-width=\"" + strokeW + "\" />"
         + segments
-        + "<text x=\"" + cx + "\" y=\"" + (cy + 6) + "\" text-anchor=\"middle\" class=\"donut-center-text\">" + total + "</text>"
-        + "</svg>"
-        + "</div>"
+        + "<text x=\"" + cx + "\" y=\"" + (cy+6) + "\" text-anchor=\"middle\" class=\"donut-center-text\">" + total + "</text>"
+        + "</svg></div>"
         + "<div class=\"donut-legend\">" + legendHtml + "</div>";
     }
 
-    // ─── TOP CHANSONS ─────────────────────────────────────────────────────────────
     function renderTopChansons(data) {
       var container = document.getElementById("topChansons");
-      if (!data || data.length === 0) {
-        container.innerHTML = "<p class=\"stat-empty\">Aucune chanson programmée pour l'instant.</p>";
-        return;
-      }
+      if (!data || data.length === 0) { container.innerHTML = "<p class=\"stat-empty\">Aucune chanson programmée pour l'instant.</p>"; return; }
       var max = data[0].count;
-      var html = "";
-      data.forEach(function(d, i) {
+      container.innerHTML = data.map(function(d, i) {
         var pct = max > 0 ? Math.round(d.count / max * 100) : 0;
-        var medal = i === 0 ? "🥇" : (i === 1 ? "🥈" : (i === 2 ? "🥉" : (i + 1) + "."));
-        html += "<div class=\"top-item\">"
+        var medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i+1) + ".";
+        return "<div class=\"top-item\">"
           + "<div class=\"top-rank\">" + medal + "</div>"
-          + "<div class=\"top-info\">"
-          + "<div class=\"top-name\">" + escHtml(d.titre) + "</div>"
-          + "<div class=\"top-bar-track\"><div class=\"top-bar-fill\" style=\"width:" + pct + "%\"></div></div>"
-          + "</div>"
+          + "<div class=\"top-info\"><div class=\"top-name\">" + escHtml(d.titre) + "</div>"
+          + "<div class=\"top-bar-track\"><div class=\"top-bar-fill\" style=\"width:" + pct + "%\"></div></div></div>"
           + "<div class=\"top-count\">" + d.count + "×</div>"
           + "</div>";
-      });
-      container.innerHTML = html;
+      }).join("");
     }
 
-    // ─── MÉDIAS ───────────────────────────────────────────────────────────────────
     function renderMediaStats(total, avecPartition, avecAudio) {
       var container = document.getElementById("mediaStats");
-      var pPart = total > 0 ? Math.round(avecPartition / total * 100) : 0;
+      var pPart  = total > 0 ? Math.round(avecPartition / total * 100) : 0;
       var pAudio = total > 0 ? Math.round(avecAudio / total * 100) : 0;
-      container.innerHTML = "<div class=\"media-row\">"
-          + "<div class=\"media-label\">🎼 Partitions</div>"
-          + "<div class=\"media-progress\"><div class=\"media-bar\" style=\"width:" + pPart + "%\"></div></div>"
-          + "<div class=\"media-pct\">" + pPart + "% (" + avecPartition + "/" + total + ")</div>"
-          + "</div>"
-          + "<div class=\"media-row\">"
-          + "<div class=\"media-label\">🔊 Audio</div>"
-          + "<div class=\"media-progress\"><div class=\"media-bar media-bar-audio\" style=\"width:" + pAudio + "%\"></div></div>"
-          + "<div class=\"media-pct\">" + pAudio + "% (" + avecAudio + "/" + total + ")</div>"
-          + "</div>";
+      container.innerHTML =
+        "<div class=\"media-row\"><div class=\"media-label\">🎼 Partitions</div>"
+        + "<div class=\"media-progress\"><div class=\"media-bar\" style=\"width:" + pPart + "%\"></div></div>"
+        + "<div class=\"media-pct\">" + pPart + "% (" + avecPartition + "/" + total + ")</div></div>"
+        + "<div class=\"media-row\"><div class=\"media-label\">🔊 Audio</div>"
+        + "<div class=\"media-progress\"><div class=\"media-bar media-bar-audio\" style=\"width:" + pAudio + "%\"></div></div>"
+        + "<div class=\"media-pct\">" + pAudio + "% (" + avecAudio + "/" + total + ")</div></div>";
     }
 
-    // ─── THÈMES BUBBLES ───────────────────────────────────────────────────────────
     function renderThemeBubbles(data) {
       var container = document.getElementById("themeBubbles");
-      if (!data || data.length === 0) {
-        container.innerHTML = "<p class=\"stat-empty\">Aucun thème associé pour l'instant.</p>";
-        return;
-      }
+      if (!data || data.length === 0) { container.innerHTML = "<p class=\"stat-empty\">Aucun thème associé pour l'instant.</p>"; return; }
       var max = data[0].count;
-      var html = "";
-      data.forEach(function(d, i) {
+      container.innerHTML = data.map(function(d) {
         var size = 0.7 + (d.count / max) * 0.9;
-        html += "<span class=\"theme-bubble\" style=\"font-size:" + size.toFixed(2) + "rem;opacity:" + (0.5 + size * 0.3).toFixed(2) + "\">"
+        return "<span class=\"theme-bubble\" style=\"font-size:" + size.toFixed(2) + "rem;opacity:" + (0.5 + size*0.3).toFixed(2) + "\">"
           + escHtml(d.nom) + " <sup>" + d.count + "</sup></span>";
-      });
-      container.innerHTML = html;
+      }).join("");
     }
 
-    // ─── CHARGEMENT DES DONNÉES ───────────────────────────────────────────────────
     async function loadStats() {
       try {
-        // 1. KPI de base
-        var [resChansons, resThemes, resCultes, resMembres, resPropositions, resEvenements] = await Promise.all([
+        var results = await Promise.all([
           sb.from("chansons").select("id, rubrique, langue, style, partition_url, audio_url"),
           sb.from("themes").select("id"),
           sb.from("cultes").select("id, statut"),
@@ -390,135 +200,117 @@
           sb.from("evenements").select("id, date_event")
         ]);
 
-        var chansons = resChansons.data || [];
+        var chansons     = results[0].data || [];
+        var themes       = results[1].data || [];
+        var cultes       = results[2].data || [];
+        var membres      = results[3].data || [];
+        var propositions = results[4].data || [];
+        var evenements   = results[5].data || [];
+
         var today = new Date().toISOString().split("T")[0];
-        var evFuturs = (resEvenements.data || []).filter(function(e) { return e.date_event >= today; });
+        var evFuturs = evenements.filter(function(e) { return e.date_event >= today; });
 
-        document.getElementById("valChansons").textContent = chansons.length;
-        document.getElementById("valThemes").textContent = (resThemes.data || []).length;
-        document.getElementById("valCultes").textContent = (resCultes.data || []).length;
-        document.getElementById("valMembres").textContent = (resMembres.data || []).length;
-        document.getElementById("valPropositions").textContent = (resPropositions.data || []).filter(function(p) { return p.statut === "en_attente"; }).length;
-        document.getElementById("valEvenements").textContent = evFuturs.length;
+        document.getElementById("valChansons").textContent    = chansons.length;
+        document.getElementById("valThemes").textContent      = themes.length;
+        document.getElementById("valCultes").textContent      = cultes.length;
+        document.getElementById("valMembres").textContent     = membres.length;
+        document.getElementById("valPropositions").textContent = propositions.filter(function(p) { return p.statut === "en_attente"; }).length;
+        document.getElementById("valEvenements").textContent  = evFuturs.length;
 
-        // Animer les KPI
         document.querySelectorAll(".kpi-card").forEach(function(card, i) {
           card.style.animationDelay = (i * 0.08) + "s";
           card.classList.add("kpi-animate");
         });
 
-        // 2. Répartition rubriques
+        // Rubriques
         var rubriques = {};
-        chansons.forEach(function(c) {
-          var r = c.rubrique || "Non définie";
-          rubriques[r] = (rubriques[r] || 0) + 1;
-        });
-        var rubriquesData = Object.keys(rubriques).map(function(k) { return { label: k, count: rubriques[k] }; });
-        rubriquesData.sort(function(a, b) { return b.count - a.count; });
-        var colorRubriques = {
-          "Adoration": "#C9A84C", "Louange": "#F0D98A", "Prélude": "#4A7FA5",
-          "Offrande": "#8AB4CC", "Méditation": "#3D6A8A", "Envoi": "#B8860B"
-        };
+        chansons.forEach(function(c) { var r = c.rubrique || "Non définie"; rubriques[r] = (rubriques[r] || 0) + 1; });
+        var rubriquesData = Object.keys(rubriques).map(function(k) { return { label:k, count:rubriques[k] }; }).sort(function(a,b){return b.count-a.count;});
+        var colorRubriques = { "Adoration":"#C9A84C","Louange":"#F0D98A","Prélude":"#4A7FA5","Offrande":"#8AB4CC","Méditation":"#3D6A8A","Envoi":"#B8860B" };
         renderBarChart("chartRubrique", rubriquesData, colorRubriques);
 
-        // 3. Répartition langues
+        // Langues
         var langues = {};
-        chansons.forEach(function(c) {
-          var l = c.langue || "Non définie";
-          langues[l] = (langues[l] || 0) + 1;
-        });
-        var languesData = Object.keys(langues).map(function(k) { return { label: k, count: langues[k] }; });
-        languesData.sort(function(a, b) { return b.count - a.count; });
+        chansons.forEach(function(c) { var l = c.langue || "Non définie"; langues[l] = (langues[l] || 0) + 1; });
+        var languesData = Object.keys(langues).map(function(k) { return { label:k, count:langues[k] }; }).sort(function(a,b){return b.count-a.count;});
         renderDonut("chartLangue", languesData);
 
-        // 4. Répartition styles
+        // Styles
         var styles = {};
-        chansons.forEach(function(c) {
-          var s = c.style || "Non défini";
-          styles[s] = (styles[s] || 0) + 1;
-        });
-        var stylesData = Object.keys(styles).map(function(k) { return { label: k, count: styles[k] }; });
-        stylesData.sort(function(a, b) { return b.count - a.count; });
+        chansons.forEach(function(c) { var s = c.style || "Non défini"; styles[s] = (styles[s] || 0) + 1; });
+        var stylesData = Object.keys(styles).map(function(k) { return { label:k, count:styles[k] }; }).sort(function(a,b){return b.count-a.count;});
         renderBarChart("chartStyle", stylesData, null);
 
-        // 5. Statut cultes
-        var statutsCultes = { "en_preparation": 0, "valide": 0, "archive": 0 };
-        (resCultes.data || []).forEach(function(c) {
-          if (statutsCultes[c.statut] !== undefined) statutsCultes[c.statut]++;
-        });
+        // Cultes par statut
+        var sc = { "en_preparation":0, "valide":0, "archive":0 };
+        cultes.forEach(function(c) { if (sc[c.statut] !== undefined) sc[c.statut]++; });
         var cultesData = [
-          { label: "En préparation", count: statutsCultes["en_preparation"] },
-          { label: "Validé", count: statutsCultes["valide"] },
-          { label: "Archivé", count: statutsCultes["archive"] }
+          { label:"En préparation", count:sc["en_preparation"] },
+          { label:"Validé",         count:sc["valide"] },
+          { label:"Archivé",        count:sc["archive"] }
         ].filter(function(d) { return d.count > 0; });
         renderDonut("chartCultes", cultesData);
 
-        // 6. Propositions par statut
-        var statutsProp = { "en_attente": 0, "accepte": 0, "refuse": 0 };
-        (resPropositions.data || []).forEach(function(p) {
-          if (statutsProp[p.statut] !== undefined) statutsProp[p.statut]++;
-        });
+        // Propositions
+        var sp = { "en_attente":0, "accepte":0, "refuse":0 };
+        propositions.forEach(function(p) { if (sp[p.statut] !== undefined) sp[p.statut]++; });
         var propData = [
-          { label: "En attente", count: statutsProp["en_attente"] },
-          { label: "Accepté", count: statutsProp["accepte"] },
-          { label: "Refusé", count: statutsProp["refuse"] }
+          { label:"En attente", count:sp["en_attente"] },
+          { label:"Accepté",    count:sp["accepte"] },
+          { label:"Refusé",     count:sp["refuse"] }
         ].filter(function(d) { return d.count > 0; });
         renderDonut("chartPropositions", propData);
 
-        // 7. Médias
-        var avecPartition = chansons.filter(function(c) { return c.partition_url; }).length;
-        var avecAudio = chansons.filter(function(c) { return c.audio_url; }).length;
-        renderMediaStats(chansons.length, avecPartition, avecAudio);
+        // Médias
+        renderMediaStats(
+          chansons.length,
+          chansons.filter(function(c) { return c.partition_url; }).length,
+          chansons.filter(function(c) { return c.audio_url; }).length
+        );
 
-        // 8. Top chansons programmées
+        // Top chansons
         var resProg = await sb.from("programme_culte").select("chanson_id, chansons(titre)");
         if (resProg.data && resProg.data.length > 0) {
-          var counts = {};
-          var titres = {};
+          var counts = {}; var titres = {};
           resProg.data.forEach(function(p) {
-            var cid = p.chanson_id;
-            counts[cid] = (counts[cid] || 0) + 1;
-            if (p.chansons) titres[cid] = p.chansons.titre;
+            counts[p.chanson_id] = (counts[p.chanson_id] || 0) + 1;
+            if (p.chansons) titres[p.chanson_id] = p.chansons.titre;
           });
-          var topData = Object.keys(counts).map(function(id) {
-            return { titre: titres[id] || "N/A", count: counts[id] };
-          });
-          topData.sort(function(a, b) { return b.count - a.count; });
-          renderTopChansons(topData.slice(0, 10));
-        } else {
-          renderTopChansons([]);
-        }
+          var topData = Object.keys(counts).map(function(id) { return { titre:titres[id] || "N/A", count:counts[id] }; });
+          topData.sort(function(a,b){return b.count-a.count;});
+          renderTopChansons(topData.slice(0,10));
+        } else { renderTopChansons([]); }
 
-        // 9. Thèmes les plus utilisés
+        // Thèmes
         var resChThemes = await sb.from("chansons_themes").select("theme_id, themes(nom)");
         if (resChThemes.data && resChThemes.data.length > 0) {
-          var themeCounts = {};
-          var themeNoms = {};
+          var tc = {}; var tn = {};
           resChThemes.data.forEach(function(ct) {
-            var tid = ct.theme_id;
-            themeCounts[tid] = (themeCounts[tid] || 0) + 1;
-            if (ct.themes) themeNoms[tid] = ct.themes.nom;
+            tc[ct.theme_id] = (tc[ct.theme_id] || 0) + 1;
+            if (ct.themes) tn[ct.theme_id] = ct.themes.nom;
           });
-          var themeData = Object.keys(themeCounts).map(function(id) {
-            return { nom: themeNoms[id] || "N/A", count: themeCounts[id] };
-          });
-          themeData.sort(function(a, b) { return b.count - a.count; });
+          var themeData = Object.keys(tc).map(function(id) { return { nom:tn[id] || "N/A", count:tc[id] }; });
+          themeData.sort(function(a,b){return b.count-a.count;});
           renderThemeBubbles(themeData);
-        } else {
-          renderThemeBubbles([]);
-        }
+        } else { renderThemeBubbles([]); }
 
-      } catch (err) {
+      } catch(err) {
         console.error(err);
         showToast("Erreur lors du chargement des statistiques.", "error");
       }
     }
 
-    // ─── INIT ─────────────────────────────────────────────────────────────────────
     (async function init() {
-      var profil = await authGuard();
-      if (!profil) return;
-      buildNavbar(profil);
+      var r = await sb.auth.getSession();
+      if (!r.data.session) { window.location.href = "index.html"; return; }
+      var p = await sb.from("profils").select("*").eq("id", r.data.session.user.id).single();
+      if (!p.data || !p.data.actif) { window.location.href = "index.html"; return; }
+      if (p.data.role !== "admin") {
+        showToast("Accès réservé aux administrateurs.", "error");
+        setTimeout(function() { window.location.href = "dashboard.html"; }, 2000);
+        return;
+      }
+      buildSharedNavbar(p.data, "statistiques");
       await loadStats();
       hideLoader();
     })();
