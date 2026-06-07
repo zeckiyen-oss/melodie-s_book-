@@ -9,38 +9,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="navbar.js"></script>
 </head>
 <body class="page-validation">
 
   <div id="loader" class="loader-overlay">
-    <div class="loader-cross">
-      <div class="loader-bar loader-bar-h"></div>
-      <div class="loader-bar loader-bar-v"></div>
-    </div>
+    <div class="loader-cross"><div class="loader-bar loader-bar-h"></div><div class="loader-bar loader-bar-v"></div></div>
   </div>
 
   <div id="toast" class="toast" aria-live="polite"></div>
 
-  <nav class="navbar">
-    <a href="dashboard.html" class="navbar-brand">
-      <span class="navbar-logo">♪</span>
-      <span class="navbar-title">Mélodie's Book</span>
-    </a>
-    <div class="navbar-links" id="navLinks">
-      <a href="dashboard.html">Accueil</a>
-      <a href="repertoire.html">Répertoire</a>
-      <a href="themes.html">Thèmes</a>
-      <a href="bibliotheque.html">Bibliothèque</a>
-      <a href="historique.html">Historique</a>
-      <a href="proposer.html">Proposer</a>
-    </div>
-    <div class="navbar-user" id="navUser">
-      <img id="userAvatar" src="" alt="Avatar" class="avatar-sm" />
-      <span id="userName"></span>
-      <button class="btn-logout" id="btnLogout">Déconnexion</button>
-    </div>
-    <button class="navbar-toggle" id="navToggle" aria-label="Menu">&#9776;</button>
-  </nav>
+  <!-- NAVBAR injectée par navbar.js -->
 
   <header class="vp-hero">
     <div class="vp-hero-bg"></div>
@@ -54,24 +33,15 @@
 
   <main class="vp-main">
 
-    <!-- TABS -->
     <div class="vp-tabs" id="vpTabs">
-      <button class="vp-tab active" data-statut="en_preparation">
-        🕊️ À valider <span class="vp-tab-badge" id="tabBadgePrep">0</span>
-      </button>
+      <button class="vp-tab active" data-statut="en_preparation">🕊️ À valider <span class="vp-tab-badge" id="tabBadgePrep">0</span></button>
       <button class="vp-tab" data-statut="valide">✅ Validés</button>
       <button class="vp-tab" data-statut="archive">📁 Archivés</button>
     </div>
 
     <div class="vp-count" id="vpCount">Chargement…</div>
+    <div class="vp-cultes-list" id="vpCultesList"><div class="vp-skeleton"></div><div class="vp-skeleton"></div></div>
 
-    <!-- LISTE CULTES -->
-    <div class="vp-cultes-list" id="vpCultesList">
-      <div class="vp-skeleton"></div>
-      <div class="vp-skeleton"></div>
-    </div>
-
-    <!-- DÉTAIL (s'affiche en dessous sur mobile) -->
     <div class="vp-detail-card" id="vpDetailCard" style="margin-top:1.5rem;">
       <div class="vp-detail-idle" id="vpDetailIdle">
         <div class="vp-detail-idle-icon">🕊️</div>
@@ -108,243 +78,77 @@
     </div>
   </div>
 
-  <!-- CSS CORRECTIF MOBILE -->
   <style>
-    .vp-main {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 1.5rem 1rem 4rem;
-    }
-    .vp-tabs {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin-bottom: 1rem;
-    }
-    .vp-tab {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.5rem 1rem;
-      border: 1px solid rgba(201,168,76,0.25);
-      border-radius: 20px;
-      background: transparent;
-      color: rgba(250,246,237,0.6);
-      font-family: 'Lato', sans-serif;
-      font-size: 0.82rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .vp-tab.active {
-      background: rgba(201,168,76,0.18);
-      border-color: #C9A84C;
-      color: #F0D98A;
-    }
-    .vp-tab-badge {
-      background: #C9A84C;
-      color: #0D1B2A;
-      font-size: 0.68rem;
-      font-weight: 700;
-      padding: 1px 6px;
-      border-radius: 10px;
-    }
-    .vp-count {
-      font-size: 0.8rem;
-      color: rgba(250,246,237,0.4);
-      margin-bottom: 0.8rem;
-    }
-    .vp-cultes-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.7rem;
-    }
-    /* Item culte — cliquable, style carte */
-    .vp-culte-item {
-      background: linear-gradient(145deg, #1A2E45, #152438);
-      border: 1px solid rgba(201,168,76,0.2);
-      border-radius: 12px;
-      padding: 1rem 1.2rem;
-      cursor: pointer;
-      user-select: none;
-      -webkit-user-select: none;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .vp-culte-item:active {
-      opacity: 0.85;
-    }
-    .vp-culte-item.vp-culte-active {
-      border-color: #C9A84C;
-      box-shadow: 0 0 0 2px rgba(201,168,76,0.25);
-    }
-    .vp-culte-left { flex: 1; min-width: 0; }
-    .vp-culte-theme {
-      font-family: 'Cinzel', serif;
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #FAF6ED;
-      margin-bottom: 0.25rem;
-    }
-    .vp-culte-date { font-size: 0.78rem; color: rgba(250,246,237,0.5); margin-bottom: 0.25rem; }
-    .vp-culte-prep {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.78rem;
-      color: rgba(250,246,237,0.5);
-    }
-    .vp-avatar {
-      width: 20px; height: 20px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 1px solid rgba(201,168,76,0.3);
-    }
-    .vp-avatar-fallback {
-      width: 20px; height: 20px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #C9A84C, #F0D98A);
-      color: #0D1B2A;
-      font-size: 0.65rem;
-      font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .vp-culte-right {
-      display: flex; flex-direction: column;
-      align-items: flex-end; gap: 0.4rem; flex-shrink: 0;
-    }
-    .vp-countdown {
-      font-family: 'Cinzel', serif;
-      font-size: 0.72rem; font-weight: 700;
-      color: #F0D98A;
-      background: rgba(201,168,76,0.12);
-      border: 1px solid rgba(201,168,76,0.25);
-      border-radius: 8px; padding: 0.15rem 0.5rem;
-    }
-    .vp-statut-dot {
-      width: 10px; height: 10px; border-radius: 50%;
-    }
-    .vp-statut-en_preparation { background: #C9A84C; }
-    .vp-statut-valide { background: #4CAF82; }
-    .vp-statut-archive { background: rgba(250,246,237,0.25); }
-    .vp-no-prep { color: #e09696; font-style: italic; }
-    .vp-empty {
-      text-align: center; color: rgba(250,246,237,0.35);
-      font-style: italic; padding: 2rem 0; font-size: 0.88rem;
-    }
-    .vp-skeleton {
-      height: 80px; border-radius: 12px;
-      background: linear-gradient(90deg, #1A2E45 25%, #1f3550 50%, #1A2E45 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.4s infinite;
-    }
+    .vp-main { max-width:900px; margin:0 auto; padding:1.5rem 1rem 4rem; }
+    .vp-tabs { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; }
+    .vp-tab { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border:1px solid rgba(201,168,76,0.25); border-radius:20px; background:transparent; color:rgba(250,246,237,0.6); font-family:'Lato',sans-serif; font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
+    .vp-tab.active { background:rgba(201,168,76,0.18); border-color:#C9A84C; color:#F0D98A; }
+    .vp-tab-badge { background:#C9A84C; color:#0D1B2A; font-size:0.68rem; font-weight:700; padding:1px 6px; border-radius:10px; }
+    .vp-count { font-size:0.8rem; color:rgba(250,246,237,0.4); margin-bottom:0.8rem; }
+    .vp-cultes-list { display:flex; flex-direction:column; gap:0.7rem; }
+    .vp-culte-item { background:linear-gradient(145deg,#1A2E45,#152438); border:1px solid rgba(201,168,76,0.2); border-radius:12px; padding:1rem 1.2rem; cursor:pointer; user-select:none; -webkit-user-select:none; display:flex; align-items:center; justify-content:space-between; gap:1rem; transition:border-color 0.2s,box-shadow 0.2s; }
+    .vp-culte-item.vp-culte-active { border-color:#C9A84C; box-shadow:0 0 0 2px rgba(201,168,76,0.25); }
+    .vp-culte-left { flex:1; min-width:0; }
+    .vp-culte-theme { font-family:'Cinzel',serif; font-size:0.95rem; font-weight:700; color:#FAF6ED; margin-bottom:0.25rem; }
+    .vp-culte-date { font-size:0.78rem; color:rgba(250,246,237,0.5); margin-bottom:0.25rem; }
+    .vp-culte-prep { display:flex; align-items:center; gap:0.4rem; font-size:0.78rem; color:rgba(250,246,237,0.5); }
+    .vp-avatar { width:20px; height:20px; border-radius:50%; object-fit:cover; border:1px solid rgba(201,168,76,0.3); }
+    .vp-avatar-fallback { width:20px; height:20px; border-radius:50%; background:linear-gradient(135deg,#C9A84C,#F0D98A); color:#0D1B2A; font-size:0.65rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .vp-culte-right { display:flex; flex-direction:column; align-items:flex-end; gap:0.4rem; flex-shrink:0; }
+    .vp-countdown { font-family:'Cinzel',serif; font-size:0.72rem; font-weight:700; color:#F0D98A; background:rgba(201,168,76,0.12); border:1px solid rgba(201,168,76,0.25); border-radius:8px; padding:0.15rem 0.5rem; }
+    .vp-statut-dot { width:10px; height:10px; border-radius:50%; }
+    .vp-statut-en_preparation { background:#C9A84C; }
+    .vp-statut-valide { background:#4CAF82; }
+    .vp-statut-archive { background:rgba(250,246,237,0.25); }
+    .vp-no-prep { color:#e09696; font-style:italic; }
+    .vp-empty { text-align:center; color:rgba(250,246,237,0.35); font-style:italic; padding:2rem 0; font-size:0.88rem; }
+    .vp-skeleton { height:80px; border-radius:12px; background:linear-gradient(90deg,#1A2E45 25%,#1f3550 50%,#1A2E45 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; }
     @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-
-    /* DÉTAIL */
-    .vp-detail-card {
-      background: linear-gradient(145deg, #1A2E45, #152438);
-      border: 1px solid rgba(201,168,76,0.22);
-      border-radius: 16px;
-      overflow: hidden;
-      min-height: 200px;
-    }
-    .vp-detail-idle {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 1rem; padding: 3rem 1.5rem; text-align: center;
-    }
-    .vp-detail-idle-icon { font-size: 2rem; opacity: 0.35; }
-    .vp-detail-idle p {
-      font-size: 0.87rem; color: rgba(250,246,237,0.45); margin: 0;
-    }
-    .vp-detail-body {
-      padding: 1.4rem;
-      display: flex; flex-direction: column; gap: 1.1rem;
-    }
-    .vp-loading-prog {
-      padding: 2rem; text-align: center;
-      color: rgba(250,246,237,0.4); font-style: italic; font-size: 0.88rem;
-    }
-    .vp-detail-header {
-      display: flex; align-items: flex-start;
-      justify-content: space-between; gap: 0.8rem;
-    }
-    .vp-detail-theme {
-      font-family: 'Cinzel', serif; font-size: 1.1rem;
-      font-weight: 700; color: #FAF6ED; margin: 0 0 0.3rem;
-    }
-    .vp-detail-date { font-size: 0.8rem; color: rgba(250,246,237,0.5); }
-    .vp-statut-badge {
-      flex-shrink: 0; font-size: 0.72rem; font-weight: 700;
-      padding: 0.25rem 0.7rem; border-radius: 20px; white-space: nowrap;
-    }
-    .vp-statut-badge-en_preparation { background: rgba(201,168,76,0.15); color: #F0D98A; border: 1px solid rgba(201,168,76,0.3); }
-    .vp-statut-badge-valide { background: rgba(76,175,130,0.15); color: #7ecfaf; border: 1px solid rgba(76,175,130,0.3); }
-    .vp-statut-badge-archive { background: rgba(250,246,237,0.07); color: rgba(250,246,237,0.45); border: 1px solid rgba(250,246,237,0.12); }
-    .vp-detail-prep {
-      display: flex; align-items: center; gap: 0.7rem;
-      padding: 0.7rem 0.9rem; background: rgba(13,27,42,0.4); border-radius: 10px;
-    }
-    .vp-prep-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(201,168,76,0.35); flex-shrink: 0; }
-    .vp-prep-avatar-fallback {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: linear-gradient(135deg, #C9A84C, #F0D98A);
-      color: #0D1B2A; font-family: 'Cinzel', serif; font-size: 0.9rem; font-weight: 700;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .vp-prep-label { font-size: 0.7rem; color: #C9A84C; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
-    .vp-prep-nom { font-size: 0.88rem; color: #FAF6ED; font-weight: 700; }
-    .vp-nb-chansons { margin-left: auto; font-family: 'Cinzel', serif; font-size: 0.82rem; color: #C9A84C; font-weight: 700; }
-    .vp-programme { display: flex; flex-direction: column; gap: 0.8rem; }
-    .vp-programme-title {
-      font-family: 'Cinzel', serif; font-size: 0.88rem; font-weight: 600;
-      color: #F0D98A; border-bottom: 1px solid rgba(201,168,76,0.15); padding-bottom: 0.5rem;
-    }
-    .vp-programme-empty { font-size: 0.85rem; color: rgba(250,246,237,0.35); font-style: italic; text-align: center; padding: 1rem 0; }
-    .vp-rubrique-bloc { display: flex; flex-direction: column; gap: 0.3rem; }
-    .vp-rubrique-title { font-size: 0.72rem; font-weight: 700; color: #C9A84C; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.2rem; }
-    .vp-chanson-item {
-      display: flex; align-items: center; gap: 0.6rem;
-      padding: 0.5rem 0.7rem; background: rgba(13,27,42,0.4);
-      border-radius: 8px; border-left: 2px solid rgba(201,168,76,0.25);
-    }
-    .vp-chanson-ordre {
-      width: 22px; height: 22px; border-radius: 50%;
-      background: rgba(201,168,76,0.15); color: #C9A84C;
-      font-family: 'Cinzel', serif; font-size: 0.68rem; font-weight: 700;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .vp-chanson-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
-    .vp-chanson-titre { font-size: 0.85rem; font-weight: 700; color: #FAF6ED; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .vp-chanson-num { font-size: 0.72rem; color: rgba(250,246,237,0.4); }
-    .vp-chanson-langue { font-size: 0.72rem; color: rgba(250,246,237,0.35); font-style: italic; flex-shrink: 0; }
-    .vp-detail-actions {
-      display: flex; gap: 0.8rem; flex-wrap: wrap;
-      padding-top: 0.5rem; border-top: 1px solid rgba(201,168,76,0.1);
-    }
-    .vp-detail-actions .btn-primary,
-    .vp-detail-actions .btn-secondary { flex: 1; justify-content: center; min-width: 100px; }
-    .vp-warning { font-size: 0.8rem; color: #e09696; text-align: center; margin: 0; font-style: italic; }
-    .vp-statut-final {
-      flex: 1; text-align: center; padding: 0.8rem; border-radius: 10px;
-      font-size: 0.88rem; font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .vp-statut-valide-final { background: rgba(76,175,130,0.12); color: #7ecfaf; border: 1px solid rgba(76,175,130,0.25); }
-    .vp-statut-archive-final { background: rgba(250,246,237,0.06); color: rgba(250,246,237,0.45); border: 1px solid rgba(250,246,237,0.12); }
-    .btn-disabled { opacity: 0.4 !important; cursor: not-allowed !important; }
+    .vp-detail-card { background:linear-gradient(145deg,#1A2E45,#152438); border:1px solid rgba(201,168,76,0.22); border-radius:16px; overflow:hidden; min-height:200px; }
+    .vp-detail-idle { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1rem; padding:3rem 1.5rem; text-align:center; }
+    .vp-detail-idle-icon { font-size:2rem; opacity:0.35; }
+    .vp-detail-idle p { font-size:0.87rem; color:rgba(250,246,237,0.45); margin:0; }
+    .vp-detail-body { padding:1.4rem; display:flex; flex-direction:column; gap:1.1rem; }
+    .vp-loading-prog { padding:2rem; text-align:center; color:rgba(250,246,237,0.4); font-style:italic; font-size:0.88rem; }
+    .vp-detail-header { display:flex; align-items:flex-start; justify-content:space-between; gap:0.8rem; }
+    .vp-detail-theme { font-family:'Cinzel',serif; font-size:1.1rem; font-weight:700; color:#FAF6ED; margin:0 0 0.3rem; }
+    .vp-detail-date { font-size:0.8rem; color:rgba(250,246,237,0.5); }
+    .vp-statut-badge { flex-shrink:0; font-size:0.72rem; font-weight:700; padding:0.25rem 0.7rem; border-radius:20px; white-space:nowrap; }
+    .vp-statut-badge-en_preparation { background:rgba(201,168,76,0.15); color:#F0D98A; border:1px solid rgba(201,168,76,0.3); }
+    .vp-statut-badge-valide { background:rgba(76,175,130,0.15); color:#7ecfaf; border:1px solid rgba(76,175,130,0.3); }
+    .vp-statut-badge-archive { background:rgba(250,246,237,0.07); color:rgba(250,246,237,0.45); border:1px solid rgba(250,246,237,0.12); }
+    .vp-detail-prep { display:flex; align-items:center; gap:0.7rem; padding:0.7rem 0.9rem; background:rgba(13,27,42,0.4); border-radius:10px; }
+    .vp-prep-avatar { width:34px; height:34px; border-radius:50%; object-fit:cover; border:1px solid rgba(201,168,76,0.35); flex-shrink:0; }
+    .vp-prep-avatar-fallback { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#C9A84C,#F0D98A); color:#0D1B2A; font-family:'Cinzel',serif; font-size:0.9rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .vp-prep-label { font-size:0.7rem; color:#C9A84C; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; }
+    .vp-prep-nom { font-size:0.88rem; color:#FAF6ED; font-weight:700; }
+    .vp-nb-chansons { margin-left:auto; font-family:'Cinzel',serif; font-size:0.82rem; color:#C9A84C; font-weight:700; }
+    .vp-programme { display:flex; flex-direction:column; gap:0.8rem; }
+    .vp-programme-title { font-family:'Cinzel',serif; font-size:0.88rem; font-weight:600; color:#F0D98A; border-bottom:1px solid rgba(201,168,76,0.15); padding-bottom:0.5rem; }
+    .vp-programme-empty { font-size:0.85rem; color:rgba(250,246,237,0.35); font-style:italic; text-align:center; padding:1rem 0; }
+    .vp-rubrique-bloc { display:flex; flex-direction:column; gap:0.3rem; }
+    .vp-rubrique-title { font-size:0.72rem; font-weight:700; color:#C9A84C; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.2rem; }
+    .vp-chanson-item { display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0.7rem; background:rgba(13,27,42,0.4); border-radius:8px; border-left:2px solid rgba(201,168,76,0.25); }
+    .vp-chanson-ordre { width:22px; height:22px; border-radius:50%; background:rgba(201,168,76,0.15); color:#C9A84C; font-family:'Cinzel',serif; font-size:0.68rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .vp-chanson-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:0.1rem; }
+    .vp-chanson-titre { font-size:0.85rem; font-weight:700; color:#FAF6ED; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .vp-chanson-num { font-size:0.72rem; color:rgba(250,246,237,0.4); }
+    .vp-chanson-langue { font-size:0.72rem; color:rgba(250,246,237,0.35); font-style:italic; flex-shrink:0; }
+    .vp-detail-actions { display:flex; gap:0.8rem; flex-wrap:wrap; padding-top:0.5rem; border-top:1px solid rgba(201,168,76,0.1); }
+    .vp-detail-actions .btn-primary, .vp-detail-actions .btn-secondary { flex:1; justify-content:center; min-width:100px; }
+    .vp-warning { font-size:0.8rem; color:#e09696; text-align:center; margin:0; font-style:italic; }
+    .vp-statut-final { flex:1; text-align:center; padding:0.8rem; border-radius:10px; font-size:0.88rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
+    .vp-statut-valide-final  { background:rgba(76,175,130,0.12); color:#7ecfaf; border:1px solid rgba(76,175,130,0.25); }
+    .vp-statut-archive-final { background:rgba(250,246,237,0.06); color:rgba(250,246,237,0.45); border:1px solid rgba(250,246,237,0.12); }
+    .btn-disabled { opacity:0.4 !important; cursor:not-allowed !important; }
   </style>
 
   <script>
-    var SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+    var SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
     var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
     var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    window._sb = sb;
 
-    var currentUser = null;
     var cultes = [];
     var filtreStatut = 'en_preparation';
     var idSelectionne = null;
@@ -355,10 +159,9 @@
     }
 
     function showToast(msg, type) {
-      type = type || 'info';
       var t = document.getElementById('toast');
       t.textContent = msg;
-      t.className = 'toast toast-' + type + ' show';
+      t.className = 'toast toast-' + (type || 'info') + ' show';
       setTimeout(function() { t.classList.remove('show'); }, 3500);
     }
 
@@ -372,30 +175,23 @@
       document.getElementById('vpDetailBody').style.display = 'none';
     }
 
-    // ─── INIT ────────────────────────────────────────────────────────
     async function init() {
-      var sessionRes = await sb.auth.getSession();
-      if (!sessionRes.data.session) { window.location.href = 'index.html'; return; }
-      currentUser = sessionRes.data.session.user;
+      var r = await sb.auth.getSession();
+      if (!r.data.session) { window.location.href = 'index.html'; return; }
 
-      var profilRes = await sb.from('profils').select('*').eq('id', currentUser.id).single();
-      var profil = profilRes.data;
-      if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
-      if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
+      var p = await sb.from('profils').select('*').eq('id', r.data.session.user.id).single();
+      if (!p.data || !p.data.actif) { window.location.href = 'index.html'; return; }
+      if (p.data.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
 
-      document.getElementById('userAvatar').src = profil.photo_url || '';
-      document.getElementById('userName').textContent = profil.nom || profil.email;
-
+      buildSharedNavbar(p.data, 'validation-programme');
       await chargerCultes();
       hideLoader();
     }
 
-    // ─── CHARGEMENT ──────────────────────────────────────────────────
     async function chargerCultes() {
       var res = await sb.from('cultes')
         .select('id, theme, date_culte, statut, preparateur_id, profils(nom, email, photo_url)')
         .order('date_culte', { ascending: false });
-
       if (res.error) { showToast('Erreur de chargement.', 'error'); return; }
       cultes = res.data || [];
 
@@ -403,17 +199,15 @@
       var badge = document.getElementById('tabBadgePrep');
       badge.textContent = nbPrep;
       badge.style.display = nbPrep > 0 ? 'inline' : 'none';
-
       appliquerFiltre();
     }
 
-    // ─── TABS ────────────────────────────────────────────────────────
     document.getElementById('vpTabs').addEventListener('click', function(e) {
       var tab = e.target.closest('.vp-tab');
       if (!tab) return;
       document.querySelectorAll('.vp-tab').forEach(function(t) { t.classList.remove('active'); });
       tab.classList.add('active');
-      filtreStatut = tab.dataset.statut;
+      filtreStatut = tab.getAttribute('data-statut');
       idSelectionne = null;
       resetDetail();
       appliquerFiltre();
@@ -424,119 +218,84 @@
       renderCultes(liste);
     }
 
-    // ─── RENDER LISTE ────────────────────────────────────────────────
     function renderCultes(liste) {
       var container = document.getElementById('vpCultesList');
       document.getElementById('vpCount').textContent = liste.length + ' culte' + (liste.length !== 1 ? 's' : '');
 
-      if (liste.length === 0) {
-        container.innerHTML = '<div class="vp-empty">Aucun culte dans cette catégorie.</div>';
-        return;
-      }
+      if (liste.length === 0) { container.innerHTML = '<div class="vp-empty">Aucun culte dans cette catégorie.</div>'; return; }
 
       container.innerHTML = '';
       liste.forEach(function(c) {
         var div = document.createElement('div');
         div.className = 'vp-culte-item' + (idSelectionne === c.id ? ' vp-culte-active' : '');
-
-        var prep = c.profils;
-        var dateStr = new Date(c.date_culte).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+        var prep    = c.profils;
+        var dateStr = new Date(c.date_culte).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
         var auj = new Date(); auj.setHours(0,0,0,0);
         var diff = Math.ceil((new Date(c.date_culte) - auj) / 86400000);
 
         var prepHtml = '';
         if (prep) {
           var init = (prep.nom || prep.email || '?')[0].toUpperCase();
-          if (prep.photo_url) {
-            prepHtml = '<img src="' + escHtml(prep.photo_url) + '" class="vp-avatar" alt="" />';
-          } else {
-            prepHtml = '<span class="vp-avatar-fallback">' + init + '</span>';
-          }
-          prepHtml += '<span>' + escHtml(prep.nom || prep.email) + '</span>';
+          prepHtml = (prep.photo_url
+            ? '<img src="' + escHtml(prep.photo_url) + '" class="vp-avatar" alt="" />'
+            : '<span class="vp-avatar-fallback">' + init + '</span>')
+            + '<span>' + escHtml(prep.nom || prep.email) + '</span>';
         } else {
           prepHtml = '<span class="vp-no-prep">Aucun préparateur</span>';
         }
 
-        var countdownHtml = '';
-        if (diff > 0) countdownHtml = '<span class="vp-countdown">J-' + diff + '</span>';
-        else if (diff === 0) countdownHtml = '<span class="vp-countdown">Aujourd\'hui</span>';
+        var countdownHtml = diff > 0 ? '<span class="vp-countdown">J-' + diff + '</span>'
+          : diff === 0 ? '<span class="vp-countdown">Aujourd\'hui</span>' : '';
 
         div.innerHTML = '<div class="vp-culte-left">'
           + '<div class="vp-culte-theme">' + escHtml(c.theme) + '</div>'
           + '<div class="vp-culte-date">📅 ' + dateStr + '</div>'
           + '<div class="vp-culte-prep">' + prepHtml + '</div>'
           + '</div>'
-          + '<div class="vp-culte-right">'
-          + countdownHtml
-          + '<span class="vp-statut-dot vp-statut-' + c.statut + '"></span>'
-          + '</div>';
+          + '<div class="vp-culte-right">' + countdownHtml
+          + '<span class="vp-statut-dot vp-statut-' + c.statut + '"></span></div>';
 
-        // ── CORRECTIF PRINCIPAL : addEventListener au lieu de onclick inline ──
-        // Évite tout problème d'échappement d'UUID dans les attributs HTML
         (function(culteId) {
-          div.addEventListener('click', function() {
-            selectionnerCulte(culteId);
-          });
+          div.addEventListener('click', function() { selectionnerCulte(culteId); });
         })(c.id);
 
         container.appendChild(div);
       });
     }
 
-    // ─── SÉLECTION ───────────────────────────────────────────────────
     async function selectionnerCulte(id) {
       idSelectionne = id;
-
-      // Mettre à jour la sélection visuelle
-      document.querySelectorAll('.vp-culte-item').forEach(function(el) {
-        el.classList.remove('vp-culte-active');
-      });
-      // Retrouver l'élément cliqué et le marquer
-      var items = document.querySelectorAll('.vp-culte-item');
-      var culte = cultes.find(function(c) { return c.id === id; });
-      if (!culte) return;
-
-      // Marquer visuellement après un tick
+      document.querySelectorAll('.vp-culte-item').forEach(function(el) { el.classList.remove('vp-culte-active'); });
       setTimeout(function() {
+        var liste = cultes.filter(function(c) { return c.statut === filtreStatut; });
         document.querySelectorAll('.vp-culte-item').forEach(function(el, i) {
-          var liste = cultes.filter(function(c) { return c.statut === filtreStatut; });
           if (liste[i] && liste[i].id === id) el.classList.add('vp-culte-active');
         });
       }, 10);
 
-      await afficherDetailCulte(culte);
+      var culte = cultes.find(function(c) { return c.id === id; });
+      if (culte) await afficherDetailCulte(culte);
     }
 
-    // ─── AFFICHER DÉTAIL ─────────────────────────────────────────────
     async function afficherDetailCulte(culte) {
       document.getElementById('vpDetailIdle').style.display = 'none';
       var body = document.getElementById('vpDetailBody');
-      body.style.display = 'flex';
-      body.style.flexDirection = 'column';
-      body.style.gap = '1.1rem';
+      body.style.display = 'flex'; body.style.flexDirection = 'column'; body.style.gap = '1.1rem';
       body.innerHTML = '<div class="vp-loading-prog">Chargement du programme…</div>';
-
-      // Scroll vers le détail sur mobile
-      document.getElementById('vpDetailCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('vpDetailCard').scrollIntoView({ behavior:'smooth', block:'start' });
 
       var progRes = await sb.from('programme_culte')
         .select('id, ordre, rubrique, chansons(numero, titre, rubrique, langue)')
         .eq('culte_id', culte.id)
         .order('ordre', { ascending: true });
 
-      if (progRes.error) {
-        body.innerHTML = '<p style="color:#e09696;padding:1rem;text-align:center;">Erreur chargement programme.</p>';
-        return;
-      }
+      if (progRes.error) { body.innerHTML = '<p style="color:#e09696;padding:1rem;text-align:center;">Erreur chargement programme.</p>'; return; }
 
       var programme = progRes.data || [];
       var nbChansons = programme.length;
       var prep = culte.profils;
-      var dateStr = new Date(culte.date_culte).toLocaleDateString('fr-FR', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-      });
+      var dateStr = new Date(culte.date_culte).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 
-      // Grouper par rubrique
       var rubriques = ['Prélude','Adoration','Louange','Offrande','Méditation','Envoi'];
       var parRubrique = {};
       rubriques.forEach(function(r) { parRubrique[r] = []; });
@@ -554,7 +313,7 @@
         items.forEach(function(item, i) {
           var ch = item.chansons || {};
           programmeHtml += '<div class="vp-chanson-item">'
-            + '<span class="vp-chanson-ordre">' + (i + 1) + '</span>'
+            + '<span class="vp-chanson-ordre">' + (i+1) + '</span>'
             + '<div class="vp-chanson-info">'
             + '<span class="vp-chanson-titre">' + escHtml(ch.titre || '—') + '</span>'
             + (ch.numero ? '<span class="vp-chanson-num">N°' + escHtml(String(ch.numero)) + '</span>' : '')
@@ -568,26 +327,6 @@
       var statutLabel = culte.statut === 'en_preparation' ? '🕊️ En préparation'
         : culte.statut === 'valide' ? '✅ Validé' : '📁 Archivé';
 
-      // Actions
-      var actionsHtml = '';
-      if (culte.statut === 'en_preparation') {
-        actionsHtml = '<div class="vp-detail-actions">'
-          + '<button class="btn-secondary" id="btnOuvrirArchiver">📁 Archiver</button>'
-          + '<button class="btn-primary' + (nbChansons === 0 ? ' btn-disabled' : '') + '"'
-          + (nbChansons === 0 ? ' disabled' : '')
-          + ' id="btnOuvrirValider">✦ Valider le programme</button>'
-          + '</div>'
-          + (nbChansons === 0 ? '<p class="vp-warning">⚠ Programme vide — le préparateur doit ajouter des chansons.</p>' : '');
-      } else if (culte.statut === 'valide') {
-        actionsHtml = '<div class="vp-detail-actions">'
-          + '<button class="btn-secondary" id="btnOuvrirArchiver">📁 Archiver</button>'
-          + '<div class="vp-statut-final vp-statut-valide-final">✅ Programme validé</div>'
-          + '</div>';
-      } else {
-        actionsHtml = '<div class="vp-statut-final vp-statut-archive-final" style="margin-top:0.5rem;">📁 Culte archivé</div>';
-      }
-
-      // Préparateur
       var prepHtml = '';
       if (prep) {
         var init = (prep.nom || prep.email || '?')[0].toUpperCase();
@@ -597,6 +336,23 @@
           + '<div><div class="vp-prep-label">Préparé par</div><div class="vp-prep-nom">' + escHtml(prep.nom || prep.email) + '</div></div>';
       } else {
         prepHtml = '<span class="vp-no-prep">Aucun préparateur désigné</span>';
+      }
+
+      var actionsHtml = '';
+      if (culte.statut === 'en_preparation') {
+        actionsHtml = '<div class="vp-detail-actions">'
+          + '<button class="btn-secondary" id="btnOuvrirArchiver">📁 Archiver</button>'
+          + '<button class="btn-primary' + (nbChansons === 0 ? ' btn-disabled' : '') + '"'
+          + (nbChansons === 0 ? ' disabled' : '') + ' id="btnOuvrirValider">✦ Valider le programme</button>'
+          + '</div>'
+          + (nbChansons === 0 ? '<p class="vp-warning">⚠ Programme vide — le préparateur doit ajouter des chansons.</p>' : '');
+      } else if (culte.statut === 'valide') {
+        actionsHtml = '<div class="vp-detail-actions">'
+          + '<button class="btn-secondary" id="btnOuvrirArchiver">📁 Archiver</button>'
+          + '<div class="vp-statut-final vp-statut-valide-final">✅ Programme validé</div>'
+          + '</div>';
+      } else {
+        actionsHtml = '<div class="vp-statut-final vp-statut-archive-final" style="margin-top:0.5rem;">📁 Culte archivé</div>';
       }
 
       body.innerHTML = '<div class="vp-detail-header">'
@@ -612,53 +368,41 @@
         + '</div>'
         + actionsHtml;
 
-      // Attacher les boutons après injection HTML
       var btnV = document.getElementById('btnOuvrirValider');
       var btnA = document.getElementById('btnOuvrirArchiver');
       if (btnV) btnV.addEventListener('click', function() { ouvrirModalValider(culte); });
       if (btnA) btnA.addEventListener('click', function() { ouvrirModalArchiver(culte); });
     }
 
-    // ─── MODALS ──────────────────────────────────────────────────────
     function ouvrirModalValider(culte) {
-      document.getElementById('modalValiderMsg').textContent =
-        'Le programme de "' + culte.theme + '" sera validé et visible par toute la chorale.';
+      document.getElementById('modalValiderMsg').textContent = 'Le programme de "' + culte.theme + '" sera validé et visible par toute la chorale.';
       document.getElementById('modalValider').style.display = 'flex';
-
       document.getElementById('btnConfirmerValider').onclick = async function() {
-        var btn = this;
-        btn.disabled = true;
-        btn.textContent = '⏳…';
-        var idAValider = culte.id;
-        var res = await sb.from('cultes').update({ statut: 'valide' }).eq('id', idAValider);
-        btn.disabled = false;
-        btn.innerHTML = '✦ Valider';
+        var btn = this; btn.disabled = true; btn.textContent = '⏳…';
+        var id = culte.id;
+        var res = await sb.from('cultes').update({ statut:'valide' }).eq('id', id);
+        btn.disabled = false; btn.innerHTML = '✦ Valider';
         fermerModals();
         if (res.error) { showToast('Erreur lors de la validation.', 'error'); return; }
         showToast('Programme validé !', 'success');
         await chargerCultes();
-        var culteApres = cultes.find(function(c) { return c.id === idAValider; });
-        if (culteApres) { idSelectionne = idAValider; await afficherDetailCulte(culteApres); }
+        var apres = cultes.find(function(c) { return c.id === id; });
+        if (apres) { idSelectionne = id; await afficherDetailCulte(apres); }
         else { idSelectionne = null; resetDetail(); }
       };
     }
 
     function ouvrirModalArchiver(culte) {
       document.getElementById('modalArchiver').style.display = 'flex';
-
       document.getElementById('btnConfirmerArchiver').onclick = async function() {
-        var btn = this;
-        btn.disabled = true;
-        btn.textContent = '⏳…';
-        var idAArchiver = culte.id;
-        var res = await sb.from('cultes').update({ statut: 'archive' }).eq('id', idAArchiver);
-        btn.disabled = false;
-        btn.textContent = 'Archiver';
+        var btn = this; btn.disabled = true; btn.textContent = '⏳…';
+        var id = culte.id;
+        var res = await sb.from('cultes').update({ statut:'archive' }).eq('id', id);
+        btn.disabled = false; btn.textContent = 'Archiver';
         fermerModals();
         if (res.error) { showToast('Erreur lors de l\'archivage.', 'error'); return; }
         showToast('Culte archivé.', 'success');
-        idSelectionne = null;
-        resetDetail();
+        idSelectionne = null; resetDetail();
         await chargerCultes();
       };
     }
@@ -672,14 +416,6 @@
     document.getElementById('btnAnnulerArchiver').addEventListener('click', fermerModals);
     document.getElementById('modalValider').addEventListener('click', function(e) { if (e.target === this) fermerModals(); });
     document.getElementById('modalArchiver').addEventListener('click', function(e) { if (e.target === this) fermerModals(); });
-
-    // ─── LOGOUT + NAV ────────────────────────────────────────────────
-    document.getElementById('btnLogout').addEventListener('click', async function() {
-      await sb.auth.signOut(); window.location.href = 'index.html';
-    });
-    document.getElementById('navToggle').addEventListener('click', function() {
-      document.getElementById('navLinks').classList.toggle('open');
-    });
 
     init();
   </script>
