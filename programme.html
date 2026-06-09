@@ -304,62 +304,41 @@
       RUBRIQUES_ORDER.forEach(function(rubrique) {
         var items = parRubrique[rubrique] || [];
         if (items.length === 0) return;
-        items.forEach(function(item, i) {
+        var ton0 = items[0].tonalite === "autre" ? (items[0].tonalite_libre || "") : (items[0].tonalite || "");
+        contenu += "<div class=\"pdf-rubrique-header\"><span class=\"pdf-rubrique-name\">" + escHtml(rubrique) + "</span>"
+          + (ton0 ? "<span class=\"pdf-rubrique-tonal\">Ton. : " + escHtml(ton0) + "</span>" : "") + "</div>";
+        items.forEach(function(item) {
           var ch = item.chansons || {};
-          var ton = item.tonalite === "autre" ? (item.tonalite_libre || "") : (item.tonalite || "");
-          if (i === 0) {
-            contenu += "<div class=\"pdf-rubrique-header\"><span class=\"pdf-rubrique-name\">" + escHtml(rubrique) + "</span>"
-              + (ton ? "<span class=\"pdf-rubrique-tonal\">Tonalité : " + escHtml(ton) + "</span>" : "") + "</div>";
-          } else if (ton) {
-            contenu += "<div class=\"pdf-rubrique-header pdf-rub-sub\"><span style=\"flex:1;\"></span>"
-              + "<span class=\"pdf-rubrique-tonal\">Tonalité : " + escHtml(ton) + "</span></div>";
-          }
           contenu += "<div class=\"pdf-chanson-row\">"
-            + (ch.numero ? "<span class=\"pdf-chanson-num\">#" + escHtml(String(ch.numero)) + "</span>" : "")
+            + (ch.numero ? "<span class=\"pdf-chanson-num\">#" + escHtml(String(ch.numero)) + "</span>" : "<span class=\"pdf-chanson-num\"></span>")
             + "<span class=\"pdf-chanson-titre\">" + escHtml(ch.titre || "—") + "</span></div>";
         });
       });
 
       var dateFormatee = formatDate(culte.date_culte);
       var theme = culte.theme || "Culte";
-      var versetBlock = verset ? "<div class=\"pdf-verset\">\u201C\u00A0" + escHtml(verset) + "\u00A0\u201D</div>" : "";
+      var versetBlock = verset ? "<blockquote class=\"pdf-verset\">\u201C " + escHtml(verset) + " \u201D</blockquote>" : "";
 
       var pdfWin = window.open("", "_blank");
       if (!pdfWin) { showToast("Autorisez les popups pour le PDF.", "error"); return; }
 
       var css = "@page { size:A4 portrait; margin:1.5cm 1.8cm; }"
-        + "* { margin:0; padding:0; box-sizing:border-box; }"
-        + "body { font-family:'Lato',sans-serif; background:#fff; color:#1A1A2E; padding:1.2cm 1.5cm; font-size:10pt; max-width:100%; }"
-        + ".pdf-header { text-align:center; border-bottom:2px solid #C9A84C; padding-bottom:0.8rem; margin-bottom:1.2rem; }"
-        + ".pdf-church { font-family:'Cinzel',serif; font-size:7.5pt; color:#C9A84C; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:0.25rem; }"
-        + ".pdf-titre { font-family:'Cinzel',serif; font-size:17pt; font-weight:700; color:#0D1B2A; margin-bottom:0.25rem; line-height:1.2; }"
-        + ".pdf-date { font-size:9pt; color:#555; }"
-        + ".pdf-verset { font-family:'Playfair Display',serif; font-style:italic; font-size:9pt; color:#4A4A6A; border-left:3px solid #C9A84C; padding:0.4rem 0.8rem; margin:0.8rem 0 1.2rem; background:#FAF6ED; line-height:1.5; }"
-        + ".pdf-prog-title { font-family:'Cinzel',serif; font-size:8.5pt; font-weight:600; color:#C9A84C; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.7rem; }"
-        + ".pdf-rubrique-header { display:flex; align-items:center; gap:0.6rem; background:#0D1B2A; color:#F0D98A; padding:0.35rem 0.6rem; border-radius:3px 3px 0 0; margin-top:0.8rem; }"
-        + ".pdf-rub-sub { background:#1A2E45; border-radius:0; margin-top:0; }"
-        + ".pdf-rubrique-name { font-family:'Cinzel',serif; font-size:9pt; font-weight:700; flex:1; }"
-        + ".pdf-rubrique-tonal { font-size:8.5pt; color:#F0D98A; font-style:italic; background:rgba(201,168,76,0.15); padding:0.1rem 0.4rem; border-radius:20px; }"
-        + ".pdf-chanson-row { display:flex; align-items:center; gap:0.6rem; padding:0.4rem 0.6rem; border:1px solid #E0D8C8; border-top:none; background:#FFFDF8; }"
-        + ".pdf-chanson-num { font-family:'Cinzel',serif; font-size:8pt; color:#C9A84C; font-weight:600; min-width:2rem; flex-shrink:0; }"
-        + ".pdf-chanson-titre { font-size:10pt; color:#1A1A2E; word-break:break-word; }"
-        + ".pdf-footer { text-align:center; margin-top:1.5rem; font-size:7.5pt; color:#999; border-top:1px solid #eee; padding-top:0.5rem; }"
-        + ".print-btn { position:fixed; bottom:1rem; right:1rem; background:#C9A84C; color:#0D1B2A; border:none; padding:0.6rem 1.2rem; font-family:'Cinzel',serif; font-weight:600; border-radius:8px; cursor:pointer; font-size:10pt; box-shadow:0 4px 16px rgba(0,0,0,0.2); }"
-        + "@media print { @page { size:A4 portrait; margin:1.5cm 1.8cm; } .print-btn { display:none; } body { padding:0; } }";
-
-      var html = "<!DOCTYPE html><html lang=\"fr\"><head><meta charset=\"UTF-8\"><title>Programme \u2014 " + escHtml(theme) + "</title>"
-        + "<link href=\"https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&family=Playfair+Display:ital@1&display=swap\" rel=\"stylesheet\">"
-        + "<style>" + css + "</style></head><body>"
-        + "<div class=\"pdf-header\"><div class=\"pdf-church\">M\u00E9lodie\u2019s Book \u2014 Programme de Culte</div>"
+      // Construire le contenu et l'injecter dans l'overlay
+      var corps = document.getElementById("pdfCorps");
+      corps.innerHTML =
+        "<div class=\"pdf-header\">"
+        + "<div class=\"pdf-church\">M\u00E9lodie\u2019s Book \u2014 Programme de Culte</div>"
         + "<div class=\"pdf-titre\">" + escHtml(theme) + "</div>"
-        + "<div class=\"pdf-date\">\uD83D\uDCC5 " + escHtml(dateFormatee) + "</div></div>"
-        + versetBlock + "<div class=\"pdf-prog-title\">Programme</div>" + contenu
-        + "<div class=\"pdf-footer\">M\u00E9lodie\u2019s Book \u00B7 " + escHtml(dateFormatee) + "</div>"
-        + "<button class=\"print-btn\" onclick=\"window.print()\">\uD83D\uDDB8\uFE0F Imprimer / Enregistrer PDF</button>"
-        + "</body></html>";
+        + "<div class=\"pdf-date\">📅 " + escHtml(dateFormatee) + "</div>"
+        + "</div>"
+        + versetBlock
+        + "<div class=\"pdf-programme-title\">Programme</div>"
+        + "<div class=\"pdf-programme\">" + contenu + "</div>"
+        + "<div class=\"pdf-footer\">M\u00E9lodie\u2019s Book \u00B7 " + escHtml(dateFormatee) + "</div>";
 
-      pdfWin.document.write(html);
-      pdfWin.document.close();
+      var overlay = document.getElementById("pdfOverlay");
+      overlay.style.display = "flex";
+      document.body.style.overflow = "hidden";
     }
 
     // ÉVÉNEMENTS
@@ -422,5 +401,71 @@
       hideLoader();
     })();
   </script>
+
+  <!-- ====== OVERLAY PDF ====== -->
+  <div id="pdfOverlay" style="display:none; position:fixed; inset:0; z-index:9999; background:#fff; overflow-y:auto; flex-direction:column;">
+
+    <!-- Barre actions (cachée à l'impression) -->
+    <div id="pdfActions" style="display:flex; align-items:center; justify-content:space-between; padding:0.75rem 1rem; background:#0D1B2A; border-bottom:2px solid #C9A84C; position:sticky; top:0; z-index:1; gap:0.5rem;">
+      <button id="btnFermerPDF" style="background:transparent; border:1px solid rgba(201,168,76,0.4); color:#F0D98A; font-family:'Lato',sans-serif; font-size:0.82rem; padding:0.4rem 0.8rem; border-radius:6px; cursor:pointer; white-space:nowrap;">✕ Fermer</button>
+      <span style="font-family:'Cinzel',serif; font-size:0.85rem; color:#F0D98A; font-weight:600; text-align:center; flex:1;">Aperçu programme</span>
+      <button id="btnImprimerPDF" style="background:linear-gradient(135deg,#C9A84C,#F0D98A); border:none; color:#0D1B2A; font-family:'Cinzel',serif; font-size:0.82rem; font-weight:700; padding:0.4rem 0.9rem; border-radius:6px; cursor:pointer; white-space:nowrap;">🖨️ Imprimer</button>
+    </div>
+
+    <!-- Corps du programme -->
+    <div id="pdfCorps" style="padding:1.2rem 1rem; max-width:560px; margin:0 auto; width:100%; box-sizing:border-box;"></div>
+  </div>
+
+  <style>
+    /* ── Styles du corps PDF ── */
+    #pdfCorps { font-family:'Lato',sans-serif; color:#1A1A2E; font-size:0.9rem; }
+    #pdfCorps .pdf-header { text-align:center; border-bottom:2px solid #C9A84C; padding-bottom:0.7rem; margin-bottom:1rem; }
+    #pdfCorps .pdf-church { font-family:'Cinzel',serif; font-size:0.62rem; color:#C9A84C; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:0.2rem; }
+    #pdfCorps .pdf-titre  { font-family:'Cinzel',serif; font-size:1.3rem; font-weight:700; color:#0D1B2A; line-height:1.2; margin-bottom:0.15rem; }
+    #pdfCorps .pdf-date   { font-size:0.78rem; color:#555; }
+    #pdfCorps .pdf-verset { font-family:'Playfair Display',serif; font-style:italic; font-size:0.82rem; color:#4A4A6A; border-left:3px solid #C9A84C; padding:0.45rem 0.8rem; margin:0.7rem 0 1rem; background:#FAF6ED; line-height:1.6; border-radius:0 4px 4px 0; }
+    #pdfCorps .pdf-programme-title { font-family:'Cinzel',serif; font-size:0.68rem; font-weight:700; color:#C9A84C; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:0.5rem; }
+    #pdfCorps .pdf-programme { display:flex; flex-direction:column; gap:0; }
+    #pdfCorps .pdf-rubrique-header { display:flex; align-items:center; gap:0.5rem; background:#0D1B2A; color:#F0D98A; padding:0.38rem 0.65rem; border-radius:4px 4px 0 0; margin-top:0.75rem; }
+    #pdfCorps .pdf-rubrique-header:first-child { margin-top:0; }
+    #pdfCorps .pdf-rubrique-name  { font-family:'Cinzel',serif; font-size:0.75rem; font-weight:700; flex:1; letter-spacing:0.05em; }
+    #pdfCorps .pdf-rubrique-tonal { font-size:0.68rem; color:#F0D98A; font-style:italic; background:rgba(201,168,76,0.2); padding:0.1rem 0.4rem; border-radius:20px; white-space:nowrap; }
+    #pdfCorps .pdf-chanson-row    { display:flex; align-items:center; gap:0.5rem; padding:0.42rem 0.65rem; border:1px solid #E0D8C8; border-top:none; background:#FFFDF8; }
+    #pdfCorps .pdf-chanson-num    { font-family:'Cinzel',serif; font-size:0.7rem; color:#C9A84C; font-weight:700; min-width:1.8rem; flex-shrink:0; }
+    #pdfCorps .pdf-chanson-titre  { font-size:0.88rem; color:#1A1A2E; word-break:break-word; line-height:1.3; }
+    #pdfCorps .pdf-notes          { margin-top:1rem; padding:0.75rem; border:1px dashed #C9A84C; border-radius:6px; background:#FAF6ED; }
+    #pdfCorps .pdf-notes-title    { font-family:'Cinzel',serif; font-size:0.65rem; color:#C9A84C; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.35rem; font-weight:700; }
+    #pdfCorps .pdf-notes p        { font-size:0.8rem; color:#1A1A2E; line-height:1.6; }
+    #pdfCorps .pdf-footer         { text-align:center; margin-top:1rem; font-size:0.65rem; color:#999; border-top:1px solid #eee; padding-top:0.4rem; }
+
+    /* ── Impression : masquer tout sauf l'overlay ── */
+    @media print {
+      @page { size: A4 portrait; margin: 1.5cm 2cm; }
+      body > *:not(#pdfOverlay) { display:none !important; }
+      #pdfOverlay { position:static !important; display:block !important; background:#fff; overflow:visible; }
+      #pdfActions { display:none !important; }
+      #pdfCorps   { padding:0 !important; max-width:100% !important; font-size:10pt; }
+      #pdfCorps .pdf-titre  { font-size:18pt; }
+      #pdfCorps .pdf-chanson-titre { font-size:10pt; }
+      #pdfCorps .pdf-verset { font-size:9pt; }
+    }
+
+    /* ── Paysage : adapter la largeur ── */
+    @media (orientation: landscape) {
+      #pdfCorps { max-width:720px; }
+      #pdfCorps .pdf-titre { font-size:1.5rem; }
+    }
+  </style>
+
+  <script>
+    document.getElementById("btnFermerPDF").addEventListener("click", function() {
+      document.getElementById("pdfOverlay").style.display = "none";
+      document.body.style.overflow = "";
+    });
+    document.getElementById("btnImprimerPDF").addEventListener("click", function() {
+      window.print();
+    });
+  </script>
+
 </body>
 </html>
