@@ -319,11 +319,7 @@
       var theme = culte.theme || "Culte";
       var versetBlock = verset ? "<blockquote class=\"pdf-verset\">\u201C " + escHtml(verset) + " \u201D</blockquote>" : "";
 
-      var pdfWin = window.open("", "_blank");
-      if (!pdfWin) { showToast("Autorisez les popups pour le PDF.", "error"); return; }
-
-      var css = "@page { size:A4 portrait; margin:1.5cm 1.8cm; }"
-      // Construire le contenu et l'injecter dans l'overlay
+      // Injecter dans l'overlay de la même page
       var corps = document.getElementById("pdfCorps");
       corps.innerHTML =
         "<div class=\"pdf-header\">"
@@ -337,7 +333,8 @@
         + "<div class=\"pdf-footer\">M\u00E9lodie\u2019s Book \u00B7 " + escHtml(dateFormatee) + "</div>";
 
       var overlay = document.getElementById("pdfOverlay");
-      overlay.style.display = "flex";
+      overlay.style.display = "block";
+      overlay.scrollTop = 0;
       document.body.style.overflow = "hidden";
     }
 
@@ -369,26 +366,69 @@
       });
     }
 
-    // PROPOSITIONS
+    // PROPOSITIONS — lecture seule avec paroles + audio
     async function chargerPropositions() {
-      var res = await sb.from("propositions").select("id, titre, artiste, langue, rubrique, statut, created_at, profils(nom, email)").order("created_at",{ascending:false});
+      var res = await sb.from("propositions")
+        .select("id, titre, artiste, langue, rubrique, statut, created_at, paroles, commentaire, profils(nom, email)")
+        .order("created_at", { ascending: false });
       var container = document.getElementById("listePropositions");
       var props = res.data || [];
-      if (props.length === 0) { container.innerHTML = "<div class=\"prog-pub-empty\">Aucune proposition pour l'instant.</div>"; return; }
+      if (props.length === 0) {
+        container.innerHTML = "<div class=\"prog-pub-empty\">Aucune proposition pour l'instant.</div>";
+        return;
+      }
       container.innerHTML = "";
       props.forEach(function(p) {
-        var div = document.createElement("div");
-        div.className = "prog-prop-card";
-        var auteur = (p.profils && (p.profils.nom || p.profils.email)) || "Membre";
-        var date = new Date(p.created_at).toLocaleDateString("fr-FR", { day:"2-digit", month:"short", year:"numeric" });
+        var auteur    = (p.profils && (p.profils.nom || p.profils.email)) || "Membre";
+        var date      = new Date(p.created_at).toLocaleDateString("fr-FR", { day:"2-digit", month:"short", year:"numeric" });
         var badgeLabel = p.statut === "en_attente" ? "⏳ En attente" : p.statut === "accepte" ? "✅ Acceptée" : "❌ Refusée";
-        div.innerHTML = "<div class=\"prog-prop-left\">"
+
+        // Carte cliquable
+        var card = document.createElement("div");
+        card.className = "prog-prop-card";
+        card.style.cssText = "flex-direction:column; align-items:stretch; cursor:pointer;";
+
+        var header = "<div style=\"display:flex; align-items:center; justify-content:space-between; gap:0.8rem;\">"
+          + "<div class=\"prog-prop-left\">"
           + "<div class=\"prog-prop-titre\">" + escHtml(p.titre) + "</div>"
           + "<div class=\"prog-prop-meta\">" + (p.artiste ? escHtml(p.artiste) + " · " : "") + escHtml(p.langue || "") + (p.rubrique ? " · " + escHtml(p.rubrique) : "") + "</div>"
           + "<div class=\"prog-prop-auteur\">👤 <span>" + escHtml(auteur) + "</span> · <span>" + date + "</span></div>"
           + "</div>"
-          + "<span class=\"prog-prop-badge prog-prop-badge-" + p.statut + "\">" + badgeLabel + "</span>";
-        container.appendChild(div);
+          + "<span class=\"prog-prop-badge prog-prop-badge-" + p.statut + "\">" + badgeLabel + "</span>"
+          + "</div>";
+
+        // Détail (caché par défaut)
+        var detailId = "prop-detail-" + p.id;
+        var parolesSec = p.paroles
+          ? "<div style=\"margin-top:0.8rem; padding:0.8rem; background:rgba(13,27,42,0.5); border-radius:8px; border-left:3px solid rgba(201,168,76,0.4);\">"
+            + "<div style=\"font-family:'Cinzel',serif; font-size:0.65rem; color:#C9A84C; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.5rem;\">🎵 Paroles</div>"
+            + "<pre style=\"font-family:'Playfair Display',serif; font-size:0.82rem; color:rgba(250,246,237,0.85); white-space:pre-wrap; line-height:1.8; margin:0;\">" + escHtml(p.paroles) + "</pre>"
+            + "</div>"
+          : "";
+
+        var commentaireSec = p.commentaire
+          ? "<div style=\"margin-top:0.6rem; padding:0.6rem 0.8rem; border-left:2px solid rgba(201,168,76,0.3); background:rgba(201,168,76,0.05); border-radius:0 6px 6px 0;\">"
+            + "<div style=\"font-size:0.7rem; color:#C9A84C; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.3rem;\">Commentaire</div>"
+            + "<p style=\"font-family:'Playfair Display',serif; font-style:italic; font-size:0.82rem; color:rgba(250,246,237,0.7); margin:0; line-height:1.6;\">" + escHtml(p.commentaire) + "</p>"
+            + "</div>"
+          : "";
+
+        var detail = "<div id=\"" + detailId + "\" style=\"display:none; margin-top:0.6rem;\">"
+          + parolesSec
+          + commentaireSec
+          + "</div>";
+
+        card.innerHTML = header + detail;
+
+        // Toggle au clic
+        (function(id) {
+          card.addEventListener("click", function() {
+            var d = document.getElementById(id);
+            if (d) d.style.display = d.style.display === "none" ? "block" : "none";
+          });
+        })(detailId);
+
+        container.appendChild(card);
       });
     }
 
@@ -403,7 +443,7 @@
   </script>
 
   <!-- ====== OVERLAY PDF ====== -->
-  <div id="pdfOverlay" style="display:none; position:fixed; inset:0; z-index:9999; background:#fff; overflow-y:auto; flex-direction:column;">
+  <div id="pdfOverlay" style="display:none; position:fixed; inset:0; z-index:9999; background:#fff; overflow-y:auto;">
 
     <!-- Barre actions (cachée à l'impression) -->
     <div id="pdfActions" style="display:flex; align-items:center; justify-content:space-between; padding:0.75rem 1rem; background:#0D1B2A; border-bottom:2px solid #C9A84C; position:sticky; top:0; z-index:1; gap:0.5rem;">
