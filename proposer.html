@@ -10,6 +10,58 @@
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+
+  <style>
+    .prop-paroles-input { font-family:'Playfair Display',serif; font-size:0.92rem; line-height:1.8; min-height:200px; resize:vertical; }
+    .prop-paroles-input::placeholder { font-family:'Lato',sans-serif; font-size:0.85rem; color:rgba(250,246,237,0.25); }
+
+    /* Zone audio */
+    .audio-prop-zone {
+      border: 2px dashed #C9A84C44;
+      border-radius: 10px;
+      padding: 1.2rem 1rem;
+      text-align: center;
+      background: rgba(201,168,76,0.04);
+      margin-top: .3rem;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .audio-prop-zone.dragover { border-color: #C9A84C; background: rgba(201,168,76,0.1); }
+    .audio-prop-zone input[type="file"] { display: none; }
+    .audio-prop-icon { font-size: 1.6rem; margin-bottom: .3rem; }
+    .audio-prop-label { font-family:'Lato',sans-serif; font-size:.85rem; color:rgba(250,246,237,.65); margin:0 0 .5rem; }
+    .btn-choisir-audio-prop {
+      display: inline-block;
+      padding: .4rem 1rem;
+      background: linear-gradient(135deg,#C9A84C,#F0D98A);
+      color: #0D1B2A;
+      font-family:'Lato',sans-serif;
+      font-weight:700;
+      font-size:.8rem;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+    }
+    .audio-prop-hint { font-size:.7rem; color:rgba(250,246,237,.3); margin-top:.4rem; }
+    .audio-prop-progress { display:none; margin-top:.7rem; }
+    .audio-prop-bar-bg { background:rgba(255,255,255,.1); border-radius:99px; height:7px; overflow:hidden; margin-bottom:.3rem; }
+    .audio-prop-bar    { height:100%; background:linear-gradient(90deg,#C9A84C,#F0D98A); border-radius:99px; width:0%; transition:width .15s; }
+    .audio-prop-pct    { font-size:.75rem; color:#F0D98A; }
+    .audio-prop-fichier {
+      display:none;
+      align-items:center;
+      gap:.5rem;
+      background:rgba(201,168,76,0.08);
+      border-radius:8px;
+      padding:.45rem .8rem;
+      margin-top:.5rem;
+    }
+    .audio-prop-fichier-ok  { color:#4caf50; }
+    .audio-prop-fichier-nom { font-size:.8rem; color:rgba(250,246,237,.7); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .audio-prop-fichier-suppr { background:none; border:none; color:#e5534b; cursor:pointer; font-size:.85rem; padding:0 .2rem; }
+    audio#audioPropPreview { width:100%; border-radius:8px; margin-top:.5rem; display:none; }
+    .form-hint-audio { font-size:.75rem; color:rgba(250,246,237,.4); margin-top:.4rem; }
+  </style>
 </head>
 <body class="page-proposer">
 
@@ -94,6 +146,33 @@
               <div class="form-hint">Séparez les couplets et refrains par une ligne vide.</div>
             </div>
 
+            <!-- SECTION AUDIO -->
+            <div class="form-group">
+              <label class="form-label">🎵 Audio de la chanson <span style="font-weight:400;font-style:italic;font-size:0.75rem;color:#78909C;">(optionnel)</span></label>
+
+              <div class="audio-prop-zone" id="audioPropZone">
+                <div class="audio-prop-icon">🎧</div>
+                <p class="audio-prop-label">Ajoute un enregistrement pour aider l'apprentissage</p>
+                <button type="button" class="btn-choisir-audio-prop" id="btnChoisirAudioProp">📂 Choisir un fichier audio</button>
+                <input type="file" id="audioPropFileInput" accept="audio/*" />
+                <p class="audio-prop-hint">MP3, M4A, WAV — max 50 Mo</p>
+
+                <div class="audio-prop-progress" id="audioPropProgress">
+                  <div class="audio-prop-bar-bg"><div class="audio-prop-bar" id="audioPropBar"></div></div>
+                  <p class="audio-prop-pct" id="audioPropPct">Envoi en cours…</p>
+                </div>
+              </div>
+
+              <div class="audio-prop-fichier" id="audioPropFichierInfo">
+                <span class="audio-prop-fichier-ok">✓</span>
+                <span class="audio-prop-fichier-nom" id="audioPropNom"></span>
+                <button type="button" class="audio-prop-fichier-suppr" id="btnSupprimerAudioProp">✕</button>
+              </div>
+
+              <audio id="audioPropPreview" controls></audio>
+              <p class="form-hint-audio">L'audio sera joint à ta proposition pour faciliter l'apprentissage de la chorale.</p>
+            </div>
+
             <div class="form-group">
               <label for="commentaire" class="form-label">Commentaire / Contexte d'utilisation</label>
               <textarea id="commentaire" class="form-textarea" rows="3" placeholder="Pourquoi proposez-vous cette chanson ?"></textarea>
@@ -149,18 +228,18 @@
     </div>
   </div>
 
-  <style>
-    .prop-paroles-input { font-family:'Playfair Display',serif; font-size:0.92rem; line-height:1.8; min-height:200px; resize:vertical; }
-    .prop-paroles-input::placeholder { font-family:'Lato',sans-serif; font-size:0.85rem; color:rgba(250,246,237,0.25); }
-  </style>
-
   <script>
   var SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
   var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
   var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
   window._sb = sb;
 
+  var CLD_CLOUD  = 'dqs0okwy2';
+  var CLD_PRESET = 'melodie_audio';
+
   var currentUser = null;
+  var audioPropFichier = null;
+  var audioPropUrlFinal = null;
 
   function escHtml(str) {
     if (!str) return '';
@@ -211,6 +290,93 @@
     }).join('');
   }
 
+  // ---- AUDIO PROP ----
+  function gererAudioProp(file) {
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) { showToast('Fichier trop lourd (max 50 Mo)', 'error'); return; }
+    audioPropFichier = file;
+    audioPropUrlFinal = null;
+    document.getElementById('audioPropNom').textContent = file.name;
+    document.getElementById('audioPropFichierInfo').style.display = 'flex';
+    var preview = document.getElementById('audioPropPreview');
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = 'block';
+  }
+
+  document.getElementById('btnChoisirAudioProp').addEventListener('click', function() {
+    document.getElementById('audioPropFileInput').click();
+  });
+
+  document.getElementById('audioPropFileInput').addEventListener('change', function() {
+    gererAudioProp(this.files[0]);
+  });
+
+  var propZone = document.getElementById('audioPropZone');
+  propZone.addEventListener('dragover', function(e) { e.preventDefault(); propZone.classList.add('dragover'); });
+  propZone.addEventListener('dragleave', function() { propZone.classList.remove('dragover'); });
+  propZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    propZone.classList.remove('dragover');
+    var file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('audio/')) gererAudioProp(file);
+    else showToast('Fichier audio requis (MP3, M4A…)', 'error');
+  });
+
+  document.getElementById('btnSupprimerAudioProp').addEventListener('click', function() {
+    audioPropFichier = null;
+    audioPropUrlFinal = null;
+    document.getElementById('audioPropFichierInfo').style.display = 'none';
+    document.getElementById('audioPropNom').textContent = '';
+    document.getElementById('audioPropPreview').style.display = 'none';
+    document.getElementById('audioPropPreview').src = '';
+    document.getElementById('audioPropFileInput').value = '';
+  });
+
+  function uploadAudioProp(file, callback) {
+    var formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLD_PRESET);
+    formData.append('resource_type', 'video');
+
+    var xhr = new XMLHttpRequest();
+    var progressWrap = document.getElementById('audioPropProgress');
+    var bar = document.getElementById('audioPropBar');
+    var pct = document.getElementById('audioPropPct');
+
+    progressWrap.style.display = 'block';
+    document.getElementById('btnChoisirAudioProp').disabled = true;
+
+    xhr.upload.onprogress = function(e) {
+      if (e.lengthComputable) {
+        var p = Math.round((e.loaded / e.total) * 100);
+        bar.style.width = p + '%';
+        pct.textContent = 'Upload : ' + p + '%';
+      }
+    };
+
+    xhr.onload = function() {
+      progressWrap.style.display = 'none';
+      bar.style.width = '0%';
+      document.getElementById('btnChoisirAudioProp').disabled = false;
+      if (xhr.status === 200) {
+        var data = JSON.parse(xhr.responseText);
+        callback(null, data.secure_url);
+      } else {
+        callback('Erreur ' + xhr.status, null);
+      }
+    };
+
+    xhr.onerror = function() {
+      progressWrap.style.display = 'none';
+      document.getElementById('btnChoisirAudioProp').disabled = false;
+      callback('Erreur réseau', null);
+    };
+
+    xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload');
+    xhr.send(formData);
+  }
+
+  // SOUMETTRE
   document.getElementById('btnSoumettre').addEventListener('click', async function() {
     var titre      = document.getElementById('titre').value.trim();
     var artiste    = document.getElementById('artiste').value.trim();
@@ -227,23 +393,69 @@
     btn.disabled = true;
     btn.innerHTML = '<span class="btn-icon">↻</span> Envoi…';
 
+    // Upload audio si présent
+    if (audioPropFichier && !audioPropUrlFinal) {
+      btn.innerHTML = '<span class="btn-icon">↻</span> Upload audio…';
+      await new Promise(function(resolve) {
+        uploadAudioProp(audioPropFichier, function(err, url) {
+          if (err) {
+            showToast('Erreur upload audio : ' + err, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<span class="btn-icon">✦</span> Soumettre la proposition';
+            resolve('error');
+          } else {
+            audioPropUrlFinal = url;
+            resolve('ok');
+          }
+        });
+      });
+      if (!audioPropUrlFinal && audioPropFichier) return;
+    }
+
+    btn.innerHTML = '<span class="btn-icon">↻</span> Envoi…';
+
     var res = await sb.from('propositions').insert({
-      titre: titre, artiste: artiste || null, langue: langue, rubrique: rubrique,
-      paroles: paroles || null, commentaire: commentaire || null,
-      statut: 'en_attente', propose_par: currentUser.id
+      titre: titre,
+      artiste: artiste || null,
+      langue: langue,
+      rubrique: rubrique,
+      paroles: paroles || null,
+      commentaire: commentaire || null,
+      audio_url: audioPropUrlFinal || null,
+      statut: 'en_attente',
+      propose_par: currentUser.id
     });
 
     btn.disabled = false;
     btn.innerHTML = '<span class="btn-icon">✦</span> Soumettre la proposition';
 
-    if (res.error) { showToast('Erreur lors de l\'envoi. Réessayez.', 'error'); return; }
+    if (res.error) {
+      // Si la colonne audio_url n'existe pas encore, on réessaie sans
+      if (res.error.message && res.error.message.indexOf('audio_url') !== -1) {
+        var res2 = await sb.from('propositions').insert({
+          titre: titre, artiste: artiste || null, langue: langue, rubrique: rubrique,
+          paroles: paroles || null, commentaire: commentaire || null,
+          statut: 'en_attente', propose_par: currentUser.id
+        });
+        if (res2.error) { showToast('Erreur lors de l\'envoi. Réessayez.', 'error'); return; }
+      } else {
+        showToast('Erreur lors de l\'envoi. Réessayez.', 'error');
+        return;
+      }
+    }
 
+    // Reset formulaire
     document.getElementById('titre').value = '';
     document.getElementById('artiste').value = '';
     document.getElementById('langue').value = '';
     document.getElementById('rubrique').value = '';
     document.getElementById('paroles').value = '';
     document.getElementById('commentaire').value = '';
+    audioPropFichier = null;
+    audioPropUrlFinal = null;
+    document.getElementById('audioPropFichierInfo').style.display = 'none';
+    document.getElementById('audioPropPreview').style.display = 'none';
+    document.getElementById('audioPropPreview').src = '';
 
     document.getElementById('modalConfirm').style.display = 'flex';
     chargerMesPropositions();
