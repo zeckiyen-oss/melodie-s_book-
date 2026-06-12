@@ -107,8 +107,26 @@
 
   <style>
     .rep-liste { display:flex; flex-direction:column; gap:0.55rem; margin-bottom:2rem; }
-    .rep-item { display:flex; align-items:center; gap:0.9rem; padding:0.85rem 1.1rem; background:linear-gradient(145deg,rgba(26,46,69,0.85),rgba(13,27,42,0.95)); border:1px solid rgba(201,168,76,0.15); border-radius:12px; text-decoration:none; color:#FAF6ED; box-sizing:border-box; transition:border-color 0.2s,transform 0.15s,box-shadow 0.2s; position:relative; }
-    .rep-item:hover { border-color:rgba(201,168,76,0.4); transform:translateX(4px); box-shadow:0 4px 16px rgba(0,0,0,0.3); }
+
+    /* Carte chanson — bloc non-lien pour permettre les boutons audio */
+    .rep-item {
+      display:flex; flex-direction:column;
+      padding:0.85rem 1.1rem;
+      background:linear-gradient(145deg,rgba(26,46,69,0.85),rgba(13,27,42,0.95));
+      border:1px solid rgba(201,168,76,0.15);
+      border-radius:12px;
+      color:#FAF6ED;
+      box-sizing:border-box;
+      transition:border-color 0.2s, box-shadow 0.2s;
+      position:relative;
+    }
+    .rep-item:hover { border-color:rgba(201,168,76,0.4); box-shadow:0 4px 16px rgba(0,0,0,0.3); }
+
+    /* Ligne principale cliquable */
+    .rep-item-main {
+      display:flex; align-items:center; gap:0.9rem;
+      text-decoration:none; color:#FAF6ED;
+    }
     .rep-num { font-family:'Cinzel',serif; font-size:0.72rem; color:rgba(201,168,76,0.7); min-width:32px; flex-shrink:0; font-weight:600; }
     .rep-icon { font-size:1.3rem; flex-shrink:0; line-height:1; }
     .rep-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:0.25rem; }
@@ -119,14 +137,53 @@
     .rep-badges { display:flex; gap:0.3rem; flex-shrink:0; align-items:center; }
     .rep-btn-edit { background:transparent; border:1px solid rgba(201,168,76,0.25); border-radius:6px; padding:3px 7px; font-size:0.8rem; text-decoration:none; transition:background 0.2s,border-color 0.2s; flex-shrink:0; }
     .rep-btn-edit:hover { background:rgba(201,168,76,0.12); border-color:rgba(201,168,76,0.5); }
+
+    /* Zone audio inline */
+    .rep-audio-zone {
+      margin-top:0.65rem;
+      padding:0.7rem 0.8rem;
+      background:rgba(13,27,42,0.5);
+      border:1px solid rgba(201,168,76,0.15);
+      border-radius:8px;
+      display:none;
+      flex-direction:column;
+      gap:0.5rem;
+    }
+    .rep-audio-zone.open { display:flex; }
+    .rep-audio-player { width:100%; border-radius:6px; display:block; }
+    .rep-audio-actions { display:flex; gap:0.5rem; flex-wrap:wrap; }
+    .rep-btn-audio {
+      display:inline-flex; align-items:center; gap:0.35rem;
+      padding:0.3rem 0.75rem;
+      border-radius:7px;
+      font-family:'Lato',sans-serif;
+      font-size:0.75rem;
+      font-weight:700;
+      cursor:pointer;
+      border:none;
+      transition:background 0.2s;
+    }
+    .rep-btn-ecouter {
+      background:rgba(201,168,76,0.15);
+      border:1px solid rgba(201,168,76,0.35);
+      color:#F0D98A;
+    }
+    .rep-btn-ecouter:hover { background:rgba(201,168,76,0.28); }
+    .rep-btn-dl {
+      background:rgba(76,175,130,0.12);
+      border:1px solid rgba(76,175,130,0.3);
+      color:#7ecfaf;
+      text-decoration:none;
+    }
+    .rep-btn-dl:hover { background:rgba(76,175,130,0.22); }
+
     .filtres-row { display:flex; flex-wrap:wrap; gap:0.8rem; align-items:flex-end; }
     @media (max-width:600px) {
       .filtres-row { flex-direction:column; gap:0.6rem; }
       .filtre-group { width:100%; }
       .filtre-select { width:100%; }
       .page-header { flex-direction:column; align-items:flex-start; gap:0.8rem; }
-      .repertoire-info { flex-direction:column; align-items:flex-start; gap:0.4rem; }
-      .rep-item { padding:0.75rem 0.9rem; gap:0.7rem; }
+      .rep-item { padding:0.75rem 0.9rem; }
       .rep-titre { font-size:0.86rem; }
     }
   </style>
@@ -171,28 +228,85 @@
       empty.classList.add('hidden');
       document.getElementById('repertoireCount').textContent =
         filteredChansons.length + ' chanson' + (filteredChansons.length > 1 ? 's' : '');
+
       var start = (currentPage - 1) * PER_PAGE;
       var pageItems = filteredChansons.slice(start, start + PER_PAGE);
       list.innerHTML = '';
+
       pageItems.forEach(function(c) {
         var rc = RUBRIQUES_COLORS[c.rubrique] || { bg:'rgba(255,255,255,0.05)', border:'rgba(255,255,255,0.2)', text:'#FAF6ED' };
         var icon = RUBRIQUES_ICONS[c.rubrique] || '🎵';
-        var a = document.createElement('a');
-        a.href = 'chanson.html?id=' + c.id;
-        a.className = 'rep-item';
+
+        var div = document.createElement('div');
+        div.className = 'rep-item';
+
+        // Badges admin
         var adminBtn = userRole === 'admin'
           ? '<a href="modifier-chanson.html?id=' + c.id + '" class="rep-btn-edit" title="Modifier" onclick="event.stopPropagation()">✏️</a>' : '';
-        var mediaBadges = (c.audio_url ? '<span title="Audio">🎧</span>' : '') + (c.partition_url ? '<span title="Partition">📄</span>' : '');
-        a.innerHTML = '<div class="rep-num">' + (c.numero ? '#' + escHtml(String(c.numero)) : '—') + '</div>'
+
+        // Badge audio dans la ligne principale
+        var audioBadge = c.audio_url ? '<span title="Audio disponible">🎵</span>' : '';
+
+        // Ligne principale → lien vers fiche
+        var mainHtml = '<a href="chanson.html?id=' + c.id + '" class="rep-item-main">'
+          + '<div class="rep-num">' + (c.numero ? '#' + escHtml(String(c.numero)) : '—') + '</div>'
           + '<div class="rep-icon">' + icon + '</div>'
-          + '<div class="rep-info"><div class="rep-titre">' + escHtml(c.titre) + '</div>'
-          + '<div class="rep-meta"><span class="rep-rubrique" style="color:' + rc.text + ';border-color:' + rc.border + ';background:' + rc.bg + ';">' + escHtml(c.rubrique || '—') + '</span>'
+          + '<div class="rep-info">'
+          + '<div class="rep-titre">' + escHtml(c.titre) + '</div>'
+          + '<div class="rep-meta">'
+          + '<span class="rep-rubrique" style="color:' + rc.text + ';border-color:' + rc.border + ';background:' + rc.bg + ';">' + escHtml(c.rubrique || '—') + '</span>'
           + '<span class="rep-langue">' + escHtml(c.langue || '—') + '</span>'
           + (c.style ? '<span class="rep-langue">' + escHtml(c.style) + '</span>' : '')
           + '</div></div>'
-          + '<div class="rep-badges">' + mediaBadges + adminBtn + '</div>';
-        list.appendChild(a);
+          + '<div class="rep-badges">' + audioBadge + adminBtn + '</div>'
+          + '</a>';
+
+        // Boutons audio + zone player (si audio_url)
+        var audioZoneHtml = '';
+        if (c.audio_url) {
+          var zoneId   = 'audio-zone-' + c.id;
+          var playerId = 'audio-player-' + c.id;
+          audioZoneHtml = '<div class="rep-audio-actions" style="margin-top:0.5rem;display:flex;gap:0.5rem;flex-wrap:wrap;">'
+            + '<button class="rep-btn-audio rep-btn-ecouter" data-zone="' + zoneId + '" data-player="' + playerId + '" data-url="' + escHtml(c.audio_url) + '">🎧 Écouter</button>'
+            + '<a class="rep-btn-audio rep-btn-dl" href="' + escHtml(c.audio_url) + '" download target="_blank">⬇️ Télécharger</a>'
+            + '</div>'
+            + '<div class="rep-audio-zone" id="' + zoneId + '">'
+            + '<audio class="rep-audio-player" id="' + playerId + '" controls preload="none"></audio>'
+            + '</div>';
+        }
+
+        div.innerHTML = mainHtml + audioZoneHtml;
+        list.appendChild(div);
       });
+
+      // Écouter : toggle player
+      list.querySelectorAll('.rep-btn-ecouter').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var zoneId   = btn.getAttribute('data-zone');
+          var playerId = btn.getAttribute('data-player');
+          var url      = btn.getAttribute('data-url');
+          var zone     = document.getElementById(zoneId);
+          var player   = document.getElementById(playerId);
+          if (!zone || !player) return;
+          var isOpen = zone.classList.contains('open');
+          // Fermer tous les autres players
+          list.querySelectorAll('.rep-audio-zone.open').forEach(function(z) {
+            z.classList.remove('open');
+            var p = z.querySelector('audio');
+            if (p) { p.pause(); p.src = ''; }
+          });
+          list.querySelectorAll('.rep-btn-ecouter').forEach(function(b) { b.textContent = '🎧 Écouter'; });
+          if (!isOpen) {
+            zone.classList.add('open');
+            player.src = url;
+            player.play();
+            btn.textContent = '⏹ Fermer';
+          }
+        });
+      });
+
       renderPagination();
     }
 
@@ -218,7 +332,7 @@
       var tri      = document.getElementById('triSelect').value;
       document.getElementById('searchClear').classList.toggle('hidden', !search);
       filteredChansons = allChansons.filter(function(c) {
-        return (!search || (c.titre&&c.titre.toLowerCase().includes(search)) || (c.numero&&String(c.numero).includes(search)))
+        return (!search || (c.titre&&c.titre.toLowerCase().indexOf(search)!==-1) || (c.numero&&String(c.numero).indexOf(search)!==-1))
           && (!rubrique || c.rubrique===rubrique)
           && (!langue   || c.langue===langue)
           && (!style    || c.style===style);
@@ -240,10 +354,7 @@
       if (!p.data || !p.data.actif) { window.location.href = 'index.html'; return; }
 
       userRole = p.data.role || 'membre';
-
-      // ── Navbar partagée (sans bouton quitter) ──
       buildSharedNavbar(p.data, 'repertoire');
-
       if (userRole === 'admin') document.getElementById('adminActions').style.display = 'flex';
 
       var res = await sb.from('chansons').select('*').order('numero', {ascending:true});
