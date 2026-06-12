@@ -13,6 +13,75 @@
   <script src="navbar.js"></script>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/chanson.css" />
+
+  <style>
+    /* --- Upload audio --- */
+    .audio-upload-zone {
+      margin-top: 1rem;
+      border: 2px dashed #C9A84C55;
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+      background: rgba(201,168,76,0.04);
+    }
+    .audio-upload-zone input[type="file"] { display: none; }
+    .btn-choisir-audio {
+      display: inline-block;
+      padding: .5rem 1.2rem;
+      background: linear-gradient(135deg,#C9A84C,#F0D98A);
+      color: #0D1B2A;
+      font-family: 'Lato',sans-serif;
+      font-weight: 700;
+      font-size: .85rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: .5rem;
+    }
+    .audio-upload-hint {
+      font-size: .75rem;
+      color: rgba(250,246,237,.45);
+      margin: .3rem 0 0;
+    }
+    .audio-upload-progress {
+      display: none;
+      margin-top: .7rem;
+    }
+    .progress-bar-wrap {
+      background: rgba(255,255,255,.1);
+      border-radius: 99px;
+      height: 8px;
+      overflow: hidden;
+      margin-bottom: .4rem;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg,#C9A84C,#F0D98A);
+      border-radius: 99px;
+      width: 0%;
+      transition: width .2s;
+    }
+    .progress-label {
+      font-size: .78rem;
+      color: #F0D98A;
+    }
+    .audio-nom-fichier {
+      font-size: .8rem;
+      color: rgba(250,246,237,.6);
+      margin-top: .4rem;
+      word-break: break-all;
+    }
+    .btn-suppr-audio {
+      margin-top: .6rem;
+      background: none;
+      border: 1px solid #e5534b55;
+      color: #e5534b;
+      padding: .3rem .8rem;
+      border-radius: 6px;
+      font-size: .78rem;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body class="page-chanson">
 
@@ -53,26 +122,39 @@
 
       <div class="chanson-col-left">
 
-        <section class="card-sacre" id="sectionAudio" style="display:none">
+        <!-- SECTION AUDIO -->
+        <section class="card-sacre" id="sectionAudio">
           <div class="card-sacre-header">
             <span class="card-icon">🎵</span>
             <h2 class="card-title">Écouter</h2>
           </div>
-          <div class="audio-player-custom">
-            <audio id="audioPlayer" controls preload="metadata">
+
+          <!-- Player (visible si audio_url existe) -->
+          <div class="audio-player-custom" id="audioPlayerWrap" style="display:none">
+            <audio id="audioPlayer" controls preload="metadata" style="width:100%;border-radius:8px;">
               Votre navigateur ne supporte pas l'audio.
             </audio>
             <p class="audio-hint">Utilisez les contrôles pour lire la chanson</p>
+            <!-- Bouton supprimer audio — admin uniquement -->
+            <button class="btn-suppr-audio" id="btnSupprimerAudio" style="display:none">🗑️ Supprimer l'audio</button>
           </div>
-        </section>
 
-        <section class="card-sacre" id="sectionPartition" style="display:none">
-          <div class="card-sacre-header">
-            <span class="card-icon">📄</span>
-            <h2 class="card-title">Partition</h2>
+          <!-- Message si pas d'audio -->
+          <div id="audioVide" style="display:none">
+            <p class="audio-hint" style="text-align:center;padding:.8rem 0;">Aucun audio disponible pour cette chanson.</p>
           </div>
-          <div class="partition-preview" id="partitionPreview"></div>
-          <a href="#" class="btn-partition" id="btnPartition" target="_blank">↗ Ouvrir la partition</a>
+
+          <!-- Zone upload — admin uniquement -->
+          <div class="audio-upload-zone" id="audioUploadZone" style="display:none">
+            <button class="btn-choisir-audio" id="btnChoisirAudio">📂 Choisir un fichier audio</button>
+            <input type="file" id="audioFileInput" accept="audio/*" />
+            <p class="audio-upload-hint">MP3, M4A, WAV — max 50 Mo</p>
+            <div class="audio-upload-progress" id="audioProgress">
+              <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+              <p class="progress-label" id="progressLabel">Envoi en cours…</p>
+            </div>
+            <p class="audio-nom-fichier" id="audioNomFichier"></p>
+          </div>
         </section>
 
         <section class="card-sacre">
@@ -140,6 +222,10 @@
   var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
   window._sb = sb;
 
+  // Cloudinary
+  var CLD_CLOUD  = 'dqs0okwy2';
+  var CLD_PRESET = 'melodie_audio';
+
   var currentProfil = null;
   var chansonId = null;
 
@@ -162,6 +248,67 @@
       rubrique: { Adoration:'badge-adora', Louange:'badge-louange', 'Prélude':'badge-prelude', Offrande:'badge-offrand', 'Méditation':'badge-medit', Envoi:'badge-envoi' }
     };
     return (map[type] && map[type][val]) ? map[type][val] : 'badge-default';
+  }
+
+  // ---- UPLOAD CLOUDINARY ----
+  function uploadAudioCloudinary(file) {
+    var formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLD_PRESET);
+    formData.append('resource_type', 'video'); // Cloudinary utilise 'video' pour l'audio
+
+    var xhr = new XMLHttpRequest();
+    var progressWrap = document.getElementById('audioProgress');
+    var fill = document.getElementById('progressFill');
+    var label = document.getElementById('progressLabel');
+
+    progressWrap.style.display = 'block';
+    document.getElementById('btnChoisirAudio').disabled = true;
+
+    xhr.upload.onprogress = function(e) {
+      if (e.lengthComputable) {
+        var pct = Math.round((e.loaded / e.total) * 100);
+        fill.style.width = pct + '%';
+        label.textContent = 'Envoi : ' + pct + '%';
+      }
+    };
+
+    xhr.onload = async function() {
+      progressWrap.style.display = 'none';
+      document.getElementById('btnChoisirAudio').disabled = false;
+
+      if (xhr.status === 200) {
+        var data = JSON.parse(xhr.responseText);
+        var url = data.secure_url;
+
+        // Sauvegarder dans Supabase
+        var res = await sb.from('chansons').update({ audio_url: url }).eq('id', chansonId);
+        if (res.error) {
+          showToast('Upload OK mais erreur sauvegarde : ' + res.error.message, 'error');
+          return;
+        }
+
+        // Mettre à jour le player
+        document.getElementById('audioPlayer').src = url;
+        document.getElementById('audioPlayerWrap').style.display = 'block';
+        document.getElementById('audioVide').style.display = 'none';
+        document.getElementById('btnSupprimerAudio').style.display = 'inline-block';
+        document.getElementById('audioNomFichier').textContent = '';
+        fill.style.width = '0%';
+        showToast('Audio uploadé et sauvegardé !', 'success');
+      } else {
+        showToast('Erreur Cloudinary : ' + xhr.status, 'error');
+      }
+    };
+
+    xhr.onerror = function() {
+      progressWrap.style.display = 'none';
+      document.getElementById('btnChoisirAudio').disabled = false;
+      showToast('Erreur réseau lors de l\'upload.', 'error');
+    };
+
+    xhr.open('POST', 'https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/video/upload');
+    xhr.send(formData);
   }
 
   // INIT
@@ -222,26 +369,18 @@
 
     // Audio
     if (ch.audio_url) {
-      document.getElementById('sectionAudio').style.display = 'block';
+      document.getElementById('audioPlayerWrap').style.display = 'block';
       document.getElementById('audioPlayer').src = ch.audio_url;
-    }
-
-    // Partition
-    if (ch.partition_url) {
-      document.getElementById('sectionPartition').style.display = 'block';
-      document.getElementById('btnPartition').href = ch.partition_url;
-      var prev = document.getElementById('partitionPreview');
-      if (ch.partition_url.match(/\.pdf$/i)) {
-        prev.innerHTML = '<iframe src="' + escHtml(ch.partition_url) + '" class="partition-iframe" loading="lazy"></iframe>';
-      } else if (ch.partition_url.match(/\.(png|jpg|jpeg|webp)$/i)) {
-        prev.innerHTML = '<img src="' + escHtml(ch.partition_url) + '" class="partition-img" alt="Partition" />';
-      } else {
-        prev.innerHTML = '<p class="partition-ext">Fichier : ' + escHtml(ch.partition_url.split('/').pop()) + '</p>';
+      if (currentProfil.role === 'admin') {
+        document.getElementById('btnSupprimerAudio').style.display = 'inline-block';
       }
+    } else {
+      document.getElementById('audioVide').style.display = 'block';
     }
 
-    // Actions admin
+    // Zone upload admin
     if (currentProfil.role === 'admin') {
+      document.getElementById('audioUploadZone').style.display = 'block';
       document.getElementById('chActions').style.display = 'flex';
       document.getElementById('btnModifier').href = 'modifier-chanson.html?id=' + chansonId;
     }
@@ -295,7 +434,35 @@
       .catch(function() { showToast('Impossible de copier.', 'error'); });
   });
 
-  // SUPPRESSION
+  // UPLOAD AUDIO — clic bouton → déclenche input file
+  document.getElementById('btnChoisirAudio').addEventListener('click', function() {
+    document.getElementById('audioFileInput').click();
+  });
+
+  document.getElementById('audioFileInput').addEventListener('change', function() {
+    var file = this.files[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      showToast('Fichier trop lourd (max 50 Mo)', 'error');
+      return;
+    }
+    document.getElementById('audioNomFichier').textContent = file.name;
+    uploadAudioCloudinary(file);
+  });
+
+  // SUPPRIMER AUDIO
+  document.getElementById('btnSupprimerAudio').addEventListener('click', async function() {
+    if (!confirm('Supprimer l\'audio de cette chanson ?')) return;
+    var res = await sb.from('chansons').update({ audio_url: null }).eq('id', chansonId);
+    if (res.error) { showToast('Erreur : ' + res.error.message, 'error'); return; }
+    document.getElementById('audioPlayer').src = '';
+    document.getElementById('audioPlayerWrap').style.display = 'none';
+    document.getElementById('audioVide').style.display = 'block';
+    document.getElementById('btnSupprimerAudio').style.display = 'none';
+    showToast('Audio supprimé.', 'success');
+  });
+
+  // SUPPRESSION CHANSON
   document.getElementById('btnSupprimer').addEventListener('click', function() {
     document.getElementById('modalSuppression').style.display = 'flex';
   });
