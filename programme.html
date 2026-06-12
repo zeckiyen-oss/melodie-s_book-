@@ -52,7 +52,7 @@
     </section>
 
     <section class="prog-pub-section" id="sectionPropositions" style="display:none;">
-      <div class="prog-pub-section-info">Chansons proposées par les membres. Consultation uniquement.</div>
+      <div class="prog-pub-section-info">Chansons proposées par les membres. Cliquez pour voir les détails et écouter l'audio.</div>
       <div id="listePropositions" class="prog-pub-list">
         <div class="prog-pub-skeleton"></div>
         <div class="prog-pub-skeleton"></div>
@@ -82,6 +82,8 @@
     .prog-pub-skeleton { height:80px; border-radius:12px; background:linear-gradient(90deg,#1A2E45 25%,#1f3550 50%,#1A2E45 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; }
     @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
     .prog-pub-empty { text-align:center; color:rgba(250,246,237,0.3); font-style:italic; padding:2.5rem 0; font-size:0.88rem; }
+
+    /* Cultes */
     .prog-culte-card { background:linear-gradient(145deg,#1A2E45,#152438); border:1px solid rgba(201,168,76,0.2); border-radius:14px; padding:1.1rem 1.3rem; cursor:pointer; user-select:none; -webkit-user-select:none; transition:border-color 0.2s,box-shadow 0.2s; display:flex; align-items:center; justify-content:space-between; gap:1rem; }
     .prog-culte-card.active { border-color:#C9A84C; box-shadow:0 0 0 2px rgba(201,168,76,0.2); }
     .prog-culte-left { flex:1; min-width:0; }
@@ -90,6 +92,8 @@
     .prog-culte-right { display:flex; flex-direction:column; align-items:flex-end; gap:0.4rem; flex-shrink:0; }
     .prog-culte-badge-valide { font-size:0.7rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:20px; background:rgba(76,175,130,0.15); color:#7ecfaf; border:1px solid rgba(76,175,130,0.3); white-space:nowrap; }
     .prog-culte-nb { font-size:0.72rem; color:rgba(250,246,237,0.4); }
+
+    /* Événements */
     .prog-ev-card { background:linear-gradient(145deg,#1A2E45,#152438); border:1px solid rgba(201,168,76,0.2); border-radius:14px; padding:1rem 1.3rem; display:flex; align-items:center; gap:1rem; }
     .prog-ev-cal { flex-shrink:0; width:50px; height:54px; background:rgba(201,168,76,0.12); border:1px solid rgba(201,168,76,0.25); border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     .prog-ev-jour { font-family:'Cinzel',serif; font-size:1.2rem; font-weight:700; color:#F0D98A; line-height:1; }
@@ -98,7 +102,10 @@
     .prog-ev-titre { font-family:'Cinzel',serif; font-size:0.9rem; font-weight:600; color:#FAF6ED; margin-bottom:0.2rem; }
     .prog-ev-desc { font-size:0.78rem; color:rgba(250,246,237,0.5); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .prog-ev-countdown { font-family:'Cinzel',serif; font-size:0.72rem; font-weight:700; color:#F0D98A; background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.2); border-radius:8px; padding:0.15rem 0.5rem; white-space:nowrap; flex-shrink:0; }
-    .prog-prop-card { background:linear-gradient(145deg,#1A2E45,#152438); border:1px solid rgba(201,168,76,0.15); border-radius:12px; padding:0.9rem 1.1rem; display:flex; align-items:center; justify-content:space-between; gap:0.8rem; }
+
+    /* Propositions */
+    .prog-prop-card { background:linear-gradient(145deg,#1A2E45,#152438); border:1px solid rgba(201,168,76,0.15); border-radius:12px; padding:0.9rem 1.1rem; cursor:pointer; user-select:none; -webkit-user-select:none; }
+    .prog-prop-header { display:flex; align-items:center; justify-content:space-between; gap:0.8rem; }
     .prog-prop-left { flex:1; min-width:0; }
     .prog-prop-titre { font-family:'Cinzel',serif; font-size:0.9rem; font-weight:600; color:#FAF6ED; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:0.2rem; }
     .prog-prop-meta { font-size:0.76rem; color:rgba(250,246,237,0.45); }
@@ -107,6 +114,65 @@
     .prog-prop-badge-en_attente { background:rgba(201,168,76,0.12); color:#F0D98A; border:1px solid rgba(201,168,76,0.3); }
     .prog-prop-badge-accepte    { background:rgba(76,175,130,0.12); color:#7ecfaf; border:1px solid rgba(76,175,130,0.3); }
     .prog-prop-badge-refuse     { background:rgba(224,108,108,0.12); color:#e09696; border:1px solid rgba(224,108,108,0.3); }
+    .prog-prop-audio-icon { font-size:0.72rem; color:#C9A84C; margin-left:0.3rem; }
+
+    /* Détail proposition expandé */
+    .prog-prop-detail { display:none; margin-top:0.7rem; padding-top:0.7rem; border-top:1px solid rgba(201,168,76,0.1); }
+    .prog-prop-detail.open { display:block; }
+
+    /* Audio inline dans proposition */
+    .prop-audio-bloc {
+      background:rgba(13,27,42,0.5);
+      border:1px solid rgba(201,168,76,0.18);
+      border-radius:8px;
+      padding:0.75rem 0.9rem;
+      margin-bottom:0.6rem;
+    }
+    .prop-audio-label { font-size:0.68rem; font-weight:700; color:#C9A84C; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.5rem; }
+    .prop-audio-player { width:100%; border-radius:6px; display:block; margin-bottom:0.4rem; }
+    .prop-audio-dl {
+      display:inline-flex; align-items:center; gap:0.3rem;
+      padding:0.28rem 0.7rem;
+      background:rgba(76,175,130,0.1);
+      border:1px solid rgba(76,175,130,0.28);
+      border-radius:7px;
+      color:#7ecfaf;
+      font-size:0.74rem;
+      font-weight:700;
+      text-decoration:none;
+    }
+
+    /* Audio inline dans programme culte */
+    .prog-chanson-audio {
+      display:flex; gap:0.4rem; align-items:center; margin-top:0.3rem; flex-wrap:wrap;
+    }
+    .prog-btn-ecouter {
+      display:inline-flex; align-items:center; gap:0.3rem;
+      padding:0.22rem 0.65rem;
+      background:rgba(201,168,76,0.12);
+      border:1px solid rgba(201,168,76,0.3);
+      border-radius:20px;
+      color:#F0D98A;
+      font-size:0.7rem;
+      font-weight:700;
+      cursor:pointer;
+      border-style:solid;
+    }
+    .prog-btn-dl-chanson {
+      display:inline-flex; align-items:center; gap:0.3rem;
+      padding:0.22rem 0.65rem;
+      background:rgba(76,175,130,0.1);
+      border:1px solid rgba(76,175,130,0.25);
+      border-radius:20px;
+      color:#7ecfaf;
+      font-size:0.7rem;
+      font-weight:700;
+      text-decoration:none;
+    }
+    .prog-inline-player { width:100%; border-radius:6px; margin-top:0.4rem; display:none; }
+    .prog-inline-player.open { display:block; }
+
+    /* Détail culte */
     .prog-pub-detail { margin-top:1.5rem; background:linear-gradient(145deg,#1A2E45,#152438); border:1px solid rgba(201,168,76,0.25); border-radius:16px; overflow:hidden; }
     .prog-pub-detail-inner { padding:1.4rem; }
     .prog-detail-header { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1.2rem; padding-bottom:1rem; border-bottom:1px solid rgba(201,168,76,0.15); flex-wrap:wrap; }
@@ -116,7 +182,8 @@
     .prog-detail-rubrique { margin-bottom:1rem; }
     .prog-detail-rubrique-label { font-family:'Cinzel',serif; font-size:0.72rem; font-weight:700; color:#C9A84C; text-transform:uppercase; letter-spacing:0.1em; padding:0.3rem 0.7rem; background:rgba(201,168,76,0.08); border-left:3px solid #C9A84C; border-radius:0 4px 4px 0; margin-bottom:0.4rem; display:flex; align-items:center; gap:0.6rem; }
     .prog-detail-tonal { font-size:0.72rem; color:#F0D98A; background:rgba(201,168,76,0.15); padding:0.15rem 0.55rem; border-radius:20px; font-style:italic; }
-    .prog-detail-chanson { display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0.7rem; background:rgba(13,27,42,0.4); border-radius:8px; margin-bottom:0.3rem; border-left:2px solid rgba(201,168,76,0.2); }
+    .prog-detail-chanson { padding:0.5rem 0.7rem; background:rgba(13,27,42,0.4); border-radius:8px; margin-bottom:0.3rem; border-left:2px solid rgba(201,168,76,0.2); }
+    .prog-detail-chanson-row { display:flex; align-items:center; gap:0.6rem; }
     .prog-detail-chanson-num { font-family:'Cinzel',serif; font-size:0.72rem; color:#C9A84C; min-width:30px; }
     .prog-detail-chanson-titre { font-size:0.88rem; color:#FAF6ED; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .prog-detail-chanson-langue { font-size:0.72rem; color:rgba(250,246,237,0.35); flex-shrink:0; }
@@ -140,25 +207,15 @@
       return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     }
 
-    function showToast(msg, type) {
-      var tc = document.getElementById("toastContainer");
-      var t = document.createElement("div");
-      t.className = "toast toast-" + (type || "info");
-      t.textContent = msg;
-      tc.appendChild(t);
-      setTimeout(function() { t.classList.add("toast-show"); }, 10);
-      setTimeout(function() { t.classList.remove("toast-show"); setTimeout(function() { if (tc.contains(t)) tc.removeChild(t); }, 400); }, 3500);
+    function formatDate(d) {
+      if (!d) return "";
+      var p = d.split("-");
+      return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : d;
     }
 
     function hideLoader() {
       document.getElementById("pageLoader").style.display = "none";
       document.getElementById("progPubMain").style.display = "block";
-    }
-
-    function formatDate(d) {
-      if (!d) return "";
-      var p = d.split("-");
-      return p.length === 3 ? p[2] + "/" + p[1] + "/" + p[0] : d;
     }
 
     async function authGuard() {
@@ -186,7 +243,7 @@
       }
     });
 
-    // CULTES
+    // ── CULTES ──
     async function chargerCultes() {
       var res = await sb.from("cultes").select("id, theme, date_culte, statut, notes, profils(nom)").eq("statut","valide").order("date_culte",{ascending:false});
       var container = document.getElementById("listeCultes");
@@ -231,8 +288,9 @@
       inner.innerHTML = "<div style=\"padding:1.5rem;text-align:center;color:rgba(250,246,237,0.4);font-style:italic;\">Chargement…</div>";
       detail.scrollIntoView({ behavior:"smooth", block:"start" });
 
+      // Récupérer programme avec audio_url des chansons
       var progRes = await sb.from("programme_culte")
-        .select("id, ordre, rubrique, tonalite, tonalite_libre, chansons(numero, titre, langue)")
+        .select("id, ordre, rubrique, tonalite, tonalite_libre, chansons(id, numero, titre, langue, audio_url)")
         .eq("culte_id", culte.id).order("ordre",{ascending:true});
 
       var programme = progRes.data || [];
@@ -256,14 +314,31 @@
         var ton = items[0].tonalite === "autre" ? (items[0].tonalite_libre || "") : (items[0].tonalite || "");
         programmeHtml += "<div class=\"prog-detail-rubrique\"><div class=\"prog-detail-rubrique-label\">" + escHtml(rubrique)
           + (ton ? "<span class=\"prog-detail-tonal\">Tonalité : " + escHtml(ton) + "</span>" : "") + "</div>";
+
         items.forEach(function(item) {
           var ch = item.chansons || {};
           var tonItem = item.tonalite === "autre" ? (item.tonalite_libre || "") : (item.tonalite || "");
+          var audioId = "prog-audio-" + item.id;
+
+          // Boutons audio si disponible
+          var audioHtml = "";
+          if (ch.audio_url) {
+            audioHtml = "<div class=\"prog-chanson-audio\">"
+              + "<button class=\"prog-btn-ecouter\" data-audio-id=\"" + audioId + "\" data-url=\"" + escHtml(ch.audio_url) + "\">🎧 Écouter</button>"
+              + "<a class=\"prog-btn-dl-chanson\" href=\"" + escHtml(ch.audio_url) + "\" download target=\"_blank\">⬇️ Télécharger</a>"
+              + "</div>"
+              + "<audio class=\"prog-inline-player\" id=\"" + audioId + "\" controls preload=\"none\"></audio>";
+          }
+
           programmeHtml += "<div class=\"prog-detail-chanson\">"
+            + "<div class=\"prog-detail-chanson-row\">"
             + "<span class=\"prog-detail-chanson-num\">" + (ch.numero ? "#" + escHtml(String(ch.numero)) : "—") + "</span>"
             + "<span class=\"prog-detail-chanson-titre\">" + escHtml(ch.titre || "—") + "</span>"
             + (tonItem ? "<span class=\"prog-detail-tonal\" style=\"font-size:0.68rem;\">" + escHtml(tonItem) + "</span>" : "")
             + "<span class=\"prog-detail-chanson-langue\">" + escHtml(ch.langue || "") + "</span>"
+            + (ch.audio_url ? "<span style=\"font-size:0.72rem;color:#C9A84C;\">🎵</span>" : "")
+            + "</div>"
+            + audioHtml
             + "</div>";
         });
         programmeHtml += "</div>";
@@ -279,6 +354,28 @@
         + "<button class=\"btn-pdf\" id=\"btnGenPDF\">📄 Télécharger le PDF</button>"
         + "<button class=\"btn-fermer-detail\" id=\"btnFermerDetail\">✕ Fermer</button>"
         + "</div>";
+
+      // Boutons écouter dans le programme
+      inner.querySelectorAll(".prog-btn-ecouter").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+          var audioId = btn.getAttribute("data-audio-id");
+          var url     = btn.getAttribute("data-url");
+          var player  = document.getElementById(audioId);
+          if (!player) return;
+          var isOpen = player.classList.contains("open");
+          // Fermer tous les autres
+          inner.querySelectorAll(".prog-inline-player.open").forEach(function(p) {
+            p.pause(); p.src = ""; p.classList.remove("open");
+          });
+          inner.querySelectorAll(".prog-btn-ecouter").forEach(function(b) { b.textContent = "🎧 Écouter"; });
+          if (!isOpen) {
+            player.src = url;
+            player.classList.add("open");
+            player.play();
+            btn.textContent = "⏹ Fermer";
+          }
+        });
+      });
 
       document.getElementById("btnFermerDetail").addEventListener("click", function() {
         document.getElementById("progPubDetail").style.display = "none";
@@ -319,7 +416,6 @@
       var theme = culte.theme || "Culte";
       var versetBlock = verset ? "<blockquote class=\"pdf-verset\">\u201C " + escHtml(verset) + " \u201D</blockquote>" : "";
 
-      // Injecter dans l'overlay de la même page
       var corps = document.getElementById("pdfCorps");
       corps.innerHTML =
         "<div class=\"pdf-header\">"
@@ -338,13 +434,12 @@
       document.body.style.overflow = "hidden";
     }
 
-    // ÉVÉNEMENTS
+    // ── ÉVÉNEMENTS ──
     async function chargerEvenements() {
       var res = await sb.from("evenements").select("id, titre, date_event, description").order("date_event",{ascending:true});
       var container = document.getElementById("listeEvenements");
       var evs = res.data || [];
       var today = new Date(); today.setHours(0,0,0,0);
-
       if (evs.length === 0) { container.innerHTML = "<div class=\"prog-pub-empty\">Aucun événement enregistré.</div>"; return; }
       container.innerHTML = "";
       evs.forEach(function(ev) {
@@ -366,10 +461,10 @@
       });
     }
 
-    // PROPOSITIONS — lecture seule avec paroles + audio
+    // ── PROPOSITIONS — avec audio ──
     async function chargerPropositions() {
       var res = await sb.from("propositions")
-        .select("id, titre, artiste, langue, rubrique, statut, created_at, paroles, commentaire, profils(nom, email)")
+        .select("id, titre, artiste, langue, rubrique, statut, created_at, paroles, commentaire, audio_url, profils(nom, email)")
         .order("created_at", { ascending: false });
       var container = document.getElementById("listePropositions");
       var props = res.data || [];
@@ -379,52 +474,63 @@
       }
       container.innerHTML = "";
       props.forEach(function(p) {
-        var auteur    = (p.profils && (p.profils.nom || p.profils.email)) || "Membre";
-        var date      = new Date(p.created_at).toLocaleDateString("fr-FR", { day:"2-digit", month:"short", year:"numeric" });
+        var auteur     = (p.profils && (p.profils.nom || p.profils.email)) || "Membre";
+        var date       = new Date(p.created_at).toLocaleDateString("fr-FR", { day:"2-digit", month:"short", year:"numeric" });
         var badgeLabel = p.statut === "en_attente" ? "⏳ En attente" : p.statut === "accepte" ? "✅ Acceptée" : "❌ Refusée";
+        var audioIcon  = p.audio_url ? "<span class=\"prog-prop-audio-icon\">🎵</span>" : "";
 
-        // Carte cliquable
         var card = document.createElement("div");
         card.className = "prog-prop-card";
-        card.style.cssText = "flex-direction:column; align-items:stretch; cursor:pointer;";
 
-        var header = "<div style=\"display:flex; align-items:center; justify-content:space-between; gap:0.8rem;\">"
-          + "<div class=\"prog-prop-left\">"
-          + "<div class=\"prog-prop-titre\">" + escHtml(p.titre) + "</div>"
-          + "<div class=\"prog-prop-meta\">" + (p.artiste ? escHtml(p.artiste) + " · " : "") + escHtml(p.langue || "") + (p.rubrique ? " · " + escHtml(p.rubrique) : "") + "</div>"
-          + "<div class=\"prog-prop-auteur\">👤 <span>" + escHtml(auteur) + "</span> · <span>" + date + "</span></div>"
-          + "</div>"
-          + "<span class=\"prog-prop-badge prog-prop-badge-" + p.statut + "\">" + badgeLabel + "</span>"
-          + "</div>";
+        var detailId = "prop-det-" + p.id;
+        var playerId = "prop-player-" + p.id;
 
-        // Détail (caché par défaut)
-        var detailId = "prop-detail-" + p.id;
-        var parolesSec = p.paroles
-          ? "<div style=\"margin-top:0.8rem; padding:0.8rem; background:rgba(13,27,42,0.5); border-radius:8px; border-left:3px solid rgba(201,168,76,0.4);\">"
-            + "<div style=\"font-family:'Cinzel',serif; font-size:0.65rem; color:#C9A84C; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.5rem;\">🎵 Paroles</div>"
+        // Audio section
+        var audioSection = "";
+        if (p.audio_url) {
+          audioSection = "<div class=\"prop-audio-bloc\">"
+            + "<div class=\"prop-audio-label\">🎵 Audio joint par le membre</div>"
+            + "<audio class=\"prop-audio-player\" id=\"" + playerId + "\" controls preload=\"none\" src=\"" + escHtml(p.audio_url) + "\"></audio>"
+            + "<a class=\"prop-audio-dl\" href=\"" + escHtml(p.audio_url) + "\" download target=\"_blank\">⬇️ Télécharger l'audio</a>"
+            + "</div>";
+        }
+
+        var parolesSection = p.paroles
+          ? "<div style=\"padding:0.7rem 0.8rem; background:rgba(13,27,42,0.5); border-radius:8px; border-left:3px solid rgba(201,168,76,0.35); margin-bottom:0.6rem;\">"
+            + "<div style=\"font-family:'Cinzel',serif; font-size:0.65rem; color:#C9A84C; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.4rem;\">Paroles</div>"
             + "<pre style=\"font-family:'Playfair Display',serif; font-size:0.82rem; color:rgba(250,246,237,0.85); white-space:pre-wrap; line-height:1.8; margin:0;\">" + escHtml(p.paroles) + "</pre>"
             + "</div>"
           : "";
 
-        var commentaireSec = p.commentaire
-          ? "<div style=\"margin-top:0.6rem; padding:0.6rem 0.8rem; border-left:2px solid rgba(201,168,76,0.3); background:rgba(201,168,76,0.05); border-radius:0 6px 6px 0;\">"
+        var commentaireSection = p.commentaire
+          ? "<div style=\"padding:0.5rem 0.8rem; border-left:2px solid rgba(201,168,76,0.3); background:rgba(201,168,76,0.05); border-radius:0 6px 6px 0;\">"
             + "<div style=\"font-size:0.7rem; color:#C9A84C; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.3rem;\">Commentaire</div>"
             + "<p style=\"font-family:'Playfair Display',serif; font-style:italic; font-size:0.82rem; color:rgba(250,246,237,0.7); margin:0; line-height:1.6;\">" + escHtml(p.commentaire) + "</p>"
             + "</div>"
           : "";
 
-        var detail = "<div id=\"" + detailId + "\" style=\"display:none; margin-top:0.6rem;\">"
-          + parolesSec
-          + commentaireSec
+        card.innerHTML =
+          "<div class=\"prog-prop-header\">"
+          + "<div class=\"prog-prop-left\">"
+          + "<div class=\"prog-prop-titre\">" + escHtml(p.titre) + audioIcon + "</div>"
+          + "<div class=\"prog-prop-meta\">" + (p.artiste ? escHtml(p.artiste) + " · " : "") + escHtml(p.langue || "") + (p.rubrique ? " · " + escHtml(p.rubrique) : "") + "</div>"
+          + "<div class=\"prog-prop-auteur\">👤 <span>" + escHtml(auteur) + "</span> · <span>" + date + "</span></div>"
+          + "</div>"
+          + "<span class=\"prog-prop-badge prog-prop-badge-" + p.statut + "\">" + badgeLabel + "</span>"
+          + "</div>"
+          + "<div class=\"prog-prop-detail\" id=\"" + detailId + "\">"
+          + audioSection
+          + parolesSection
+          + commentaireSection
           + "</div>";
 
-        card.innerHTML = header + detail;
-
-        // Toggle au clic
+        // Toggle expand
         (function(id) {
-          card.addEventListener("click", function() {
+          card.addEventListener("click", function(e) {
+            // Ne pas interférer avec les contrôles audio
+            if (e.target.tagName === "AUDIO" || e.target.tagName === "A" || e.target.tagName === "BUTTON") return;
             var d = document.getElementById(id);
-            if (d) d.style.display = d.style.display === "none" ? "block" : "none";
+            if (d) d.classList.toggle("open");
           });
         })(detailId);
 
@@ -444,20 +550,15 @@
 
   <!-- ====== OVERLAY PDF ====== -->
   <div id="pdfOverlay" style="display:none; position:fixed; inset:0; z-index:9999; background:#fff; overflow-y:auto;">
-
-    <!-- Barre actions (cachée à l'impression) -->
     <div id="pdfActions" style="display:flex; align-items:center; justify-content:space-between; padding:0.75rem 1rem; background:#0D1B2A; border-bottom:2px solid #C9A84C; position:sticky; top:0; z-index:1; gap:0.5rem;">
       <button id="btnFermerPDF" style="background:transparent; border:1px solid rgba(201,168,76,0.4); color:#F0D98A; font-family:'Lato',sans-serif; font-size:0.82rem; padding:0.4rem 0.8rem; border-radius:6px; cursor:pointer; white-space:nowrap;">✕ Fermer</button>
       <span style="font-family:'Cinzel',serif; font-size:0.85rem; color:#F0D98A; font-weight:600; text-align:center; flex:1;">Aperçu programme</span>
       <button id="btnImprimerPDF" style="background:linear-gradient(135deg,#C9A84C,#F0D98A); border:none; color:#0D1B2A; font-family:'Cinzel',serif; font-size:0.82rem; font-weight:700; padding:0.4rem 0.9rem; border-radius:6px; cursor:pointer; white-space:nowrap;">🖨️ Imprimer</button>
     </div>
-
-    <!-- Corps du programme -->
     <div id="pdfCorps" style="padding:1.2rem 1rem; max-width:560px; margin:0 auto; width:100%; box-sizing:border-box;"></div>
   </div>
 
   <style>
-    /* ── Styles du corps PDF ── */
     #pdfCorps { font-family:'Lato',sans-serif; color:#1A1A2E; font-size:0.9rem; }
     #pdfCorps .pdf-header { text-align:center; border-bottom:2px solid #C9A84C; padding-bottom:0.7rem; margin-bottom:1rem; }
     #pdfCorps .pdf-church { font-family:'Cinzel',serif; font-size:0.62rem; color:#C9A84C; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:0.2rem; }
@@ -473,27 +574,14 @@
     #pdfCorps .pdf-chanson-row    { display:flex; align-items:center; gap:0.5rem; padding:0.42rem 0.65rem; border:1px solid #E0D8C8; border-top:none; background:#FFFDF8; }
     #pdfCorps .pdf-chanson-num    { font-family:'Cinzel',serif; font-size:0.7rem; color:#C9A84C; font-weight:700; min-width:1.8rem; flex-shrink:0; }
     #pdfCorps .pdf-chanson-titre  { font-size:0.88rem; color:#1A1A2E; word-break:break-word; line-height:1.3; }
-    #pdfCorps .pdf-notes          { margin-top:1rem; padding:0.75rem; border:1px dashed #C9A84C; border-radius:6px; background:#FAF6ED; }
-    #pdfCorps .pdf-notes-title    { font-family:'Cinzel',serif; font-size:0.65rem; color:#C9A84C; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.35rem; font-weight:700; }
-    #pdfCorps .pdf-notes p        { font-size:0.8rem; color:#1A1A2E; line-height:1.6; }
     #pdfCorps .pdf-footer         { text-align:center; margin-top:1rem; font-size:0.65rem; color:#999; border-top:1px solid #eee; padding-top:0.4rem; }
-
-    /* ── Impression : masquer tout sauf l'overlay ── */
     @media print {
       @page { size: A4 portrait; margin: 1.5cm 2cm; }
       body > *:not(#pdfOverlay) { display:none !important; }
       #pdfOverlay { position:static !important; display:block !important; background:#fff; overflow:visible; }
       #pdfActions { display:none !important; }
       #pdfCorps   { padding:0 !important; max-width:100% !important; font-size:10pt; }
-      #pdfCorps .pdf-titre  { font-size:18pt; }
-      #pdfCorps .pdf-chanson-titre { font-size:10pt; }
-      #pdfCorps .pdf-verset { font-size:9pt; }
-    }
-
-    /* ── Paysage : adapter la largeur ── */
-    @media (orientation: landscape) {
-      #pdfCorps { max-width:720px; }
-      #pdfCorps .pdf-titre { font-size:1.5rem; }
+      #pdfCorps .pdf-titre { font-size:18pt; }
     }
   </style>
 
