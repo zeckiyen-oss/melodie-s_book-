@@ -71,7 +71,7 @@
     <div class="modal-box">
       <div class="modal-success-icon">🎵</div>
       <h3>Accepter & Ajouter au répertoire ?</h3>
-      <p>La chanson sera ajoutée directement au répertoire avec les informations fournies.</p>
+      <p>La chanson sera ajoutée directement au répertoire avec les informations fournies, y compris l'audio si disponible.</p>
       <div class="modal-actions">
         <button class="btn-secondary" id="btnAnnulerAjouter">Annuler</button>
         <button class="btn-primary" id="btnConfirmerAjouter">✦ Accepter & Ajouter</button>
@@ -119,6 +119,7 @@
     .pp-badge-en_attente { background:rgba(201,168,76,0.15); color:#F0D98A; border:1px solid rgba(201,168,76,0.3); }
     .pp-badge-accepte    { background:rgba(76,175,130,0.15); color:#7ecfaf; border:1px solid rgba(76,175,130,0.3); }
     .pp-badge-refuse     { background:rgba(224,108,108,0.15); color:#e09696; border:1px solid rgba(224,108,108,0.3); }
+    .pp-has-audio { font-size:0.7rem; color:#C9A84C; margin-left:0.3rem; }
     .pp-detail-card { background:linear-gradient(145deg,#1A2E45,#152438); border:1px solid rgba(201,168,76,0.22); border-radius:16px; overflow:hidden; min-height:160px; }
     .pp-detail-idle { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1rem; padding:2.5rem 1.5rem; text-align:center; }
     .pp-detail-idle-icon { font-size:2rem; opacity:0.3; }
@@ -136,6 +137,14 @@
     .pp-detail-paroles { background:rgba(13,27,42,0.3); border:1px solid rgba(201,168,76,0.15); border-radius:10px; padding:1rem; }
     .pp-paroles-titre { font-family:'Cinzel',serif; font-size:0.75rem; color:#C9A84C; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.7rem; }
     .pp-paroles-texte { font-family:'Playfair Display',serif; font-size:0.88rem; color:rgba(250,246,237,0.85); line-height:1.9; white-space:pre-wrap; max-height:220px; overflow-y:auto; }
+
+    /* Audio section */
+    .pp-detail-audio { background:rgba(13,27,42,0.3); border:1px solid rgba(201,168,76,0.2); border-radius:10px; padding:1rem; }
+    .pp-audio-titre { font-family:'Cinzel',serif; font-size:0.75rem; color:#C9A84C; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.7rem; display:flex; align-items:center; gap:0.5rem; }
+    .pp-audio-player { width:100%; border-radius:8px; display:block; margin-bottom:0.5rem; }
+    .pp-audio-download { display:inline-flex; align-items:center; gap:0.4rem; padding:0.35rem 0.9rem; background:rgba(201,168,76,0.12); border:1px solid rgba(201,168,76,0.3); border-radius:8px; color:#F0D98A; font-family:'Lato',sans-serif; font-size:0.78rem; font-weight:700; text-decoration:none; cursor:pointer; transition:background 0.2s; }
+    .pp-audio-download:hover { background:rgba(201,168,76,0.22); }
+
     .pp-detail-actions { display:flex; gap:0.8rem; flex-wrap:wrap; padding-top:0.5rem; border-top:1px solid rgba(201,168,76,0.1); }
     .pp-detail-actions .btn-primary, .pp-detail-actions .btn-danger { flex:1; justify-content:center; min-width:100px; }
     .pp-detail-statut-final { font-size:0.88rem; font-weight:700; text-align:center; padding:0.8rem; border-radius:10px; }
@@ -233,9 +242,9 @@
       var liste = filtreStatut === 'all' ? propositions : propositions.filter(function(p) { return p.statut === filtreStatut; });
       if (q) {
         liste = liste.filter(function(p) {
-          return p.titre.toLowerCase().includes(q)
-            || (p.artiste || '').toLowerCase().includes(q)
-            || (p.commentaire || '').toLowerCase().includes(q);
+          return p.titre.toLowerCase().indexOf(q) !== -1
+            || (p.artiste || '').toLowerCase().indexOf(q) !== -1
+            || (p.commentaire || '').toLowerCase().indexOf(q) !== -1;
         });
       }
       renderListe(liste);
@@ -256,9 +265,10 @@
         div.className = 'pp-item' + (propSelectionnee && propSelectionnee.id === p.id ? ' pp-item-active' : '');
         var auteur = (p.profils && (p.profils.nom || p.profils.email)) || 'Membre inconnu';
         var date   = new Date(p.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+        var audioIcon = p.audio_url ? '<span class="pp-has-audio">🎵</span>' : '';
         div.innerHTML =
           '<div class="pp-item-left">'
-          + '<div class="pp-item-titre">' + escHtml(p.titre) + '</div>'
+          + '<div class="pp-item-titre">' + escHtml(p.titre) + audioIcon + '</div>'
           + '<div class="pp-item-meta">' + (p.artiste ? escHtml(p.artiste) + ' · ' : '') + escHtml(p.langue || '') + ' · ' + escHtml(p.rubrique || '') + '</div>'
           + '<div class="pp-item-auteur">👤 <span>' + escHtml(auteur) + '</span> · <span>' + date + '</span></div>'
           + '</div>'
@@ -291,14 +301,31 @@
       var auteur = (p.profils && (p.profils.nom || p.profils.email)) || 'Membre inconnu';
       var date   = new Date(p.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
 
+      // Paroles
       var parolesHtml = p.paroles
         ? '<div class="pp-detail-paroles"><div class="pp-paroles-titre">🎵 Paroles</div>'
           + '<div class="pp-paroles-texte">' + escHtml(p.paroles) + '</div></div>' : '';
 
+      // Commentaire
       var commentaireHtml = p.commentaire
         ? '<div class="pp-detail-commentaire"><div class="pp-detail-label">Commentaire</div>'
           + '<p class="pp-blockquote">' + escHtml(p.commentaire) + '</p></div>' : '';
 
+      // Audio
+      var audioHtml = '';
+      if (p.audio_url) {
+        audioHtml = '<div class="pp-detail-audio">'
+          + '<div class="pp-audio-titre">🎵 Audio joint</div>'
+          + '<audio class="pp-audio-player" controls preload="metadata" src="' + escHtml(p.audio_url) + '">'
+          + 'Votre navigateur ne supporte pas l\'audio.'
+          + '</audio>'
+          + '<a class="pp-audio-download" href="' + escHtml(p.audio_url) + '" download target="_blank">'
+          + '⬇️ Télécharger l\'audio'
+          + '</a>'
+          + '</div>';
+      }
+
+      // Actions
       var actionsHtml = '';
       if (p.statut === 'en_attente') {
         actionsHtml = '<div class="pp-detail-actions">'
@@ -323,7 +350,10 @@
         + '<div class="pp-detail-row"><span class="pp-detail-label">Proposé par</span><span class="pp-detail-val pp-detail-auteur">👤 ' + escHtml(auteur) + '</span></div>'
         + '<div class="pp-detail-row"><span class="pp-detail-label">Date</span><span class="pp-detail-val">' + date + '</span></div>'
         + '</div>'
-        + parolesHtml + commentaireHtml + actionsHtml;
+        + audioHtml
+        + parolesHtml
+        + commentaireHtml
+        + actionsHtml;
 
       var btnA = document.getElementById('btnOuvrirAjouter');
       var btnR = document.getElementById('btnOuvrirRefuser');
@@ -334,14 +364,36 @@
     function ouvrirModalAjouter(p) {
       document.getElementById('modalAjouter').style.display = 'flex';
       document.getElementById('btnConfirmerAjouter').onclick = async function() {
-        var btn = this; btn.disabled = true; btn.textContent = '⏳…';
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = 'Traitement…';
+
+        // Marquer la proposition comme acceptée
         var r1 = await sb.from('propositions').update({ statut:'accepte' }).eq('id', p.id);
-        if (r1.error) { showToast('Erreur mise à jour.', 'error'); btn.disabled = false; btn.innerHTML = '✦ Accepter & Ajouter'; return; }
-        await sb.from('chansons').insert({ titre:p.titre, langue:p.langue, rubrique:p.rubrique, style:null, paroles:p.paroles || null, partition_url:null, audio_url:null });
-        btn.disabled = false; btn.innerHTML = '✦ Accepter & Ajouter';
+        if (r1.error) {
+          showToast('Erreur mise à jour.', 'error');
+          btn.disabled = false;
+          btn.innerHTML = '✦ Accepter & Ajouter';
+          return;
+        }
+
+        // Ajouter la chanson au répertoire — audio_url transféré depuis la proposition
+        await sb.from('chansons').insert({
+          titre:     p.titre,
+          langue:    p.langue,
+          rubrique:  p.rubrique,
+          style:     null,
+          paroles:   p.paroles || null,
+          audio_url: p.audio_url || null,
+          partition_url: null
+        });
+
+        btn.disabled = false;
+        btn.innerHTML = '✦ Accepter & Ajouter';
         fermerModals();
-        showToast('Proposition acceptée et chanson ajoutée !', 'success');
-        propSelectionnee = null; resetDetail();
+        showToast('Proposition acceptée — chanson ajoutée au répertoire !', 'success');
+        propSelectionnee = null;
+        resetDetail();
         await chargerPropositions();
       };
     }
@@ -349,13 +401,17 @@
     function ouvrirModalRefuser(p) {
       document.getElementById('modalRefuser').style.display = 'flex';
       document.getElementById('btnConfirmerRefuser').onclick = async function() {
-        var btn = this; btn.disabled = true; btn.textContent = '⏳…';
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = 'Traitement…';
         var res = await sb.from('propositions').update({ statut:'refuse' }).eq('id', p.id);
-        btn.disabled = false; btn.textContent = 'Refuser';
+        btn.disabled = false;
+        btn.textContent = 'Refuser';
         fermerModals();
         if (res.error) { showToast('Erreur lors du refus.', 'error'); return; }
         showToast('Proposition refusée.', 'success');
-        propSelectionnee = null; resetDetail();
+        propSelectionnee = null;
+        resetDetail();
         await chargerPropositions();
       };
     }
