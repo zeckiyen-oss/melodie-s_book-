@@ -10,6 +10,235 @@
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+
+  <style>
+    html, body { background: #0D1B2A !important; color: #FAF6ED !important; min-height: 100vh; }
+    .page-validation { background: #0D1B2A !important; }
+
+    /* ── LOADER ── */
+    .loader-overlay {
+      position: fixed; inset: 0; z-index: 9999; background: #0D1B2A;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .loader-cross { width: 48px; height: 48px; position: relative; }
+    .loader-bar { position: absolute; background: #C9A84C; border-radius: 3px; }
+    .loader-bar-h { width: 100%; height: 6px; top: 50%; transform: translateY(-50%); }
+    .loader-bar-v { height: 100%; width: 6px; left: 50%; transform: translateX(-50%); animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── HERO ── */
+    .vp-hero {
+      position: relative; overflow: hidden;
+      background: linear-gradient(160deg, #1A2E45 0%, #0D1B2A 100%);
+      border-bottom: 1px solid rgba(201,168,76,0.2);
+      padding: 2rem 1.2rem 1.6rem;
+    }
+    .vp-hero-bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(201,168,76,0.06) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .vp-hero-content { position: relative; z-index: 1; }
+    .vp-badge-admin {
+      display: inline-block; margin-bottom: 0.6rem;
+      font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: #F0D98A; background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; padding: 0.2rem 0.8rem;
+    }
+    .vp-title { font-family: 'Cinzel', serif; font-size: 1.6rem; font-weight: 700; color: #FAF6ED; margin: 0 0 0.4rem; }
+    .vp-subtitle { font-size: 0.82rem; color: rgba(250,246,237,0.45); margin: 0; }
+    .vp-hero-ornement {
+      position: absolute; right: -20px; top: -20px;
+      width: 180px; height: 180px; border-radius: 50%;
+      border: 1px solid rgba(201,168,76,0.08); pointer-events: none;
+    }
+
+    /* ── MAIN ── */
+    .vp-main { max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+    /* ── TABS ── */
+    .vp-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .vp-tab {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.5rem 1rem; border: 1px solid rgba(201,168,76,0.25); border-radius: 20px;
+      background: transparent; color: rgba(250,246,237,0.6);
+      font-family: 'Lato', sans-serif; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .vp-tab:hover { color: #F0D98A; }
+    .vp-tab.active { background: rgba(201,168,76,0.18); border-color: #C9A84C; color: #F0D98A; }
+    .vp-tab-badge {
+      background: #C9A84C; color: #0D1B2A; font-size: 0.68rem;
+      font-weight: 700; padding: 1px 6px; border-radius: 10px;
+    }
+
+    /* ── COUNT ── */
+    .vp-count { font-size: 0.8rem; color: rgba(250,246,237,0.4); margin-bottom: 0.8rem; }
+
+    /* ── LISTE CULTES ── */
+    .vp-cultes-list { display: flex; flex-direction: column; gap: 0.7rem; }
+    .vp-culte-item {
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.2); border-radius: 12px;
+      padding: 1rem 1.2rem; cursor: pointer;
+      user-select: none; -webkit-user-select: none;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .vp-culte-item:hover { border-color: rgba(201,168,76,0.4); }
+    .vp-culte-item.vp-culte-active { border-color: #C9A84C; box-shadow: 0 0 0 2px rgba(201,168,76,0.25); }
+    .vp-culte-left { flex: 1; min-width: 0; }
+    .vp-culte-theme { font-family: 'Cinzel', serif; font-size: 0.95rem; font-weight: 700; color: #FAF6ED; margin-bottom: 0.25rem; }
+    .vp-culte-date  { font-size: 0.78rem; color: rgba(250,246,237,0.5); margin-bottom: 0.25rem; }
+    .vp-culte-prep  { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: rgba(250,246,237,0.5); }
+    .vp-avatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(201,168,76,0.3); }
+    .vp-avatar-fallback {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: linear-gradient(135deg, #C9A84C, #F0D98A); color: #0D1B2A;
+      font-size: 0.65rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .vp-culte-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; flex-shrink: 0; }
+    .vp-countdown {
+      font-family: 'Cinzel', serif; font-size: 0.72rem; font-weight: 700;
+      color: #F0D98A; background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.25); border-radius: 8px; padding: 0.15rem 0.5rem;
+    }
+    .vp-statut-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .vp-statut-en_preparation { background: #C9A84C; }
+    .vp-statut-valide          { background: #4CAF82; }
+    .vp-statut-archive         { background: rgba(250,246,237,0.25); }
+    .vp-no-prep { color: #e09696; font-style: italic; }
+
+    .vp-skeleton {
+      height: 80px; border-radius: 12px;
+      background: linear-gradient(90deg, #1A2E45 25%, #1f3550 50%, #1A2E45 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .vp-empty { text-align: center; color: rgba(250,246,237,0.35); font-style: italic; padding: 2rem 0; font-size: 0.88rem; }
+
+    /* ── DETAIL ── */
+    .vp-detail-card {
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.22); border-radius: 16px;
+      overflow: hidden; min-height: 200px; margin-top: 1.5rem;
+    }
+    .vp-detail-idle {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 1rem; padding: 3rem 1.5rem; text-align: center;
+    }
+    .vp-detail-idle-icon { font-size: 2rem; opacity: 0.35; }
+    .vp-detail-idle p { font-size: 0.87rem; color: rgba(250,246,237,0.45); margin: 0; }
+    .vp-detail-body { padding: 1.4rem; display: flex; flex-direction: column; gap: 1.1rem; }
+    .vp-loading-prog { padding: 2rem; text-align: center; color: rgba(250,246,237,0.4); font-style: italic; font-size: 0.88rem; }
+
+    .vp-detail-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.8rem; }
+    .vp-detail-theme { font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700; color: #FAF6ED; margin: 0 0 0.3rem; }
+    .vp-detail-date  { font-size: 0.8rem; color: rgba(250,246,237,0.5); }
+    .vp-statut-badge { flex-shrink: 0; font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.7rem; border-radius: 20px; white-space: nowrap; }
+    .vp-statut-badge-en_preparation { background: rgba(201,168,76,0.15); color: #F0D98A; border: 1px solid rgba(201,168,76,0.3); }
+    .vp-statut-badge-valide          { background: rgba(76,175,130,0.15); color: #7ecfaf; border: 1px solid rgba(76,175,130,0.3); }
+    .vp-statut-badge-archive         { background: rgba(250,246,237,0.07); color: rgba(250,246,237,0.45); border: 1px solid rgba(250,246,237,0.12); }
+
+    .vp-detail-prep {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.7rem 0.9rem; background: rgba(13,27,42,0.4); border-radius: 10px;
+    }
+    .vp-prep-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(201,168,76,0.35); flex-shrink: 0; }
+    .vp-prep-avatar-fallback {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, #C9A84C, #F0D98A); color: #0D1B2A;
+      font-family: 'Cinzel', serif; font-size: 0.9rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .vp-prep-label { font-size: 0.7rem; color: #C9A84C; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+    .vp-prep-nom   { font-size: 0.88rem; color: #FAF6ED; font-weight: 700; }
+    .vp-nb-chansons { margin-left: auto; font-family: 'Cinzel', serif; font-size: 0.82rem; color: #C9A84C; font-weight: 700; }
+
+    /* ── PROGRAMME ── */
+    .vp-programme { display: flex; flex-direction: column; gap: 0.8rem; }
+    .vp-programme-title {
+      font-family: 'Cinzel', serif; font-size: 0.88rem; font-weight: 600;
+      color: #F0D98A; border-bottom: 1px solid rgba(201,168,76,0.15); padding-bottom: 0.5rem;
+    }
+    .vp-programme-empty { font-size: 0.85rem; color: rgba(250,246,237,0.35); font-style: italic; text-align: center; padding: 1rem 0; }
+    .vp-rubrique-bloc { display: flex; flex-direction: column; gap: 0.3rem; }
+    .vp-rubrique-title {
+      font-size: 0.72rem; font-weight: 700; color: #C9A84C;
+      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.2rem;
+    }
+    .vp-chanson-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.5rem 0.7rem; background: rgba(13,27,42,0.4);
+      border-radius: 8px; border-left: 2px solid rgba(201,168,76,0.25);
+    }
+    .vp-chanson-ordre {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(201,168,76,0.15); color: #C9A84C;
+      font-family: 'Cinzel', serif; font-size: 0.68rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .vp-chanson-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+    .vp-chanson-titre { font-size: 0.85rem; font-weight: 700; color: #FAF6ED; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .vp-chanson-num   { font-size: 0.72rem; color: rgba(250,246,237,0.4); }
+    .vp-chanson-langue{ font-size: 0.72rem; color: rgba(250,246,237,0.35); font-style: italic; flex-shrink: 0; }
+
+    /* ── ACTIONS ── */
+    .vp-detail-actions { display: flex; gap: 0.8rem; flex-wrap: wrap; padding-top: 0.5rem; border-top: 1px solid rgba(201,168,76,0.1); }
+    .vp-warning { font-size: 0.8rem; color: #e09696; text-align: center; margin: 0; font-style: italic; }
+    .vp-statut-final {
+      flex: 1; text-align: center; padding: 0.8rem; border-radius: 10px;
+      font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    }
+    .vp-statut-valide-final  { background: rgba(76,175,130,0.12); color: #7ecfaf; border: 1px solid rgba(76,175,130,0.25); }
+    .vp-statut-archive-final { background: rgba(250,246,237,0.06); color: rgba(250,246,237,0.45); border: 1px solid rgba(250,246,237,0.12); }
+
+    /* ── BOUTONS ── */
+    .btn-primary, .btn-secondary {
+      flex: 1; padding: 0.6rem 0.8rem; border-radius: 8px;
+      font-family: 'Lato', sans-serif; font-size: 0.85rem; font-weight: 700;
+      cursor: pointer; border: none; transition: all 0.2s;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .btn-primary { background: linear-gradient(135deg, #C9A84C, #F0D98A); color: #0D1B2A; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-secondary { background: rgba(250,246,237,0.08); color: rgba(250,246,237,0.7); border: 1px solid rgba(250,246,237,0.15) !important; }
+    .btn-secondary:hover { background: rgba(250,246,237,0.13); }
+    .btn-danger { background: rgba(192,57,43,0.8); color: #FAF6ED; flex: 1; padding: 0.6rem 0.8rem; border-radius: 8px; font-family: 'Lato', sans-serif; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: none; }
+    .btn-danger:hover { background: rgba(192,57,43,1); }
+    .btn-disabled { opacity: 0.4 !important; cursor: not-allowed !important; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 8000;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .modal-box {
+      background: linear-gradient(145deg, #1A2E45, #0D1B2A);
+      border: 1px solid rgba(201,168,76,0.35); border-radius: 16px;
+      padding: 1.8rem 1.4rem; max-width: 380px; width: 100%; text-align: center;
+    }
+    .modal-success-icon { font-size: 2rem; margin-bottom: 0.8rem; }
+    .modal-danger-icon  { font-size: 2rem; color: #e09696; margin-bottom: 0.8rem; }
+    .modal-box h3 { font-family: 'Cinzel', serif; font-size: 1rem; color: #FAF6ED; margin: 0 0 0.6rem; }
+    .modal-box p  { font-size: 0.83rem; color: rgba(250,246,237,0.55); margin: 0; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 0.7rem; margin-top: 1.4rem; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1A2E45; border: 1px solid rgba(201,168,76,0.35);
+      color: #FAF6ED; padding: 0.6rem 1.2rem; border-radius: 8px;
+      font-size: 0.85rem; z-index: 9999; opacity: 0; transition: all 0.3s;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast-success { border-color: #4CAF82; }
+    .toast-error   { border-color: #e07070; }
+  </style>
 </head>
 <body class="page-validation">
 
@@ -24,7 +253,7 @@
   <header class="vp-hero">
     <div class="vp-hero-bg"></div>
     <div class="vp-hero-content">
-      <div class="vp-badge-admin">⚙ Administration</div>
+      <div class="vp-badge-admin">&#9881; Administration</div>
       <h1 class="vp-title">Validation des Programmes</h1>
       <p class="vp-subtitle">Examinez et validez les programmes préparés avant le culte</p>
     </div>
@@ -34,17 +263,17 @@
   <main class="vp-main">
 
     <div class="vp-tabs" id="vpTabs">
-      <button class="vp-tab active" data-statut="en_preparation">🕊️ À valider <span class="vp-tab-badge" id="tabBadgePrep">0</span></button>
-      <button class="vp-tab" data-statut="valide">✅ Validés</button>
-      <button class="vp-tab" data-statut="archive">📁 Archivés</button>
+      <button class="vp-tab active" data-statut="en_preparation">&#128330; À valider <span class="vp-tab-badge" id="tabBadgePrep">0</span></button>
+      <button class="vp-tab" data-statut="valide">&#10003; Validés</button>
+      <button class="vp-tab" data-statut="archive">&#128193; Archivés</button>
     </div>
 
     <div class="vp-count" id="vpCount">Chargement…</div>
     <div class="vp-cultes-list" id="vpCultesList"><div class="vp-skeleton"></div><div class="vp-skeleton"></div></div>
 
-    <div class="vp-detail-card" id="vpDetailCard" style="margin-top:1.5rem;">
+    <div class="vp-detail-card" id="vpDetailCard">
       <div class="vp-detail-idle" id="vpDetailIdle">
-        <div class="vp-detail-idle-icon">🕊️</div>
+        <div class="vp-detail-idle-icon">&#128330;</div>
         <p>Sélectionnez un culte pour examiner son programme.</p>
       </div>
       <div class="vp-detail-body" id="vpDetailBody" style="display:none;"></div>
@@ -55,12 +284,12 @@
   <!-- MODAL VALIDER -->
   <div id="modalValider" class="modal-overlay" style="display:none;">
     <div class="modal-box">
-      <div class="modal-success-icon">✅</div>
+      <div class="modal-success-icon">&#10003;</div>
       <h3>Valider ce programme ?</h3>
       <p id="modalValiderMsg"></p>
       <div class="modal-actions">
         <button class="btn-secondary" id="btnAnnulerValider">Annuler</button>
-        <button class="btn-primary" id="btnConfirmerValider">✦ Valider</button>
+        <button class="btn-primary" id="btnConfirmerValider">&#10022; Valider</button>
       </div>
     </div>
   </div>
@@ -68,7 +297,7 @@
   <!-- MODAL ARCHIVER -->
   <div id="modalArchiver" class="modal-overlay" style="display:none;">
     <div class="modal-box">
-      <div class="modal-danger-icon">📁</div>
+      <div class="modal-danger-icon">&#128193;</div>
       <h3>Archiver ce culte ?</h3>
       <p>Il restera consultable dans l'historique.</p>
       <div class="modal-actions">
@@ -77,71 +306,6 @@
       </div>
     </div>
   </div>
-
-  <style>
-    .vp-main { max-width:900px; margin:0 auto; padding:1.5rem 1rem 4rem; }
-    .vp-tabs { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; }
-    .vp-tab { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border:1px solid rgba(201,168,76,0.25); border-radius:20px; background:transparent; color:rgba(250,246,237,0.6); font-family:'Lato',sans-serif; font-size:0.82rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
-    .vp-tab.active { background:rgba(201,168,76,0.18); border-color:#C9A84C; color:#F0D98A; }
-    .vp-tab-badge { background:#C9A84C; color:#0D1B2A; font-size:0.68rem; font-weight:700; padding:1px 6px; border-radius:10px; }
-    .vp-count { font-size:0.8rem; color:rgba(250,246,237,0.4); margin-bottom:0.8rem; }
-    .vp-cultes-list { display:flex; flex-direction:column; gap:0.7rem; }
-    .vp-culte-item { background:linear-gradient(145deg,#1A2E45,#152438); border:1px solid rgba(201,168,76,0.2); border-radius:12px; padding:1rem 1.2rem; cursor:pointer; user-select:none; -webkit-user-select:none; display:flex; align-items:center; justify-content:space-between; gap:1rem; transition:border-color 0.2s,box-shadow 0.2s; }
-    .vp-culte-item.vp-culte-active { border-color:#C9A84C; box-shadow:0 0 0 2px rgba(201,168,76,0.25); }
-    .vp-culte-left { flex:1; min-width:0; }
-    .vp-culte-theme { font-family:'Cinzel',serif; font-size:0.95rem; font-weight:700; color:#FAF6ED; margin-bottom:0.25rem; }
-    .vp-culte-date { font-size:0.78rem; color:rgba(250,246,237,0.5); margin-bottom:0.25rem; }
-    .vp-culte-prep { display:flex; align-items:center; gap:0.4rem; font-size:0.78rem; color:rgba(250,246,237,0.5); }
-    .vp-avatar { width:20px; height:20px; border-radius:50%; object-fit:cover; border:1px solid rgba(201,168,76,0.3); }
-    .vp-avatar-fallback { width:20px; height:20px; border-radius:50%; background:linear-gradient(135deg,#C9A84C,#F0D98A); color:#0D1B2A; font-size:0.65rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-    .vp-culte-right { display:flex; flex-direction:column; align-items:flex-end; gap:0.4rem; flex-shrink:0; }
-    .vp-countdown { font-family:'Cinzel',serif; font-size:0.72rem; font-weight:700; color:#F0D98A; background:rgba(201,168,76,0.12); border:1px solid rgba(201,168,76,0.25); border-radius:8px; padding:0.15rem 0.5rem; }
-    .vp-statut-dot { width:10px; height:10px; border-radius:50%; }
-    .vp-statut-en_preparation { background:#C9A84C; }
-    .vp-statut-valide { background:#4CAF82; }
-    .vp-statut-archive { background:rgba(250,246,237,0.25); }
-    .vp-no-prep { color:#e09696; font-style:italic; }
-    .vp-empty { text-align:center; color:rgba(250,246,237,0.35); font-style:italic; padding:2rem 0; font-size:0.88rem; }
-    .vp-skeleton { height:80px; border-radius:12px; background:linear-gradient(90deg,#1A2E45 25%,#1f3550 50%,#1A2E45 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; }
-    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-    .vp-detail-card { background:linear-gradient(145deg,#1A2E45,#152438); border:1px solid rgba(201,168,76,0.22); border-radius:16px; overflow:hidden; min-height:200px; }
-    .vp-detail-idle { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1rem; padding:3rem 1.5rem; text-align:center; }
-    .vp-detail-idle-icon { font-size:2rem; opacity:0.35; }
-    .vp-detail-idle p { font-size:0.87rem; color:rgba(250,246,237,0.45); margin:0; }
-    .vp-detail-body { padding:1.4rem; display:flex; flex-direction:column; gap:1.1rem; }
-    .vp-loading-prog { padding:2rem; text-align:center; color:rgba(250,246,237,0.4); font-style:italic; font-size:0.88rem; }
-    .vp-detail-header { display:flex; align-items:flex-start; justify-content:space-between; gap:0.8rem; }
-    .vp-detail-theme { font-family:'Cinzel',serif; font-size:1.1rem; font-weight:700; color:#FAF6ED; margin:0 0 0.3rem; }
-    .vp-detail-date { font-size:0.8rem; color:rgba(250,246,237,0.5); }
-    .vp-statut-badge { flex-shrink:0; font-size:0.72rem; font-weight:700; padding:0.25rem 0.7rem; border-radius:20px; white-space:nowrap; }
-    .vp-statut-badge-en_preparation { background:rgba(201,168,76,0.15); color:#F0D98A; border:1px solid rgba(201,168,76,0.3); }
-    .vp-statut-badge-valide { background:rgba(76,175,130,0.15); color:#7ecfaf; border:1px solid rgba(76,175,130,0.3); }
-    .vp-statut-badge-archive { background:rgba(250,246,237,0.07); color:rgba(250,246,237,0.45); border:1px solid rgba(250,246,237,0.12); }
-    .vp-detail-prep { display:flex; align-items:center; gap:0.7rem; padding:0.7rem 0.9rem; background:rgba(13,27,42,0.4); border-radius:10px; }
-    .vp-prep-avatar { width:34px; height:34px; border-radius:50%; object-fit:cover; border:1px solid rgba(201,168,76,0.35); flex-shrink:0; }
-    .vp-prep-avatar-fallback { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#C9A84C,#F0D98A); color:#0D1B2A; font-family:'Cinzel',serif; font-size:0.9rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-    .vp-prep-label { font-size:0.7rem; color:#C9A84C; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; }
-    .vp-prep-nom { font-size:0.88rem; color:#FAF6ED; font-weight:700; }
-    .vp-nb-chansons { margin-left:auto; font-family:'Cinzel',serif; font-size:0.82rem; color:#C9A84C; font-weight:700; }
-    .vp-programme { display:flex; flex-direction:column; gap:0.8rem; }
-    .vp-programme-title { font-family:'Cinzel',serif; font-size:0.88rem; font-weight:600; color:#F0D98A; border-bottom:1px solid rgba(201,168,76,0.15); padding-bottom:0.5rem; }
-    .vp-programme-empty { font-size:0.85rem; color:rgba(250,246,237,0.35); font-style:italic; text-align:center; padding:1rem 0; }
-    .vp-rubrique-bloc { display:flex; flex-direction:column; gap:0.3rem; }
-    .vp-rubrique-title { font-size:0.72rem; font-weight:700; color:#C9A84C; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.2rem; }
-    .vp-chanson-item { display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0.7rem; background:rgba(13,27,42,0.4); border-radius:8px; border-left:2px solid rgba(201,168,76,0.25); }
-    .vp-chanson-ordre { width:22px; height:22px; border-radius:50%; background:rgba(201,168,76,0.15); color:#C9A84C; font-family:'Cinzel',serif; font-size:0.68rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-    .vp-chanson-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:0.1rem; }
-    .vp-chanson-titre { font-size:0.85rem; font-weight:700; color:#FAF6ED; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .vp-chanson-num { font-size:0.72rem; color:rgba(250,246,237,0.4); }
-    .vp-chanson-langue { font-size:0.72rem; color:rgba(250,246,237,0.35); font-style:italic; flex-shrink:0; }
-    .vp-detail-actions { display:flex; gap:0.8rem; flex-wrap:wrap; padding-top:0.5rem; border-top:1px solid rgba(201,168,76,0.1); }
-    .vp-detail-actions .btn-primary, .vp-detail-actions .btn-secondary { flex:1; justify-content:center; min-width:100px; }
-    .vp-warning { font-size:0.8rem; color:#e09696; text-align:center; margin:0; font-style:italic; }
-    .vp-statut-final { flex:1; text-align:center; padding:0.8rem; border-radius:10px; font-size:0.88rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
-    .vp-statut-valide-final  { background:rgba(76,175,130,0.12); color:#7ecfaf; border:1px solid rgba(76,175,130,0.25); }
-    .vp-statut-archive-final { background:rgba(250,246,237,0.06); color:rgba(250,246,237,0.45); border:1px solid rgba(250,246,237,0.12); }
-    .btn-disabled { opacity:0.4 !important; cursor:not-allowed !important; }
-  </style>
 
   <script>
     var SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
@@ -152,6 +316,9 @@
     var cultes = [];
     var filtreStatut = 'en_preparation';
     var idSelectionne = null;
+
+    // Rubriques avec Chant de réflexion
+    var RUBRIQUES_ORDER = ['Prélude','Adoration','Louange','Offrande','Méditation','Envoi','Chant de réflexion'];
 
     function escHtml(str) {
       if (!str) return '';
@@ -249,7 +416,7 @@
 
         div.innerHTML = '<div class="vp-culte-left">'
           + '<div class="vp-culte-theme">' + escHtml(c.theme) + '</div>'
-          + '<div class="vp-culte-date">📅 ' + dateStr + '</div>'
+          + '<div class="vp-culte-date">&#128197; ' + dateStr + '</div>'
           + '<div class="vp-culte-prep">' + prepHtml + '</div>'
           + '</div>'
           + '<div class="vp-culte-right">' + countdownHtml
@@ -296,9 +463,8 @@
       var prep = culte.profils;
       var dateStr = new Date(culte.date_culte).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
 
-      var rubriques = ['Prélude','Adoration','Louange','Offrande','Méditation','Envoi'];
       var parRubrique = {};
-      rubriques.forEach(function(r) { parRubrique[r] = []; });
+      RUBRIQUES_ORDER.forEach(function(r) { parRubrique[r] = []; });
       programme.forEach(function(p) {
         var r = p.rubrique || (p.chansons && p.chansons.rubrique) || 'Autre';
         if (!parRubrique[r]) parRubrique[r] = [];
@@ -306,7 +472,7 @@
       });
 
       var programmeHtml = '';
-      rubriques.forEach(function(rubrique) {
+      RUBRIQUES_ORDER.forEach(function(rubrique) {
         var items = parRubrique[rubrique] || [];
         if (items.length === 0) return;
         programmeHtml += '<div class="vp-rubrique-bloc"><div class="vp-rubrique-title">' + escHtml(rubrique) + '</div>';
@@ -323,16 +489,28 @@
         });
         programmeHtml += '</div>';
       });
+      // Rubrique "Autre" si présente
+      if (parRubrique['Autre'] && parRubrique['Autre'].length > 0) {
+        programmeHtml += '<div class="vp-rubrique-bloc"><div class="vp-rubrique-title">Autre</div>';
+        parRubrique['Autre'].forEach(function(item, i) {
+          var ch = item.chansons || {};
+          programmeHtml += '<div class="vp-chanson-item">'
+            + '<span class="vp-chanson-ordre">' + (i+1) + '</span>'
+            + '<div class="vp-chanson-info"><span class="vp-chanson-titre">' + escHtml(ch.titre || '—') + '</span></div>'
+            + '</div>';
+        });
+        programmeHtml += '</div>';
+      }
 
-      var statutLabel = culte.statut === 'en_preparation' ? '🕊️ En préparation'
-        : culte.statut === 'valide' ? '✅ Validé' : '📁 Archivé';
+      var statutLabel = culte.statut === 'en_preparation' ? '&#128330; En préparation'
+        : culte.statut === 'valide' ? '&#10003; Validé' : '&#128193; Archivé';
 
       var prepHtml = '';
       if (prep) {
-        var init = (prep.nom || prep.email || '?')[0].toUpperCase();
+        var initPrep = (prep.nom || prep.email || '?')[0].toUpperCase();
         prepHtml = (prep.photo_url
           ? '<img src="' + escHtml(prep.photo_url) + '" class="vp-prep-avatar" alt="" />'
-          : '<div class="vp-prep-avatar-fallback">' + init + '</div>')
+          : '<div class="vp-prep-avatar-fallback">' + initPrep + '</div>')
           + '<div><div class="vp-prep-label">Préparé par</div><div class="vp-prep-nom">' + escHtml(prep.nom || prep.email) + '</div></div>';
       } else {
         prepHtml = '<span class="vp-no-prep">Aucun préparateur désigné</span>';
@@ -341,23 +519,23 @@
       var actionsHtml = '';
       if (culte.statut === 'en_preparation') {
         actionsHtml = '<div class="vp-detail-actions">'
-          + '<button class="btn-secondary" id="btnOuvrirArchiver">📁 Archiver</button>'
+          + '<button class="btn-secondary" id="btnOuvrirArchiver">&#128193; Archiver</button>'
           + '<button class="btn-primary' + (nbChansons === 0 ? ' btn-disabled' : '') + '"'
-          + (nbChansons === 0 ? ' disabled' : '') + ' id="btnOuvrirValider">✦ Valider le programme</button>'
+          + (nbChansons === 0 ? ' disabled' : '') + ' id="btnOuvrirValider">&#10022; Valider le programme</button>'
           + '</div>'
-          + (nbChansons === 0 ? '<p class="vp-warning">⚠ Programme vide — le préparateur doit ajouter des chansons.</p>' : '');
+          + (nbChansons === 0 ? '<p class="vp-warning">&#9888; Programme vide — le préparateur doit ajouter des chansons.</p>' : '');
       } else if (culte.statut === 'valide') {
         actionsHtml = '<div class="vp-detail-actions">'
-          + '<button class="btn-secondary" id="btnOuvrirArchiver">📁 Archiver</button>'
-          + '<div class="vp-statut-final vp-statut-valide-final">✅ Programme validé</div>'
+          + '<button class="btn-secondary" id="btnOuvrirArchiver">&#128193; Archiver</button>'
+          + '<div class="vp-statut-final vp-statut-valide-final">&#10003; Programme validé</div>'
           + '</div>';
       } else {
-        actionsHtml = '<div class="vp-statut-final vp-statut-archive-final" style="margin-top:0.5rem;">📁 Culte archivé</div>';
+        actionsHtml = '<div class="vp-statut-final vp-statut-archive-final" style="margin-top:0.5rem;">&#128193; Culte archivé</div>';
       }
 
       body.innerHTML = '<div class="vp-detail-header">'
         + '<div><h2 class="vp-detail-theme">' + escHtml(culte.theme) + '</h2>'
-        + '<div class="vp-detail-date">📅 ' + dateStr + '</div></div>'
+        + '<div class="vp-detail-date">&#128197; ' + dateStr + '</div></div>'
         + '<span class="vp-statut-badge vp-statut-badge-' + culte.statut + '">' + statutLabel + '</span>'
         + '</div>'
         + '<div class="vp-detail-prep">' + prepHtml
@@ -378,10 +556,10 @@
       document.getElementById('modalValiderMsg').textContent = 'Le programme de "' + culte.theme + '" sera validé et visible par toute la chorale.';
       document.getElementById('modalValider').style.display = 'flex';
       document.getElementById('btnConfirmerValider').onclick = async function() {
-        var btn = this; btn.disabled = true; btn.textContent = '⏳…';
+        var btn = this; btn.disabled = true; btn.textContent = '…';
         var id = culte.id;
         var res = await sb.from('cultes').update({ statut:'valide' }).eq('id', id);
-        btn.disabled = false; btn.innerHTML = '✦ Valider';
+        btn.disabled = false; btn.innerHTML = '&#10022; Valider';
         fermerModals();
         if (res.error) { showToast('Erreur lors de la validation.', 'error'); return; }
         showToast('Programme validé !', 'success');
@@ -395,7 +573,7 @@
     function ouvrirModalArchiver(culte) {
       document.getElementById('modalArchiver').style.display = 'flex';
       document.getElementById('btnConfirmerArchiver').onclick = async function() {
-        var btn = this; btn.disabled = true; btn.textContent = '⏳…';
+        var btn = this; btn.disabled = true; btn.textContent = '…';
         var id = culte.id;
         var res = await sb.from('cultes').update({ statut:'archive' }).eq('id', id);
         btn.disabled = false; btn.textContent = 'Archiver';
