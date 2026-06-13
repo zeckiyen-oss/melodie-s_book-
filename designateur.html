@@ -10,10 +10,248 @@
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+
+  <style>
+    html, body { background: #0D1B2A !important; color: #FAF6ED !important; min-height: 100vh; }
+    .page-designateur { background: #0D1B2A !important; }
+
+    /* ── LOADER ── */
+    .loader-overlay {
+      position: fixed; inset: 0; z-index: 9999; background: #0D1B2A;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .loader-cross { width: 48px; height: 48px; position: relative; }
+    .loader-bar { position: absolute; background: #C9A84C; border-radius: 3px; }
+    .loader-bar-h { width: 100%; height: 6px; top: 50%; transform: translateY(-50%); }
+    .loader-bar-v { height: 100%; width: 6px; left: 50%; transform: translateX(-50%); animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── HERO ── */
+    .ds-hero {
+      position: relative; overflow: hidden;
+      background: linear-gradient(160deg, #1A2E45 0%, #0D1B2A 100%);
+      border-bottom: 1px solid rgba(201,168,76,0.2);
+      padding: 2rem 1.2rem 1.6rem;
+    }
+    .ds-hero-bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(201,168,76,0.06) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .ds-hero-content { position: relative; z-index: 1; }
+    .ds-badge-admin {
+      display: inline-block; margin-bottom: 0.6rem;
+      font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: #F0D98A; background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; padding: 0.2rem 0.8rem;
+    }
+    .ds-title { font-family: 'Cinzel', serif; font-size: 1.6rem; font-weight: 700; color: #FAF6ED; margin: 0 0 0.4rem; }
+    .ds-subtitle { font-size: 0.82rem; color: rgba(250,246,237,0.45); margin: 0 0 0.8rem; }
+    .ds-verset { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.8rem; color: rgba(250,246,237,0.4); margin-top: 0.5rem; }
+    .ds-verset em { color: rgba(201,168,76,0.7); }
+    .ds-verset span { display: block; font-size: 0.72rem; color: rgba(250,246,237,0.3); margin-top: 0.2rem; }
+    .ds-hero-ornement {
+      position: absolute; right: -20px; top: -20px;
+      width: 180px; height: 180px; border-radius: 50%;
+      border: 1px solid rgba(201,168,76,0.08); pointer-events: none;
+    }
+
+    /* ── MAIN ── */
+    .ds-main { max-width: 960px; margin: 0 auto; padding: 1.4rem 1rem 4rem; }
+    .ds-layout {
+      display: grid; grid-template-columns: 1fr;
+      gap: 1.2rem;
+    }
+    @media (min-width: 680px) { .ds-layout { grid-template-columns: 1fr 280px; } }
+
+    /* ── SECTION TITRE ── */
+    .ds-section-title {
+      display: flex; align-items: center; gap: 0.7rem;
+      flex-wrap: wrap; margin-bottom: 1rem;
+    }
+    .ds-section-icon { font-size: 1.1rem; }
+    .ds-section-title h2 {
+      font-family: 'Cinzel', serif; font-size: 0.95rem; font-weight: 700;
+      color: #FAF6ED; margin: 0; flex: 1;
+    }
+    .ds-btn-creer { font-size: 0.8rem !important; padding: 0.4rem 0.9rem !important; }
+
+    /* ── CARTES CULTES ── */
+    .ds-cultes-list { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1rem; }
+    .ds-culte-card {
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.18); border-radius: 14px;
+      padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.6rem;
+    }
+    .ds-culte-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
+    .ds-culte-theme { font-family: 'Cinzel', serif; font-size: 0.95rem; font-weight: 700; color: #FAF6ED; }
+    .ds-culte-countdown {
+      font-family: 'Cinzel', serif; font-size: 0.72rem; font-weight: 700;
+      color: #F0D98A; background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.25); border-radius: 8px;
+      padding: 0.15rem 0.5rem; white-space: nowrap; flex-shrink: 0;
+    }
+    .ds-countdown-passe { color: rgba(250,246,237,0.3); background: rgba(250,246,237,0.05); border-color: rgba(250,246,237,0.1); }
+    .ds-culte-date { font-size: 0.78rem; color: rgba(250,246,237,0.45); }
+    .ds-culte-preparateur { display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; color: rgba(250,246,237,0.5); }
+    .ds-prep-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(201,168,76,0.3); }
+    .ds-prep-avatar-fallback {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: linear-gradient(135deg, #C9A84C, #F0D98A); color: #0D1B2A;
+      font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    }
+    .ds-no-prep { color: rgba(224,150,150,0.7); font-style: italic; }
+    .ds-culte-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .ds-btn-sm { font-size: 0.75rem !important; padding: 0.3rem 0.7rem !important; }
+    .ds-btn-danger { border-color: rgba(192,57,43,0.35) !important; color: #e09696 !important; }
+    .ds-btn-danger:hover { background: rgba(192,57,43,0.1) !important; }
+
+    .ds-skeleton {
+      height: 100px; border-radius: 14px;
+      background: linear-gradient(90deg, #1A2E45 25%, #1f3550 50%, #1A2E45 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .ds-empty {
+      display: flex; flex-direction: column; align-items: center; gap: 0.7rem;
+      padding: 2rem 1rem; text-align: center;
+      color: rgba(250,246,237,0.3); font-size: 0.85rem; font-style: italic;
+    }
+    .ds-empty span { font-size: 1.6rem; opacity: 0.4; }
+
+    /* ── FORMULAIRE CULTE ── */
+    .ds-form-card {
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.25); border-radius: 14px;
+      padding: 1.1rem;
+    }
+    .ds-form-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;
+    }
+    .ds-form-header h3 { font-family: 'Cinzel', serif; font-size: 0.9rem; color: #FAF6ED; margin: 0; }
+    .ev-form-close {
+      background: transparent; border: none;
+      color: rgba(250,246,237,0.4); font-size: 1rem; cursor: pointer;
+    }
+    .ev-form-close:hover { color: #FAF6ED; }
+
+    .form-group { margin-bottom: 0.9rem; }
+    .form-label {
+      display: block; font-family: 'Cinzel', serif; font-size: 0.72rem;
+      font-weight: 700; color: #C9A84C; letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: 0.4rem;
+    }
+    .required { color: #e09696; }
+    .form-input {
+      width: 100%; box-sizing: border-box;
+      background: rgba(13,27,42,0.6);
+      border: 1px solid rgba(201,168,76,0.25); border-radius: 8px;
+      color: #FAF6ED; font-family: 'Lato', sans-serif; font-size: 0.88rem;
+      padding: 0.55rem 0.8rem; outline: none; transition: border-color 0.2s;
+    }
+    .form-input::placeholder { color: rgba(250,246,237,0.3); }
+    .form-input:focus { border-color: #C9A84C; }
+
+    .select-wrapper { position: relative; }
+    .form-select {
+      width: 100%; box-sizing: border-box;
+      background: rgba(13,27,42,0.6);
+      border: 1px solid rgba(201,168,76,0.25); border-radius: 8px;
+      color: #FAF6ED; font-family: 'Lato', sans-serif; font-size: 0.88rem;
+      padding: 0.55rem 2rem 0.55rem 0.8rem; outline: none; cursor: pointer;
+      appearance: none; -webkit-appearance: none;
+    }
+    .form-select option { background: #1A2E45; }
+    .select-arrow {
+      position: absolute; right: 0.8rem; top: 50%; transform: translateY(-50%);
+      color: #C9A84C; pointer-events: none; font-size: 0.8rem;
+    }
+
+    .ds-form-actions { display: flex; gap: 0.6rem; margin-top: 1rem; }
+
+    /* ── ASIDE ── */
+    .ds-aside { display: flex; flex-direction: column; gap: 1rem; }
+    .ds-aside-card {
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.15); border-radius: 14px;
+      padding: 1rem;
+    }
+    .ds-aside-title {
+      font-family: 'Cinzel', serif; font-size: 0.8rem; font-weight: 700;
+      color: #C9A84C; margin: 0 0 0.8rem;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .ds-membres-list { display: flex; flex-direction: column; gap: 0.45rem; max-height: 280px; overflow-y: auto; }
+    .ds-membres-list::-webkit-scrollbar { width: 4px; }
+    .ds-membres-list::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.25); border-radius: 2px; }
+    .ds-membre-item { display: flex; align-items: center; gap: 0.6rem; }
+    .ds-membre-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(201,168,76,0.2); flex-shrink: 0; }
+    .ds-membre-avatar-fallback {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, #C9A84C, #F0D98A); color: #0D1B2A;
+      font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .ds-membre-info { flex: 1; min-width: 0; }
+    .ds-membre-nom  { display: block; font-size: 0.8rem; font-weight: 700; color: #FAF6ED; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ds-membre-email{ display: block; font-size: 0.68rem; color: rgba(250,246,237,0.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ds-role-badge { font-size: 0.62rem; font-weight: 700; padding: 1px 6px; border-radius: 10px; white-space: nowrap; }
+    .ds-role-admin       { background: rgba(201,168,76,0.15); color: #F0D98A; border: 1px solid rgba(201,168,76,0.3); }
+    .ds-role-preparateur { background: rgba(156,126,204,0.15); color: #C5B3E8; border: 1px solid rgba(156,126,204,0.3); }
+    .ds-role-membre      { background: rgba(91,163,201,0.12); color: #7ECFF0; border: 1px solid rgba(91,163,201,0.25); }
+    .ds-loading { font-size: 0.8rem; color: rgba(250,246,237,0.3); font-style: italic; padding: 0.5rem 0; }
+    .ds-empty-sm { font-size: 0.8rem; color: rgba(250,246,237,0.3); font-style: italic; margin: 0; }
+
+    .ds-aside-info { border-color: rgba(201,168,76,0.08); }
+    .ds-info-list { margin: 0; padding: 0 0 0 1.1rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    .ds-info-list li { font-size: 0.78rem; color: rgba(250,246,237,0.45); line-height: 1.4; }
+
+    /* ── BOUTONS GLOBAUX ── */
+    .btn-primary, .btn-secondary {
+      padding: 0.55rem 1rem; border-radius: 8px;
+      font-family: 'Lato', sans-serif; font-size: 0.85rem; font-weight: 700;
+      cursor: pointer; border: none; transition: all 0.2s;
+    }
+    .btn-primary { background: linear-gradient(135deg, #C9A84C, #F0D98A); color: #0D1B2A; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-secondary { background: rgba(250,246,237,0.08); color: rgba(250,246,237,0.7); border: 1px solid rgba(250,246,237,0.15) !important; }
+    .btn-secondary:hover { background: rgba(250,246,237,0.13); }
+    .btn-danger { background: rgba(192,57,43,0.8); color: #FAF6ED; padding: 0.55rem 1rem; border-radius: 8px; font-family: 'Lato', sans-serif; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: none; }
+    .btn-danger:hover { background: rgba(192,57,43,1); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 8000;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .modal-box {
+      background: linear-gradient(145deg, #1A2E45, #0D1B2A);
+      border: 1px solid rgba(201,168,76,0.35); border-radius: 16px;
+      padding: 1.8rem 1.4rem; max-width: 380px; width: 100%; text-align: center;
+    }
+    .modal-box.modal-danger { border-color: rgba(192,57,43,0.4); }
+    .modal-success-icon { font-size: 2rem; margin-bottom: 0.8rem; }
+    .modal-danger-icon { font-size: 2rem; color: #e09696; margin-bottom: 0.8rem; }
+    .modal-box h3 { font-family: 'Cinzel', serif; font-size: 1rem; color: #FAF6ED; margin: 0 0 0.6rem; }
+    .modal-box p  { font-size: 0.83rem; color: rgba(250,246,237,0.55); margin: 0; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 0.7rem; margin-top: 1.4rem; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1A2E45; border: 1px solid rgba(201,168,76,0.35);
+      color: #FAF6ED; padding: 0.6rem 1.2rem; border-radius: 8px;
+      font-size: 0.85rem; z-index: 9999; opacity: 0; transition: all 0.3s;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast-success { border-color: #4CAF82; }
+    .toast-error   { border-color: #e07070; }
+  </style>
 </head>
 <body class="page-designateur">
 
-  <!-- LOADER -->
   <div id="loader" class="loader-overlay">
     <div class="loader-cross">
       <div class="loader-bar loader-bar-h"></div>
@@ -21,16 +259,14 @@
     </div>
   </div>
 
-  <!-- TOAST -->
   <div id="toast" class="toast" aria-live="polite"></div>
 
   <!-- NAVBAR injectée par navbar.js -->
 
-  <!-- HERO -->
   <header class="ds-hero">
     <div class="ds-hero-bg"></div>
     <div class="ds-hero-content">
-      <div class="ds-badge-admin">⚙ Administration</div>
+      <div class="ds-badge-admin">&#9881; Administration</div>
       <h1 class="ds-title">Désignation du Préparateur</h1>
       <p class="ds-subtitle">Créez un culte et désignez le membre chargé de préparer le programme</p>
       <div class="ds-verset">
@@ -41,16 +277,15 @@
     <div class="ds-hero-ornement"></div>
   </header>
 
-  <!-- CONTENU -->
   <main class="ds-main">
     <div class="ds-layout">
 
       <section class="ds-left">
 
         <div class="ds-section-title">
-          <span class="ds-section-icon">🕊️</span>
+          <span class="ds-section-icon">&#128330;</span>
           <h2>Cultes en préparation</h2>
-          <button class="btn-primary ds-btn-creer" id="btnNouveauCulte">✦ Nouveau culte</button>
+          <button class="btn-primary ds-btn-creer" id="btnNouveauCulte">&#10022; Nouveau culte</button>
         </div>
 
         <div class="ds-cultes-list" id="dsCultesList">
@@ -61,7 +296,7 @@
         <div class="ds-form-card" id="dsFormCulte" style="display:none;">
           <div class="ds-form-header">
             <h3 id="dsFormCulteTitle">Nouveau culte</h3>
-            <button class="ev-form-close" id="btnFermerFormCulte">✕</button>
+            <button class="ev-form-close" id="btnFermerFormCulte">&#10005;</button>
           </div>
 
           <input type="hidden" id="culteId" />
@@ -82,13 +317,13 @@
               <select id="cultePreparateur" class="form-select">
                 <option value="">— Choisir un membre —</option>
               </select>
-              <span class="select-arrow">▾</span>
+              <span class="select-arrow">&#9662;</span>
             </div>
           </div>
 
           <div class="ds-form-actions">
             <button class="btn-secondary" id="btnAnnulerFormCulte">Annuler</button>
-            <button class="btn-primary" id="btnSauvegarderCulte">💾 Enregistrer et Désigner</button>
+            <button class="btn-primary" id="btnSauvegarderCulte">&#128190; Enregistrer et Désigner</button>
           </div>
         </div>
 
@@ -97,14 +332,14 @@
       <aside class="ds-aside">
 
         <div class="ds-aside-card">
-          <h3 class="ds-aside-title"><span>👥</span> Membres actifs</h3>
+          <h3 class="ds-aside-title"><span>&#128101;</span> Membres actifs</h3>
           <div class="ds-membres-list" id="dsMembresList">
             <div class="ds-loading">Chargement…</div>
           </div>
         </div>
 
         <div class="ds-aside-card ds-aside-info">
-          <h3 class="ds-aside-title"><span>ℹ️</span> Rôle du préparateur</h3>
+          <h3 class="ds-aside-title"><span>&#8505;&#65039;</span> Rôle du préparateur</h3>
           <ul class="ds-info-list">
             <li>Accède à la page de préparation de culte</li>
             <li>Sélectionne les chansons par rubrique</li>
@@ -122,12 +357,12 @@
   <!-- MODAL DÉSIGNATION -->
   <div id="modalDesigner" class="modal-overlay" style="display:none;">
     <div class="modal-box">
-      <div class="modal-success-icon">🕊️</div>
+      <div class="modal-success-icon">&#128330;</div>
       <h3>Confirmer la désignation ?</h3>
       <p id="modalDesignerMsg">Ce membre sera désigné comme préparateur pour ce culte.</p>
       <div class="modal-actions">
         <button class="btn-secondary" id="btnAnnulerDesignation">Annuler</button>
-        <button class="btn-primary" id="btnConfirmerDesignation">✦ Confirmer</button>
+        <button class="btn-primary" id="btnConfirmerDesignation">&#10022; Confirmer</button>
       </div>
     </div>
   </div>
@@ -135,7 +370,7 @@
   <!-- MODAL SUPPRIMER CULTE -->
   <div id="modalSupprimerCulte" class="modal-overlay" style="display:none;">
     <div class="modal-box modal-danger">
-      <div class="modal-danger-icon">⚠</div>
+      <div class="modal-danger-icon">&#9888;</div>
       <h3>Supprimer ce culte ?</h3>
       <p>Le programme associé sera également supprimé. Cette action est irréversible.</p>
       <div class="modal-actions">
@@ -174,7 +409,6 @@
       setTimeout(function() { t.classList.remove('show'); }, 3500);
     }
 
-    // INIT
     async function init() {
       var sessionData = await sb.auth.getSession();
       var session = sessionData.data.session;
@@ -191,7 +425,6 @@
       hideLoader();
     }
 
-    // MEMBRES
     async function chargerMembres() {
       var res = await sb.from('profils').select('*').eq('actif', true).order('nom');
       if (res.error) { showToast('Erreur chargement membres.', 'error'); return; }
@@ -222,18 +455,17 @@
         var avatarHtml = m.photo_url
           ? '<img src="' + escHtml(m.photo_url) + '" class="ds-membre-avatar" alt="" />'
           : '<div class="ds-membre-avatar-fallback">' + (m.nom || m.email || '?')[0].toUpperCase() + '</div>';
-        return '<div class="ds-membre-item">' +
-          avatarHtml +
-          '<div class="ds-membre-info">' +
-            '<span class="ds-membre-nom">' + escHtml(m.nom || m.email) + '</span>' +
-            '<span class="ds-membre-email">' + escHtml(m.email) + '</span>' +
-          '</div>' +
-          '<span class="ds-role-badge ds-role-' + escHtml(m.role) + '">' + escHtml(roleLabel) + '</span>' +
-        '</div>';
+        return '<div class="ds-membre-item">'
+          + avatarHtml
+          + '<div class="ds-membre-info">'
+            + '<span class="ds-membre-nom">' + escHtml(m.nom || m.email) + '</span>'
+            + '<span class="ds-membre-email">' + escHtml(m.email) + '</span>'
+          + '</div>'
+          + '<span class="ds-role-badge ds-role-' + escHtml(m.role) + '">' + escHtml(roleLabel) + '</span>'
+        + '</div>';
       }).join('');
     }
 
-    // CULTES
     async function chargerCultes() {
       var res = await sb.from('cultes')
         .select('*, profils(nom, email, photo_url)')
@@ -248,8 +480,8 @@
       var container = document.getElementById('dsCultesList');
       if (cultes.length === 0) {
         container.innerHTML =
-          '<div class="ds-empty"><span>🕊️</span>' +
-          '<p>Aucun culte en préparation.<br>Créez le premier en cliquant sur Nouveau culte.</p></div>';
+          '<div class="ds-empty"><span>&#128330;</span>'
+          + '<p>Aucun culte en préparation.<br>Créez le premier en cliquant sur Nouveau culte.</p></div>';
         return;
       }
 
@@ -264,28 +496,27 @@
         var prepHtml = preparateur
           ? (preparateur.photo_url
               ? '<img src="' + escHtml(preparateur.photo_url) + '" class="ds-prep-avatar" alt="" />'
-              : '<div class="ds-prep-avatar-fallback">' + (preparateur.nom || preparateur.email || '?')[0].toUpperCase() + '</div>') +
-            '<span>Préparé par <strong>' + escHtml(preparateur.nom || preparateur.email) + '</strong></span>'
+              : '<div class="ds-prep-avatar-fallback">' + (preparateur.nom || preparateur.email || '?')[0].toUpperCase() + '</div>')
+            + '<span>Préparé par <strong>' + escHtml(preparateur.nom || preparateur.email) + '</strong></span>'
           : '<span class="ds-no-prep">Aucun préparateur désigné</span>';
 
         var div = document.createElement('div');
         div.className = 'ds-culte-card';
         div.innerHTML =
-          '<div class="ds-culte-top">' +
-            '<div class="ds-culte-theme">' + escHtml(c.theme) + '</div>' +
-            '<span class="ds-culte-countdown' + (diff <= 0 ? ' ds-countdown-passe' : '') + '">' + countdown + '</span>' +
-          '</div>' +
-          '<div class="ds-culte-date">📅 ' + dateStr + '</div>' +
-          '<div class="ds-culte-preparateur">' + prepHtml + '</div>' +
-          '<div class="ds-culte-actions">' +
-            '<button class="btn-secondary ds-btn-sm btn-edit-culte" data-id="' + c.id + '">✏️ Modifier</button>' +
-            '<button class="btn-secondary ds-btn-sm ds-btn-danger btn-del-culte" data-id="' + c.id + '">🗑️ Supprimer</button>' +
-            '<a href="preparation-culte.html?id=' + escHtml(c.id) + '" class="btn-primary ds-btn-sm">🕊️ Voir prog.</a>' +
-          '</div>';
+          '<div class="ds-culte-top">'
+            + '<div class="ds-culte-theme">' + escHtml(c.theme) + '</div>'
+            + '<span class="ds-culte-countdown' + (diff <= 0 ? ' ds-countdown-passe' : '') + '">' + countdown + '</span>'
+          + '</div>'
+          + '<div class="ds-culte-date">&#128197; ' + dateStr + '</div>'
+          + '<div class="ds-culte-preparateur">' + prepHtml + '</div>'
+          + '<div class="ds-culte-actions">'
+            + '<button class="btn-secondary ds-btn-sm btn-edit-culte" data-id="' + c.id + '">&#9999;&#65039; Modifier</button>'
+            + '<button class="btn-secondary ds-btn-sm ds-btn-danger btn-del-culte" data-id="' + c.id + '">&#128465; Supprimer</button>'
+            + '<a href="preparation-culte.html?id=' + escHtml(c.id) + '" class="btn-primary ds-btn-sm">&#128330; Voir prog.</a>'
+          + '</div>';
         container.appendChild(div);
       });
 
-      // Listeners sur les boutons des cartes
       container.querySelectorAll('.btn-edit-culte').forEach(function(btn) {
         btn.addEventListener('click', function() { editerCulte(btn.getAttribute('data-id')); });
       });
@@ -294,7 +525,6 @@
       });
     }
 
-    // FORMULAIRE
     function ouvrirFormulaire(culte) {
       document.getElementById('dsFormCulte').style.display = 'block';
       document.getElementById('dsFormCulte').scrollIntoView({ behavior:'smooth', block:'nearest' });
@@ -322,7 +552,6 @@
       if (culte) ouvrirFormulaire(culte);
     }
 
-    // SAUVEGARDER
     document.getElementById('btnSauvegarderCulte').addEventListener('click', function() {
       var theme          = document.getElementById('culteTheme').value.trim();
       var date_culte     = document.getElementById('culteDate').value;
@@ -338,13 +567,12 @@
 
       var dateStr = new Date(date_culte).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
       document.getElementById('modalDesignerMsg').textContent =
-        (membre ? (membre.nom || membre.email) : 'Ce membre') +
-        ' sera désigné comme préparateur pour le culte "' + theme + '" du ' + dateStr + '.';
+        (membre ? (membre.nom || membre.email) : 'Ce membre')
+        + ' sera désigné comme préparateur pour le culte "' + theme + '" du ' + dateStr + '.';
 
       document.getElementById('modalDesigner').style.display = 'flex';
     });
 
-    // MODAL DÉSIGNATION
     function fermerModalDesigner() {
       document.getElementById('modalDesigner').style.display = 'none';
       pendingSave = null;
@@ -379,13 +607,11 @@
       fermerModalDesigner();
 
       if (res.error) { showToast('Erreur lors de la sauvegarde.', 'error'); return; }
-
       showToast(id ? 'Culte modifié et préparateur désigné.' : 'Culte créé et préparateur désigné.', 'success');
       fermerFormulaire();
       await Promise.all([chargerMembres(), chargerCultes()]);
     });
 
-    // SUPPRIMER CULTE
     function demanderSupprimerCulte(id) {
       culteASupprimer = id;
       document.getElementById('modalSupprimerCulte').style.display = 'flex';
@@ -411,7 +637,6 @@
       await chargerCultes();
     });
 
-    // BOUTONS
     document.getElementById('btnNouveauCulte').addEventListener('click', function() { ouvrirFormulaire(null); });
     document.getElementById('btnFermerFormCulte').addEventListener('click', fermerFormulaire);
     document.getElementById('btnAnnulerFormCulte').addEventListener('click', fermerFormulaire);
