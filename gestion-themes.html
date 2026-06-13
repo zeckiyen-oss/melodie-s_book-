@@ -10,6 +10,214 @@
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+
+  <style>
+    html, body { background: #0D1B2A !important; color: #FAF6ED !important; min-height: 100vh; }
+    .page-gestion-themes { background: #0D1B2A !important; }
+
+    /* ── LOADER ── */
+    .loader-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #0D1B2A;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .loader-cross { width: 48px; height: 48px; position: relative; }
+    .loader-bar { position: absolute; background: #C9A84C; border-radius: 3px; }
+    .loader-bar-h { width: 100%; height: 6px; top: 50%; transform: translateY(-50%); }
+    .loader-bar-v { height: 100%; width: 6px; left: 50%; transform: translateX(-50%); animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── HERO ── */
+    .gt-hero {
+      position: relative; overflow: hidden;
+      background: linear-gradient(160deg, #1A2E45 0%, #0D1B2A 100%);
+      border-bottom: 1px solid rgba(201,168,76,0.2);
+      padding: 2rem 1.2rem 1.6rem;
+    }
+    .gt-hero-bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(201,168,76,0.06) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .gt-hero-content { position: relative; z-index: 1; }
+    .gt-badge-admin {
+      display: inline-block; margin-bottom: 0.6rem;
+      font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: #F0D98A; background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; padding: 0.2rem 0.8rem;
+    }
+    .gt-title { font-family: 'Cinzel', serif; font-size: 1.6rem; font-weight: 700; color: #FAF6ED; margin: 0 0 0.4rem; }
+    .gt-subtitle { font-size: 0.82rem; color: rgba(250,246,237,0.45); margin: 0; }
+    .gt-hero-ornement {
+      position: absolute; right: -20px; top: -20px;
+      width: 180px; height: 180px; border-radius: 50%;
+      border: 1px solid rgba(201,168,76,0.08); pointer-events: none;
+    }
+
+    /* ── MAIN ── */
+    .gt-main { max-width: 960px; margin: 0 auto; padding: 1.4rem 1rem 4rem; }
+
+    .gt-layout {
+      display: grid; grid-template-columns: 1fr;
+      gap: 1.2rem;
+    }
+    @media (min-width: 680px) { .gt-layout { grid-template-columns: 1fr 300px; } }
+
+    /* ── TOOLBAR ── */
+    .gt-toolbar { display: flex; gap: 0.7rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+    .gt-search-wrapper {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(26,46,69,0.8);
+      border: 1px solid rgba(201,168,76,0.2); border-radius: 8px;
+      padding: 0.4rem 0.8rem; flex: 1; min-width: 160px;
+    }
+    .gt-search-input {
+      background: transparent; border: none; outline: none;
+      color: #FAF6ED; font-family: 'Lato', sans-serif; font-size: 0.85rem; width: 100%;
+    }
+    .gt-search-input::placeholder { color: rgba(250,246,237,0.3); }
+
+    /* ── GRILLE THEMES ── */
+    .gt-count { font-size: 0.78rem; color: rgba(250,246,237,0.35); margin-bottom: 0.7rem; }
+    .gt-grid { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .gt-card {
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.15); border-radius: 12px;
+      padding: 0.9rem 1rem; transition: border-color 0.2s;
+    }
+    .gt-card:hover { border-color: rgba(201,168,76,0.35); }
+    .gt-card-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem; }
+    .gt-card-icon { color: #C9A84C; font-size: 0.85rem; }
+    .gt-card-nom { font-family: 'Cinzel', serif; font-size: 0.92rem; font-weight: 700; color: #FAF6ED; margin: 0; }
+    .gt-card-desc { font-size: 0.78rem; color: rgba(250,246,237,0.45); margin: 0 0 0.6rem; line-height: 1.4; }
+    .gt-card-desc-empty { font-style: italic; color: rgba(250,246,237,0.2); }
+    .gt-card-footer { display: flex; align-items: center; justify-content: space-between; }
+    .gt-card-nb { font-size: 0.72rem; color: rgba(250,246,237,0.35); }
+    .gt-card-actions { display: flex; gap: 0.4rem; }
+    .gt-btn-edit, .gt-btn-delete {
+      background: transparent; border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 6px; padding: 0.25rem 0.5rem;
+      font-size: 0.8rem; cursor: pointer; color: rgba(250,246,237,0.6);
+      transition: all 0.2s;
+    }
+    .gt-btn-edit:hover { border-color: #C9A84C; color: #F0D98A; }
+    .gt-btn-delete:hover { border-color: rgba(192,57,43,0.5); color: #e09696; }
+
+    .gt-skeleton {
+      height: 80px; border-radius: 12px;
+      background: linear-gradient(90deg, #1A2E45 25%, #1f3550 50%, #1A2E45 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .gt-empty { text-align: center; color: rgba(250,246,237,0.3); font-style: italic; padding: 2rem 0; font-size: 0.85rem; }
+
+    /* ── FORMULAIRE ASIDE ── */
+    .gt-form-aside { display: flex; flex-direction: column; gap: 1rem; }
+    .gt-form-card {
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.2); border-radius: 16px;
+      overflow: hidden;
+    }
+    .gt-form-idle {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 0.8rem; padding: 2.5rem 1.5rem; text-align: center;
+    }
+    .gt-form-idle-icon { font-size: 1.8rem; color: #C9A84C; opacity: 0.5; }
+    .gt-form-idle p { font-size: 0.82rem; color: rgba(250,246,237,0.35); margin: 0; }
+
+    .gt-form-body { padding: 1.2rem; }
+    .gt-form-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .gt-form-header h2 { font-family: 'Cinzel', serif; font-size: 0.95rem; color: #FAF6ED; margin: 0; }
+    .gt-form-close {
+      background: transparent; border: none;
+      color: rgba(250,246,237,0.4); font-size: 1rem; cursor: pointer;
+    }
+    .gt-form-close:hover { color: #FAF6ED; }
+
+    .form-group { margin-bottom: 0.9rem; }
+    .form-label {
+      display: block; font-family: 'Cinzel', serif; font-size: 0.72rem;
+      font-weight: 700; color: #C9A84C; letter-spacing: 0.08em;
+      text-transform: uppercase; margin-bottom: 0.4rem;
+    }
+    .required { color: #e09696; }
+    .form-input, .form-textarea {
+      width: 100%; box-sizing: border-box;
+      background: rgba(13,27,42,0.6);
+      border: 1px solid rgba(201,168,76,0.25); border-radius: 8px;
+      color: #FAF6ED; font-family: 'Lato', sans-serif; font-size: 0.88rem;
+      padding: 0.55rem 0.8rem; outline: none; transition: border-color 0.2s;
+      resize: vertical;
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color: rgba(250,246,237,0.3); }
+    .form-input:focus, .form-textarea:focus { border-color: #C9A84C; }
+
+    .gt-form-actions { display: flex; gap: 0.6rem; margin-top: 1rem; }
+
+    /* Boutons globaux */
+    .btn-primary, .btn-secondary, .btn-danger {
+      padding: 0.55rem 1rem; border-radius: 8px;
+      font-family: 'Lato', sans-serif; font-size: 0.85rem; font-weight: 700;
+      cursor: pointer; border: none; transition: all 0.2s;
+    }
+    .btn-primary { background: linear-gradient(135deg, #C9A84C, #F0D98A); color: #0D1B2A; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-secondary { background: rgba(250,246,237,0.08); color: rgba(250,246,237,0.7); border: 1px solid rgba(250,246,237,0.15) !important; }
+    .btn-secondary:hover { background: rgba(250,246,237,0.13); }
+    .btn-danger { background: rgba(192,57,43,0.8); color: #FAF6ED; }
+    .btn-danger:hover { background: rgba(192,57,43,1); }
+
+    /* ── STATS THEME ── */
+    .gt-theme-stats {
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.15); border-radius: 16px;
+      padding: 1rem 1.2rem;
+    }
+    .gt-stats-title {
+      font-family: 'Cinzel', serif; font-size: 0.78rem; font-weight: 700;
+      color: #C9A84C; letter-spacing: 0.08em; text-transform: uppercase;
+      margin: 0 0 0.8rem;
+    }
+    .gt-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+    .gt-stat-item { text-align: center; }
+    .gt-stat-num { display: block; font-family: 'Cinzel', serif; font-size: 1.3rem; font-weight: 700; color: #F0D98A; }
+    .gt-stat-label { font-size: 0.68rem; color: rgba(250,246,237,0.4); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 8000;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .modal-box {
+      background: linear-gradient(145deg, #1A2E45, #0D1B2A);
+      border: 1px solid rgba(201,168,76,0.35); border-radius: 16px;
+      padding: 1.8rem 1.4rem; max-width: 380px; width: 100%; text-align: center;
+    }
+    .modal-danger { border-color: rgba(192,57,43,0.4); }
+    .modal-danger-icon { font-size: 2rem; color: #e09696; margin-bottom: 0.8rem; }
+    .modal-box h3 { font-family: 'Cinzel', serif; font-size: 1rem; color: #FAF6ED; margin: 0 0 0.6rem; }
+    .modal-box p  { font-size: 0.83rem; color: rgba(250,246,237,0.55); margin: 0; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 0.7rem; margin-top: 1.4rem; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1A2E45; border: 1px solid rgba(201,168,76,0.35);
+      color: #FAF6ED; padding: 0.6rem 1.2rem; border-radius: 8px;
+      font-size: 0.85rem; z-index: 9999; opacity: 0; transition: all 0.3s;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast-success { border-color: #4CAF82; }
+    .toast-error   { border-color: #e07070; }
+  </style>
 </head>
 <body class="page-gestion-themes">
 
@@ -27,7 +235,7 @@
   <header class="gt-hero">
     <div class="gt-hero-bg"></div>
     <div class="gt-hero-content">
-      <div class="gt-badge-admin">⚙ Administration</div>
+      <div class="gt-badge-admin">&#9881; Administration</div>
       <h1 class="gt-title">Gestion des Thèmes</h1>
       <p class="gt-subtitle">Créez, modifiez et organisez les thèmes du répertoire</p>
     </div>
@@ -43,7 +251,7 @@
             <span class="gt-search-icon">🔍</span>
             <input type="text" id="searchTheme" class="gt-search-input" placeholder="Rechercher un thème…" />
           </div>
-          <button class="btn-primary" id="btnNouveauTheme">✦ Nouveau thème</button>
+          <button class="btn-primary" id="btnNouveauTheme">&#10022; Nouveau thème</button>
         </div>
 
         <div class="gt-count" id="gtCount">Chargement…</div>
@@ -59,7 +267,7 @@
         <div class="gt-form-card" id="gtFormCard">
 
           <div class="gt-form-idle" id="gtFormIdle">
-            <div class="gt-form-idle-icon">✦</div>
+            <div class="gt-form-idle-icon">&#10022;</div>
             <p>Sélectionnez un thème pour le modifier, ou créez-en un nouveau.</p>
             <button class="btn-primary" id="btnCreerDepuisIdle">+ Créer un thème</button>
           </div>
@@ -67,7 +275,7 @@
           <div class="gt-form-body" id="gtFormBody" style="display:none;">
             <div class="gt-form-header">
               <h2 id="gtFormTitle">Nouveau thème</h2>
-              <button class="gt-form-close" id="btnFermerForm" title="Fermer">✕</button>
+              <button class="gt-form-close" id="btnFermerForm" title="Fermer">&#10005;</button>
             </div>
 
             <input type="hidden" id="themeId" />
@@ -84,7 +292,7 @@
 
             <div class="gt-form-actions">
               <button class="btn-secondary" id="btnAnnulerForm">Annuler</button>
-              <button class="btn-primary" id="btnSauvegarder">💾 Sauvegarder</button>
+              <button class="btn-primary" id="btnSauvegarder">&#128190; Sauvegarder</button>
             </div>
           </div>
         </div>
@@ -118,7 +326,7 @@
   <!-- MODAL SUPPRESSION -->
   <div id="modalSupprimer" class="modal-overlay" style="display:none;">
     <div class="modal-box modal-danger">
-      <div class="modal-danger-icon">⚠</div>
+      <div class="modal-danger-icon">&#9888;</div>
       <h3>Supprimer ce thème ?</h3>
       <p id="modalSupprimerMsg">Cette action est irréversible.</p>
       <div class="modal-actions">
@@ -193,18 +401,20 @@
         div.className = 'gt-card';
         div.setAttribute('data-id', t.id);
         div.innerHTML =
-          '<div class="gt-card-header">' +
-            '<span class="gt-card-icon">✦</span>' +
-            '<h3 class="gt-card-nom">' + escHtml(t.nom) + '</h3>' +
-          '</div>' +
-          (t.description ? '<p class="gt-card-desc">' + escHtml(t.description) + '</p>' : '<p class="gt-card-desc gt-card-desc-empty">Aucune description</p>') +
-          '<div class="gt-card-footer">' +
-            '<span class="gt-card-nb">' + nb + ' chanson' + (nb !== 1 ? 's' : '') + '</span>' +
-            '<div class="gt-card-actions">' +
-              '<button class="gt-btn-edit btn-edit-theme" data-id="' + t.id + '" title="Modifier">✏️</button>' +
-              '<button class="gt-btn-delete btn-del-theme" data-id="' + t.id + '" title="Supprimer">🗑️</button>' +
-            '</div>' +
-          '</div>';
+          '<div class="gt-card-header">'
+            + '<span class="gt-card-icon">&#10022;</span>'
+            + '<h3 class="gt-card-nom">' + escHtml(t.nom) + '</h3>'
+          + '</div>'
+          + (t.description
+              ? '<p class="gt-card-desc">' + escHtml(t.description) + '</p>'
+              : '<p class="gt-card-desc gt-card-desc-empty">Aucune description</p>')
+          + '<div class="gt-card-footer">'
+            + '<span class="gt-card-nb">' + nb + ' chanson' + (nb !== 1 ? 's' : '') + '</span>'
+            + '<div class="gt-card-actions">'
+              + '<button class="gt-btn-edit btn-edit-theme" data-id="' + t.id + '" title="Modifier">&#9999;&#65039;</button>'
+              + '<button class="gt-btn-delete btn-del-theme" data-id="' + t.id + '" title="Supprimer">&#128465;</button>'
+            + '</div>'
+          + '</div>';
         grid.appendChild(div);
       });
 
@@ -258,9 +468,9 @@
       if (!res.data) return;
       var rubriques = res.data.map(function(r) { return r.chansons && r.chansons.rubrique; }).filter(Boolean);
       var count = function(r) { return rubriques.filter(function(x) { return x === r; }).length; };
-      document.getElementById('statTotal').textContent     = res.data.length;
-      document.getElementById('statAdoration').textContent = count('Adoration');
-      document.getElementById('statLouange').textContent   = count('Louange');
+      document.getElementById('statTotal').textContent      = res.data.length;
+      document.getElementById('statAdoration').textContent  = count('Adoration');
+      document.getElementById('statLouange').textContent    = count('Louange');
       document.getElementById('statMeditation').textContent = count('Méditation');
       document.getElementById('gtThemeStats').style.display = 'block';
     }
