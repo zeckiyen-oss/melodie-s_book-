@@ -12,21 +12,22 @@ function buildSharedNavbar(profil, pageActive) {
 
   // ── Liens selon le rôle ──────────────────────────────────
   var liens = [
-    { href: "dashboard.html",        label: "🏠 Accueil",       id: "dashboard",        roles: ["membre","preparateur","admin"] },
-    { href: "repertoire.html",       label: "🎵 Répertoire",    id: "repertoire",       roles: ["membre","preparateur","admin"] },
-    { href: "themes.html",           label: "📖 Thèmes",        id: "themes",           roles: ["membre","preparateur","admin"] },
-    { href: "historique.html",       label: "📜 Historique",    id: "historique",       roles: ["membre","preparateur","admin"] },
-    { href: "bibliotheque.html",     label: "📚 Bibliothèque",  id: "bibliotheque",     roles: ["membre","preparateur","admin"] },
-    { href: "proposer.html",         label: "💡 Proposer",      id: "proposer",         roles: ["membre","preparateur","admin"] },
-    { href: "programme.html",        label: "🕊️ Programme",     id: "programme",        roles: ["membre","preparateur","admin"] },
-    { href: "preparation-culte.html",label: "⛪ Préparation",   id: "preparation-culte",roles: ["preparateur","admin"] },
-    { href: "propositions.html",     label: "📋 Propositions",  id: "propositions",     roles: ["admin"] },
-    { href: "validation-programme.html", label: "✅ Validation",id: "validation-programme", roles: ["admin"] },
-    { href: "designateur.html",      label: "🎯 Désignateur",   id: "designateur",      roles: ["admin"] },
-    { href: "gestion-themes.html",   label: "🏷️ Gestion thèmes",id: "gestion-themes",  roles: ["admin"] },
-    { href: "evenements.html",       label: "📅 Événements",    id: "evenements",       roles: ["admin"] },
-    { href: "statistiques.html",     label: "📊 Statistiques",  id: "statistiques",     roles: ["admin"] },
-    { href: "comptes.html",          label: "👥 Comptes",        id: "comptes",          roles: ["admin"] }
+    { href: "dashboard.html",             label: "🏠 Accueil",          id: "dashboard",             roles: ["membre","preparateur","admin"] },
+    { href: "repertoire.html",            label: "🎵 Répertoire",       id: "repertoire",            roles: ["membre","preparateur","admin"] },
+    { href: "themes.html",                label: "📖 Thèmes",           id: "themes",                roles: ["membre","preparateur","admin"] },
+    { href: "historique.html",            label: "📜 Historique",       id: "historique",            roles: ["membre","preparateur","admin"] },
+    { href: "bibliotheque.html",          label: "📚 Bibliothèque",     id: "bibliotheque",          roles: ["membre","preparateur","admin"] },
+    { href: "proposer.html",              label: "💡 Proposer",         id: "proposer",              roles: ["membre","preparateur","admin"] },
+    { href: "programme.html",             label: "🕊️ Programme",        id: "programme",             roles: ["membre","preparateur","admin"] },
+    { href: "preparation-culte.html",     label: "⛪ Prépa. culte",     id: "preparation-culte",     roles: ["preparateur","admin"] },
+    { href: "preparation-evenement.html", label: "📅 Prépa. événement", id: "preparation-evenement", roles: ["preparateur","admin"] },
+    { href: "propositions.html",          label: "📋 Propositions",     id: "propositions",          roles: ["admin"] },
+    { href: "validation-programme.html",  label: "✅ Validation",       id: "validation-programme",  roles: ["admin"] },
+    { href: "designateur.html",           label: "🎯 Désignateur",      id: "designateur",           roles: ["admin"] },
+    { href: "gestion-themes.html",        label: "🏷️ Gestion thèmes",  id: "gestion-themes",        roles: ["admin"] },
+    { href: "evenements.html",            label: "📅 Événements",       id: "evenements",            roles: ["admin"] },
+    { href: "statistiques.html",          label: "📊 Statistiques",     id: "statistiques",          roles: ["admin"] },
+    { href: "comptes.html",               label: "👥 Comptes",          id: "comptes",               roles: ["admin"] }
   ];
 
   var liensFiltres = liens.filter(function(l) {
