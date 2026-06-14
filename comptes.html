@@ -10,6 +10,296 @@
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+
+  <style>
+    html, body {
+      background: #0D1B2A !important;
+      color: #FAF6ED !important;
+      min-height: 100vh;
+    }
+    .page-comptes { background: #0D1B2A !important; }
+
+    /* ── LOADER ── */
+    .loader-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #0D1B2A;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .loader-cross {
+      width: 48px; height: 48px; position: relative;
+    }
+    .loader-bar {
+      position: absolute; background: #C9A84C; border-radius: 3px;
+    }
+    .loader-bar-h { width: 100%; height: 6px; top: 50%; transform: translateY(-50%); }
+    .loader-bar-v { height: 100%; width: 6px; left: 50%; transform: translateX(-50%); animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── HERO ── */
+    .cp-hero {
+      position: relative; overflow: hidden;
+      background: linear-gradient(160deg, #1A2E45 0%, #0D1B2A 100%);
+      border-bottom: 1px solid rgba(201,168,76,0.2);
+      padding: 2rem 1.2rem 1.4rem;
+    }
+    .cp-hero-bg {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(201,168,76,0.06) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .cp-hero-content { position: relative; z-index: 1; margin-bottom: 1.2rem; }
+    .cp-badge-admin {
+      display: inline-block; margin-bottom: 0.6rem;
+      font-family: 'Cinzel', serif; font-size: 0.65rem;
+      font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+      color: #F0D98A; background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.3); border-radius: 20px;
+      padding: 0.2rem 0.8rem;
+    }
+    .cp-title {
+      font-family: 'Cinzel', serif; font-size: 1.6rem;
+      font-weight: 700; color: #FAF6ED; margin: 0 0 0.4rem;
+    }
+    .cp-subtitle { font-size: 0.82rem; color: rgba(250,246,237,0.45); margin: 0; }
+
+    .cp-hero-stats {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; gap: 0;
+    }
+    .cp-stat { text-align: center; padding: 0 1.2rem; }
+    .cp-stat:first-child { padding-left: 0; }
+    .cp-stat-num {
+      display: block; font-family: 'Cinzel', serif;
+      font-size: 1.5rem; font-weight: 700; color: #FAF6ED; line-height: 1;
+    }
+    .cp-num-attente { color: #F0D98A; }
+    .cp-num-actif   { color: #4CAF82; }
+    .cp-stat-label  { font-size: 0.72rem; color: rgba(250,246,237,0.4); }
+    .cp-stat-sep {
+      width: 1px; height: 36px;
+      background: rgba(201,168,76,0.2);
+    }
+    .cp-hero-ornement {
+      position: absolute; right: -20px; top: -20px;
+      width: 180px; height: 180px; border-radius: 50%;
+      border: 1px solid rgba(201,168,76,0.08); pointer-events: none;
+    }
+
+    /* ── MAIN ── */
+    .cp-main { max-width: 960px; margin: 0 auto; padding: 1.4rem 1rem 4rem; }
+
+    /* ── TOOLBAR ── */
+    .cp-toolbar {
+      display: flex; flex-wrap: wrap; gap: 0.8rem;
+      align-items: center; margin-bottom: 1.2rem;
+    }
+    .cp-filter-tabs { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .cp-tab {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.4rem 0.9rem;
+      border: 1px solid rgba(201,168,76,0.2); border-radius: 20px;
+      background: transparent; color: rgba(250,246,237,0.5);
+      font-family: 'Lato', sans-serif; font-size: 0.78rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .cp-tab:hover { color: #F0D98A; }
+    .cp-tab.active {
+      background: rgba(201,168,76,0.15); border-color: #C9A84C; color: #F0D98A;
+    }
+    .cp-tab-badge {
+      background: #C9A84C; color: #0D1B2A;
+      font-size: 0.68rem; font-weight: 700;
+      padding: 1px 6px; border-radius: 10px;
+    }
+    .cp-search-wrapper {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(26,46,69,0.8);
+      border: 1px solid rgba(201,168,76,0.2); border-radius: 8px;
+      padding: 0.4rem 0.8rem; flex: 1; min-width: 180px;
+    }
+    .cp-search-input {
+      background: transparent; border: none; outline: none;
+      color: #FAF6ED; font-family: 'Lato', sans-serif; font-size: 0.85rem; width: 100%;
+    }
+    .cp-search-input::placeholder { color: rgba(250,246,237,0.3); }
+
+    /* ── LAYOUT ── */
+    .cp-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 680px) {
+      .cp-layout { grid-template-columns: 1fr 320px; }
+    }
+
+    /* ── LISTE ── */
+    .cp-list-section { display: flex; flex-direction: column; gap: 0.6rem; }
+    .cp-count { font-size: 0.78rem; color: rgba(250,246,237,0.35); margin-bottom: 0.2rem; }
+    .cp-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .cp-item {
+      display: flex; align-items: center; gap: 0.8rem;
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.15); border-radius: 12px;
+      padding: 0.75rem 1rem; cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .cp-item:hover { border-color: rgba(201,168,76,0.35); }
+    .cp-item-active { border-color: #C9A84C !important; box-shadow: 0 0 0 2px rgba(201,168,76,0.2); }
+    .cp-item-pending { border-left: 3px solid rgba(240,217,138,0.5); }
+
+    .cp-item-avatar-wrap { position: relative; flex-shrink: 0; }
+    .cp-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      object-fit: cover; border: 1px solid rgba(201,168,76,0.3);
+    }
+    .cp-avatar-fallback {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, #C9A84C, #F0D98A);
+      color: #0D1B2A; font-family: 'Cinzel', serif;
+      font-size: 1rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cp-pending-dot {
+      position: absolute; bottom: 0; right: 0;
+      width: 12px; height: 12px; border-radius: 50%;
+      background: #F0D98A; border: 2px solid #0D1B2A;
+    }
+
+    .cp-item-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+    .cp-item-nom { font-size: 0.88rem; font-weight: 700; color: #FAF6ED; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cp-moi { font-size: 0.7rem; color: #C9A84C; font-weight: 400; }
+    .cp-item-email { font-size: 0.72rem; color: rgba(250,246,237,0.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cp-item-date  { font-size: 0.7rem;  color: rgba(250,246,237,0.28); }
+
+    .cp-item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.3rem; flex-shrink: 0; }
+
+    .cp-role-badge {
+      font-size: 0.65rem; font-weight: 700; padding: 2px 8px;
+      border-radius: 20px; letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .cp-role-admin       { background: rgba(201,168,76,0.15); color: #F0D98A; border: 1px solid rgba(201,168,76,0.35); }
+    .cp-role-preparateur { background: rgba(156,126,204,0.15); color: #C5B3E8; border: 1px solid rgba(156,126,204,0.35); }
+    .cp-role-membre      { background: rgba(91,163,201,0.12); color: #7ECFF0; border: 1px solid rgba(91,163,201,0.3); }
+
+    .cp-statut-badge { font-size: 0.62rem; font-weight: 700; padding: 1px 7px; border-radius: 10px; }
+    .cp-statut-pending { background: rgba(240,217,138,0.12); color: #F0D98A; border: 1px solid rgba(240,217,138,0.3); }
+
+    .cp-skeleton {
+      height: 64px; border-radius: 12px;
+      background: linear-gradient(90deg, #1A2E45 25%, #1f3550 50%, #1A2E45 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .cp-empty { text-align: center; color: rgba(250,246,237,0.3); font-style: italic; padding: 2rem 0; font-size: 0.85rem; }
+
+    /* ── DÉTAIL ── */
+    .cp-detail-aside { display: flex; flex-direction: column; gap: 0.8rem; }
+    .cp-detail-card {
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.2); border-radius: 16px;
+      overflow: hidden; min-height: 200px;
+    }
+    .cp-detail-idle {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 0.8rem; padding: 3rem 1.5rem; text-align: center;
+    }
+    .cp-detail-idle-icon { font-size: 2rem; opacity: 0.3; }
+    .cp-detail-idle p { font-size: 0.82rem; color: rgba(250,246,237,0.35); margin: 0; }
+    .cp-detail-body { padding: 1.2rem; display: flex; flex-direction: column; gap: 1rem; }
+
+    /* Profil dans le détail */
+    .cp-detail-profil { display: flex; align-items: center; gap: 0.9rem; }
+    .cp-detail-avatar { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(201,168,76,0.4); }
+    .cp-detail-avatar-fallback {
+      width: 54px; height: 54px; border-radius: 50%;
+      background: linear-gradient(135deg, #C9A84C, #F0D98A);
+      color: #0D1B2A; font-family: 'Cinzel', serif; font-size: 1.3rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .cp-detail-nom   { font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 700; color: #FAF6ED; margin: 0 0 0.2rem; }
+    .cp-detail-email { font-size: 0.75rem; color: rgba(250,246,237,0.45); }
+
+    /* Meta */
+    .cp-detail-meta { display: flex; flex-direction: column; gap: 0.5rem; }
+    .cp-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+    .cp-meta-label { font-size: 0.72rem; color: rgba(250,246,237,0.4); }
+    .cp-meta-val   { font-size: 0.82rem; color: #FAF6ED; }
+    .cp-val-actif  { color: #4CAF82; font-weight: 700; }
+    .cp-val-pending{ color: #F0D98A; font-weight: 700; }
+
+    /* Actions */
+    .cp-actions-section { display: flex; flex-direction: column; gap: 0.6rem; }
+    .cp-actions-title {
+      font-family: 'Cinzel', serif; font-size: 0.7rem; font-weight: 700;
+      color: #C9A84C; letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .cp-actions-grid { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .cp-roles-grid  { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .cp-action-btn {
+      flex: 1; padding: 0.55rem 0.8rem;
+      border-radius: 8px; font-family: 'Lato', sans-serif;
+      font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      border: none; transition: all 0.2s;
+    }
+    .cp-action-valider   { background: rgba(76,175,130,0.15); color: #7ecfaf; border: 1px solid rgba(76,175,130,0.3) !important; }
+    .cp-action-valider:hover { background: rgba(76,175,130,0.25); }
+    .cp-action-rejeter, .cp-action-desactiver { background: rgba(192,57,43,0.12); color: #e09696; border: 1px solid rgba(192,57,43,0.3) !important; }
+    .cp-action-rejeter:hover, .cp-action-desactiver:hover { background: rgba(192,57,43,0.22); }
+
+    .cp-role-option {
+      padding: 0.35rem 0.8rem;
+      border: 1px solid rgba(201,168,76,0.2); border-radius: 20px;
+      background: transparent; color: rgba(250,246,237,0.5);
+      font-size: 0.78rem; cursor: pointer; transition: all 0.2s;
+    }
+    .cp-role-option:hover { color: #FAF6ED; }
+    .cp-role-option-active { background: rgba(201,168,76,0.15); border-color: #C9A84C; color: #F0D98A; }
+
+    .cp-info-moi { font-size: 0.8rem; color: rgba(250,246,237,0.35); font-style: italic; text-align: center; padding: 0.5rem; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 8000;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .modal-box {
+      background: linear-gradient(145deg, #1A2E45, #0D1B2A);
+      border: 1px solid rgba(201,168,76,0.35); border-radius: 16px;
+      padding: 1.8rem 1.4rem; max-width: 380px; width: 100%; text-align: center;
+    }
+    .modal-action-icon { font-size: 2rem; margin-bottom: 0.8rem; }
+    .modal-box h3 { font-family: 'Cinzel', serif; font-size: 1rem; color: #FAF6ED; margin: 0 0 0.6rem; }
+    .modal-box p  { font-size: 0.83rem; color: rgba(250,246,237,0.55); margin: 0 0 1rem; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 0.7rem; margin-top: 1.2rem; }
+    .btn-primary, .btn-secondary, .btn-danger {
+      flex: 1; padding: 0.6rem 0.8rem; border-radius: 8px;
+      font-family: 'Lato', sans-serif; font-size: 0.85rem; font-weight: 700;
+      cursor: pointer; border: none; transition: all 0.2s;
+    }
+    .btn-primary   { background: linear-gradient(135deg, #C9A84C, #F0D98A); color: #0D1B2A; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-secondary { background: rgba(250,246,237,0.08); color: rgba(250,246,237,0.7); border: 1px solid rgba(250,246,237,0.15) !important; }
+    .btn-secondary:hover { background: rgba(250,246,237,0.13); }
+    .btn-danger    { background: rgba(192,57,43,0.8); color: #FAF6ED; }
+    .btn-danger:hover { background: rgba(192,57,43,1); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1A2E45; border: 1px solid rgba(201,168,76,0.35);
+      color: #FAF6ED; padding: 0.6rem 1.2rem; border-radius: 8px;
+      font-size: 0.85rem; z-index: 9999; opacity: 0;
+      transition: all 0.3s; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast-success { border-color: #4CAF82; }
+    .toast-error   { border-color: #e07070; }
+  </style>
 </head>
 <body class="page-comptes">
 
@@ -30,7 +320,7 @@
   <header class="cp-hero">
     <div class="cp-hero-bg"></div>
     <div class="cp-hero-content">
-      <div class="cp-badge-admin">⚙ Administration</div>
+      <div class="cp-badge-admin">&#9881; Administration</div>
       <h1 class="cp-title">Gestion des Comptes</h1>
       <p class="cp-subtitle">Validez les inscriptions, gérez les rôles et les accès des membres</p>
     </div>
@@ -59,10 +349,10 @@
     <div class="cp-toolbar">
       <div class="cp-filter-tabs" id="cpFilterTabs">
         <button class="cp-tab active" data-filtre="attente">
-          ⏳ En attente
+          &#9203; En attente
           <span class="cp-tab-badge" id="cpBadgeAttente">0</span>
         </button>
-        <button class="cp-tab" data-filtre="actifs">✅ Actifs</button>
+        <button class="cp-tab" data-filtre="actifs">&#10003; Actifs</button>
         <button class="cp-tab" data-filtre="tous">Tous</button>
       </div>
       <div class="cp-search-wrapper">
@@ -85,7 +375,7 @@
       <aside class="cp-detail-aside">
         <div class="cp-detail-card">
           <div class="cp-detail-idle" id="cpDetailIdle">
-            <div class="cp-detail-idle-icon">👥</div>
+            <div class="cp-detail-idle-icon">&#128101;</div>
             <p>Sélectionnez un membre pour gérer son compte.</p>
           </div>
           <div class="cp-detail-body" id="cpDetailBody" style="display:none;"></div>
@@ -98,7 +388,7 @@
   <!-- MODAL ACTION -->
   <div id="modalAction" class="modal-overlay" style="display:none;">
     <div class="modal-box" id="modalActionBox">
-      <div class="modal-action-icon" id="modalActionIcon">👤</div>
+      <div class="modal-action-icon" id="modalActionIcon">&#128100;</div>
       <h3 id="modalActionTitle">Confirmer</h3>
       <p id="modalActionMsg">Confirmez-vous cette action ?</p>
 
@@ -147,7 +437,6 @@
       setTimeout(function() { document.getElementById('loader').style.display = 'none'; }, 400);
     }
 
-    // INIT
     async function init() {
       var sessionData = await sb.auth.getSession();
       var session = sessionData.data.session;
@@ -164,7 +453,6 @@
       hideLoader();
     }
 
-    // CHARGEMENT
     async function chargerMembres() {
       var res = await sb.from('profils').select('*').order('created_at', { ascending: false });
       if (res.error) { showToast('Erreur de chargement.', 'error'); return; }
@@ -184,7 +472,6 @@
       badge.style.display = enAttente > 0 ? 'inline' : 'none';
     }
 
-    // FILTRES
     document.getElementById('cpFilterTabs').addEventListener('click', function(e) {
       var tab = e.target.closest('.cp-tab');
       if (!tab) return;
@@ -211,7 +498,6 @@
       renderListe(liste);
     }
 
-    // RENDER LISTE
     function renderListe(liste) {
       var container = document.getElementById('cpList');
       var count = document.getElementById('cpCount');
@@ -239,26 +525,25 @@
           : '<div class="cp-avatar-fallback">' + initiale + '</div>';
 
         div.innerHTML =
-          '<div class="cp-item-avatar-wrap">' +
-            avatarHtml +
-            (m.actif ? '' : '<span class="cp-pending-dot" title="En attente de validation"></span>') +
-          '</div>' +
-          '<div class="cp-item-info">' +
-            '<span class="cp-item-nom">' + escHtml(m.nom || m.email) + (estMoi ? ' <span class="cp-moi">(moi)</span>' : '') + '</span>' +
-            '<span class="cp-item-email">' + escHtml(m.email) + '</span>' +
-            '<span class="cp-item-date">Inscrit le ' + dateInscrit + '</span>' +
-          '</div>' +
-          '<div class="cp-item-right">' +
-            '<span class="cp-role-badge cp-role-' + escHtml(m.role) + '">' + escHtml(roleLabel) + '</span>' +
-            (!m.actif ? '<span class="cp-statut-badge cp-statut-pending">En attente</span>' : '') +
-          '</div>';
+          '<div class="cp-item-avatar-wrap">'
+            + avatarHtml
+            + (m.actif ? '' : '<span class="cp-pending-dot" title="En attente de validation"></span>')
+          + '</div>'
+          + '<div class="cp-item-info">'
+            + '<span class="cp-item-nom">' + escHtml(m.nom || m.email) + (estMoi ? ' <span class="cp-moi">(moi)</span>' : '') + '</span>'
+            + '<span class="cp-item-email">' + escHtml(m.email) + '</span>'
+            + '<span class="cp-item-date">Inscrit le ' + dateInscrit + '</span>'
+          + '</div>'
+          + '<div class="cp-item-right">'
+            + '<span class="cp-role-badge cp-role-' + escHtml(m.role) + '">' + escHtml(roleLabel) + '</span>'
+            + (!m.actif ? '<span class="cp-statut-badge cp-statut-pending">En attente</span>' : '')
+          + '</div>';
 
         div.addEventListener('click', function() { selectionnerMembre(m.id); });
         container.appendChild(div);
       });
     }
 
-    // SÉLECTION
     function selectionnerMembre(id) {
       membreSelectionne = membres.find(function(m) { return m.id === id; });
       document.querySelectorAll('.cp-item').forEach(function(el) {
@@ -283,32 +568,30 @@
       var roleLabel = { admin:'Admin', preparateur:'Préparateur', membre:'Membre' }[m.role] || m.role;
 
       var actionsHtml = '';
-
       if (!m.actif) {
         actionsHtml =
-          '<div class="cp-actions-section">' +
-            '<div class="cp-actions-title">Actions</div>' +
-            '<div class="cp-actions-grid">' +
-              '<button class="cp-action-btn cp-action-valider" id="btnValider">✅ Valider le compte</button>' +
-              '<button class="cp-action-btn cp-action-rejeter" id="btnRejeter">🗑️ Rejeter</button>' +
-            '</div>' +
-          '</div>';
+          '<div class="cp-actions-section">'
+            + '<div class="cp-actions-title">Actions</div>'
+            + '<div class="cp-actions-grid">'
+              + '<button class="cp-action-btn cp-action-valider" id="btnValider">&#10003; Valider le compte</button>'
+              + '<button class="cp-action-btn cp-action-rejeter" id="btnRejeter">&#128465; Rejeter</button>'
+            + '</div>'
+          + '</div>';
       } else if (!estMoi) {
         var roles = ['membre','preparateur','admin'];
         var roleLabels = { admin:'Admin', preparateur:'Préparateur', membre:'Membre' };
         var roleButtons = roles.map(function(r) {
           return '<button class="cp-role-option' + (m.role === r ? ' cp-role-option-active' : '') + '" data-role="' + r + '">' + roleLabels[r] + '</button>';
         }).join('');
-
         actionsHtml =
-          '<div class="cp-actions-section">' +
-            '<div class="cp-actions-title">Changer le rôle</div>' +
-            '<div class="cp-roles-grid" id="cpRolesGrid">' + roleButtons + '</div>' +
-          '</div>' +
-          '<div class="cp-actions-section">' +
-            '<div class="cp-actions-title">Gestion du compte</div>' +
-            '<button class="cp-action-btn cp-action-desactiver" id="btnDesactiver">🔒 Désactiver le compte</button>' +
-          '</div>';
+          '<div class="cp-actions-section">'
+            + '<div class="cp-actions-title">Changer le rôle</div>'
+            + '<div class="cp-roles-grid" id="cpRolesGrid">' + roleButtons + '</div>'
+          + '</div>'
+          + '<div class="cp-actions-section">'
+            + '<div class="cp-actions-title">Gestion du compte</div>'
+            + '<button class="cp-action-btn cp-action-desactiver" id="btnDesactiver">&#128274; Désactiver le compte</button>'
+          + '</div>';
       } else {
         actionsHtml = '<div class="cp-info-moi">C\'est votre propre compte. Vous ne pouvez pas le modifier.</div>';
       }
@@ -318,25 +601,24 @@
         : '<div class="cp-detail-avatar-fallback">' + initiale + '</div>';
 
       body.innerHTML =
-        '<div class="cp-detail-profil">' +
-          avatarHtml +
-          '<div class="cp-detail-info">' +
-            '<h2 class="cp-detail-nom">' + escHtml(m.nom || 'Sans nom') + '</h2>' +
-            '<span class="cp-detail-email">' + escHtml(m.email) + '</span>' +
-          '</div>' +
-        '</div>' +
-        '<div class="cp-detail-meta">' +
-          '<div class="cp-meta-row"><span class="cp-meta-label">Statut</span>' +
-            '<span class="cp-meta-val ' + (m.actif ? 'cp-val-actif' : 'cp-val-pending') + '">' +
-              (m.actif ? 'Actif' : 'En attente de validation') + '</span></div>' +
-          '<div class="cp-meta-row"><span class="cp-meta-label">Rôle</span>' +
-            '<span class="cp-role-badge cp-role-' + escHtml(m.role) + '">' + escHtml(roleLabel) + '</span></div>' +
-          '<div class="cp-meta-row"><span class="cp-meta-label">Inscription</span>' +
-            '<span class="cp-meta-val">' + dateInscrit + '</span></div>' +
-        '</div>' +
-        actionsHtml;
+        '<div class="cp-detail-profil">'
+          + avatarHtml
+          + '<div class="cp-detail-info">'
+            + '<h2 class="cp-detail-nom">' + escHtml(m.nom || 'Sans nom') + '</h2>'
+            + '<span class="cp-detail-email">' + escHtml(m.email) + '</span>'
+          + '</div>'
+        + '</div>'
+        + '<div class="cp-detail-meta">'
+          + '<div class="cp-meta-row"><span class="cp-meta-label">Statut</span>'
+            + '<span class="cp-meta-val ' + (m.actif ? 'cp-val-actif' : 'cp-val-pending') + '">'
+              + (m.actif ? 'Actif' : 'En attente de validation') + '</span></div>'
+          + '<div class="cp-meta-row"><span class="cp-meta-label">Rôle</span>'
+            + '<span class="cp-role-badge cp-role-' + escHtml(m.role) + '">' + escHtml(roleLabel) + '</span></div>'
+          + '<div class="cp-meta-row"><span class="cp-meta-label">Inscription</span>'
+            + '<span class="cp-meta-val">' + dateInscrit + '</span></div>'
+        + '</div>'
+        + actionsHtml;
 
-      // Attacher les listeners après injection HTML
       var btnValider = document.getElementById('btnValider');
       if (btnValider) btnValider.addEventListener('click', function() { demanderAction('valider'); });
 
@@ -355,10 +637,9 @@
       }
     }
 
-    // MODAL ACTION
     var actionConfigs = {
       valider: {
-        icon: '✅', titre: 'Valider ce compte ?',
+        icon: '&#10003;', titre: 'Valider ce compte ?',
         msg: function(m) { return (m.nom || m.email) + ' pourra accéder à Mélodie\'s Book. Choisissez son rôle ci-dessous.'; },
         btnClass: 'btn-primary', btnLabel: 'Valider',
         exec: async function(m) {
@@ -367,19 +648,19 @@
         }
       },
       rejeter: {
-        icon: '🗑️', titre: 'Rejeter ce compte ?',
+        icon: '&#128465;', titre: 'Rejeter ce compte ?',
         msg: function() { return 'Le profil sera supprimé. Cette action est irréversible.'; },
         btnClass: 'btn-danger', btnLabel: 'Rejeter',
         exec: async function(m) { return sb.from('profils').delete().eq('id', m.id); }
       },
       desactiver: {
-        icon: '🔒', titre: 'Désactiver ce compte ?',
+        icon: '&#128274;', titre: 'Désactiver ce compte ?',
         msg: function(m) { return (m.nom || m.email) + ' ne pourra plus accéder à l\'application.'; },
         btnClass: 'btn-danger', btnLabel: 'Désactiver',
         exec: async function(m) { return sb.from('profils').update({ actif: false }).eq('id', m.id); }
       },
       role: {
-        icon: '🔄', titre: 'Changer le rôle ?',
+        icon: '&#128260;', titre: 'Changer le rôle ?',
         msg: function(m, data) {
           var labels = { admin:'Admin', preparateur:'Préparateur', membre:'Membre' };
           return (m.nom || m.email) + ' aura désormais le rôle ' + (labels[data] || data) + '.';
@@ -395,7 +676,7 @@
       if (!config) return;
       actionEnCours = { type: type, membre: membreSelectionne, data: data || null };
 
-      document.getElementById('modalActionIcon').textContent  = config.icon;
+      document.getElementById('modalActionIcon').innerHTML  = config.icon;
       document.getElementById('modalActionTitle').textContent = config.titre;
       document.getElementById('modalActionMsg').textContent   = config.msg(membreSelectionne, data);
 
@@ -416,7 +697,6 @@
     }
 
     document.getElementById('btnAnnulerModalAction').addEventListener('click', fermerModalAction);
-
     document.getElementById('modalAction').addEventListener('click', function(e) {
       if (e.target === document.getElementById('modalAction')) fermerModalAction();
     });
