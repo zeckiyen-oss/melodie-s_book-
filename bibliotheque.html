@@ -12,7 +12,279 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
   <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/bibliotheque.css" />
+
+  <style>
+    html, body {
+      background: #0D1B2A !important;
+      color: #FAF6ED !important;
+      min-height: 100vh;
+    }
+    .page-bibliotheque { background: #0D1B2A !important; }
+
+    /* ── LOADER ── */
+    .page-loader {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #0D1B2A;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 1rem;
+    }
+    .loader-cross {
+      font-size: 2.5rem; color: #C9A84C;
+      animation: spin 1.5s linear infinite;
+    }
+    .loader-text { font-family: 'Lato', sans-serif; font-size: 0.85rem; color: rgba(250,246,237,0.5); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── MAIN ── */
+    .biblio-main {
+      max-width: 860px; margin: 0 auto;
+      padding: 1.5rem 1rem 5rem;
+    }
+
+    /* ── HEADER ── */
+    .biblio-header {
+      display: flex; align-items: center;
+      gap: 1rem; margin-bottom: 1.4rem;
+    }
+    .biblio-header-left { display: flex; align-items: center; gap: 0.9rem; }
+    .biblio-header-icon {
+      width: 46px; height: 46px;
+      background: linear-gradient(135deg, #C9A84C, #F0D98A);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+    }
+    .biblio-titre {
+      font-family: 'Cinzel', serif; font-size: 1.3rem;
+      font-weight: 700; color: #FAF6ED; margin: 0 0 0.15rem;
+    }
+    .biblio-sous-titre {
+      font-size: 0.78rem; color: rgba(250,246,237,0.45); margin: 0;
+    }
+
+    /* ── STATS ── */
+    .biblio-stats {
+      display: flex; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 1.2rem;
+    }
+    .stat-pill {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 20px; padding: 0.35rem 0.9rem;
+    }
+    .stat-num {
+      font-family: 'Cinzel', serif; font-size: 1rem;
+      font-weight: 700; color: #F0D98A;
+    }
+    .stat-label {
+      font-size: 0.75rem; color: rgba(250,246,237,0.55);
+    }
+
+    /* ── FILTRES ── */
+    .biblio-filtres {
+      display: flex; flex-wrap: wrap; gap: 0.7rem;
+      align-items: center; margin-bottom: 1rem;
+    }
+    .filtre-recherche {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(26,46,69,0.8);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 8px; padding: 0.45rem 0.8rem;
+      flex: 1; min-width: 180px;
+    }
+    .filtre-recherche input {
+      background: transparent; border: none; outline: none;
+      color: #FAF6ED; font-family: 'Lato', sans-serif;
+      font-size: 0.85rem; width: 100%;
+    }
+    .filtre-recherche input::placeholder { color: rgba(250,246,237,0.3); }
+
+    /* Tabs : uniquement Tout et Audios */
+    .filtre-tabs { display: flex; gap: 0.4rem; }
+    .ftab {
+      padding: 0.4rem 0.9rem;
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 20px;
+      background: transparent;
+      color: rgba(250,246,237,0.5);
+      font-family: 'Lato', sans-serif; font-size: 0.78rem;
+      font-weight: 600; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ftab:hover { color: #F0D98A; }
+    .ftab-actif {
+      background: rgba(201,168,76,0.15);
+      border-color: #C9A84C; color: #F0D98A;
+    }
+
+    .filtre-select {
+      background: rgba(26,46,69,0.8);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 8px; padding: 0.45rem 0.8rem;
+      color: #FAF6ED; font-family: 'Lato', sans-serif;
+      font-size: 0.82rem; cursor: pointer; outline: none;
+    }
+    .filtre-select option { background: #1A2E45; }
+
+    /* ── COMPTEUR ── */
+    .biblio-compteur {
+      font-size: 0.78rem; color: rgba(250,246,237,0.35);
+      margin-bottom: 0.8rem;
+    }
+
+    /* ── SECTIONS RUBRIQUES ── */
+    .rubrique-section { margin-bottom: 1.4rem; }
+    .rubrique-section-header {
+      display: flex; align-items: center; gap: 0.6rem;
+      margin-bottom: 0.5rem;
+    }
+    .rubrique-section-nom {
+      font-family: 'Cinzel', serif; font-size: 0.78rem;
+      font-weight: 700; color: #C9A84C;
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .rubrique-section-nb {
+      font-size: 0.7rem; color: rgba(250,246,237,0.35);
+      background: rgba(201,168,76,0.1);
+      padding: 1px 7px; border-radius: 10px;
+    }
+
+    /* ── LISTE CHANSONS ── */
+    .biblio-liste { display: flex; flex-direction: column; gap: 0.45rem; }
+
+    .biblio-item {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 0.8rem;
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 10px; padding: 0.65rem 0.9rem;
+      transition: border-color 0.2s;
+    }
+    .biblio-item:hover { border-color: rgba(201,168,76,0.35); }
+
+    .biblio-item-left {
+      display: flex; align-items: center; gap: 0.7rem;
+      flex: 1; min-width: 0;
+    }
+    .item-num {
+      font-family: 'Cinzel', serif; font-size: 0.72rem;
+      color: rgba(201,168,76,0.6); flex-shrink: 0;
+    }
+    .item-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+    .item-titre {
+      font-size: 0.9rem; font-weight: 700; color: #FAF6ED;
+      text-decoration: none; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .item-titre:hover { color: #F0D98A; }
+    .item-langue { font-size: 0.72rem; color: rgba(250,246,237,0.4); }
+
+    .biblio-item-right {
+      display: flex; align-items: center; gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .btn-media {
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px; font-size: 0.75rem;
+      font-family: 'Lato', sans-serif; font-weight: 600;
+      cursor: pointer; border: none; white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+    .btn-play {
+      background: rgba(201,168,76,0.15);
+      color: #F0D98A;
+      border: 1px solid rgba(201,168,76,0.3) !important;
+    }
+    .btn-play:hover { background: rgba(201,168,76,0.25); }
+    .btn-partition {
+      background: rgba(26,46,69,0.9);
+      color: rgba(250,246,237,0.7);
+      border: 1px solid rgba(201,168,76,0.15) !important;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-partition:hover { color: #FAF6ED; }
+    .media-absent { font-size: 0.75rem; color: rgba(250,246,237,0.2); }
+
+    .item-dots {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .dots-complet  { background: #4CAF82; }
+    .dots-partiel  { background: #C9A84C; }
+    .dots-vide     { background: rgba(250,246,237,0.12); }
+
+    /* ── ÉTAT VIDE ── */
+    .biblio-vide {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 0.8rem; padding: 3rem 1rem; text-align: center;
+    }
+    .vide-icon { font-size: 2.5rem; opacity: 0.4; }
+    .vide-titre {
+      font-family: 'Cinzel', serif; font-size: 1rem;
+      color: rgba(250,246,237,0.5);
+    }
+    .vide-desc { font-size: 0.82rem; color: rgba(250,246,237,0.3); }
+    .btn-ajouter-vide {
+      display: inline-block; margin-top: 0.5rem;
+      padding: 0.5rem 1.2rem;
+      background: linear-gradient(135deg, #C9A84C, #F0D98A);
+      color: #0D1B2A; font-family: 'Cinzel', serif;
+      font-size: 0.8rem; font-weight: 700; border-radius: 8px;
+      text-decoration: none;
+    }
+
+    /* ── LECTEUR FLOTTANT ── */
+    .lecteur-flottant {
+      position: fixed; bottom: 1rem; left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 2rem); max-width: 560px;
+      z-index: 500;
+    }
+    .lecteur-inner {
+      background: linear-gradient(135deg, #1A2E45, #0D1B2A);
+      border: 1px solid rgba(201,168,76,0.4);
+      border-radius: 14px; padding: 0.8rem 1rem;
+      display: flex; flex-direction: column; gap: 0.5rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .lecteur-info { display: flex; flex-direction: column; gap: 0.1rem; }
+    .lecteur-titre {
+      font-family: 'Cinzel', serif; font-size: 0.85rem;
+      font-weight: 700; color: #FAF6ED;
+    }
+    .lecteur-rubrique { font-size: 0.72rem; color: #C9A84C; }
+    .lecteur-inner audio { width: 100%; height: 34px; }
+    .lecteur-fermer {
+      position: absolute; top: 0.6rem; right: 0.8rem;
+      background: transparent; border: none;
+      color: rgba(250,246,237,0.4); font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    /* ── VERSET ── */
+    .verset-bloc {
+      margin-top: 2rem; text-align: center;
+      padding: 1rem; border-top: 1px solid rgba(201,168,76,0.1);
+    }
+    .verset-texte {
+      font-family: 'Playfair Display', serif; font-style: italic;
+      font-size: 0.85rem; color: rgba(250,246,237,0.4); margin: 0 0 0.3rem;
+    }
+    .verset-ref { font-size: 0.72rem; color: rgba(201,168,76,0.5); margin: 0; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1A2E45; border: 1px solid rgba(201,168,76,0.35);
+      color: #FAF6ED; padding: 0.6rem 1.2rem; border-radius: 8px;
+      font-size: 0.85rem; z-index: 9999; opacity: 0;
+      transition: all 0.3s; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast-success { border-color: #4CAF82; }
+    .toast-error   { border-color: #e07070; }
+  </style>
 </head>
 <body class="page-bibliotheque">
 
@@ -32,7 +304,7 @@
         <div class="biblio-header-icon">📚</div>
         <div>
           <h1 class="biblio-titre">Bibliothèque</h1>
-          <p class="biblio-sous-titre">Partitions et enregistrements audio de la chorale</p>
+          <p class="biblio-sous-titre">Enregistrements audio de la chorale</p>
         </div>
       </div>
     </div>
@@ -41,10 +313,6 @@
       <div class="stat-pill" id="statTotal">
         <span class="stat-num">—</span>
         <span class="stat-label">chansons</span>
-      </div>
-      <div class="stat-pill" id="statPartitions">
-        <span class="stat-num">—</span>
-        <span class="stat-label">partitions</span>
       </div>
       <div class="stat-pill" id="statAudios">
         <span class="stat-num">—</span>
@@ -58,11 +326,10 @@
         <input type="text" id="searchInput" placeholder="Rechercher par titre…" />
       </div>
 
+      <!-- Seulement Tout et Audios — Partitions et Complet supprimés -->
       <div class="filtre-tabs" id="filtreTabs">
         <button class="ftab ftab-actif" data-filtre="tous">Tout</button>
-        <button class="ftab" data-filtre="partition">📄 Partitions</button>
         <button class="ftab" data-filtre="audio">🎵 Audios</button>
-        <button class="ftab" data-filtre="complet">✦ Complets</button>
       </div>
 
       <select id="filtreRubrique" class="filtre-select">
@@ -73,6 +340,7 @@
         <option value="Offrande">Offrande</option>
         <option value="Méditation">Méditation</option>
         <option value="Envoi">Envoi</option>
+        <option value="Chant de réflexion">Chant de réflexion</option>
       </select>
     </div>
 
@@ -83,7 +351,7 @@
     <div class="biblio-vide" id="biblioVide" style="display:none">
       <div class="vide-icon">📭</div>
       <p class="vide-titre">Aucune ressource trouvée</p>
-      <p class="vide-desc">Modifiez vos filtres ou ajoutez des partitions/audios aux chansons.</p>
+      <p class="vide-desc">Modifiez vos filtres ou ajoutez des audios aux chansons.</p>
       <a href="ajouter-chanson.html" class="btn-ajouter-vide" id="btnAjouterVide" style="display:none">
         + Ajouter une chanson
       </a>
@@ -119,7 +387,7 @@
   var toutesChansons = [];
   var filtreMedia = 'tous';
   var isAdmin = false;
-  var ORDRE_RUBRIQUES = ['Prélude','Adoration','Louange','Méditation','Offrande','Envoi'];
+  var ORDRE_RUBRIQUES = ['Prélude','Adoration','Louange','Méditation','Offrande','Envoi','Chant de réflexion'];
 
   function escHtml(str) {
     if (!str) return '';
@@ -133,7 +401,6 @@
     setTimeout(function() { t.classList.remove('show'); }, 3000);
   }
 
-  // INIT
   async function initPage() {
     var sessionData = await sb.auth.getSession();
     var session = sessionData.data.session;
@@ -156,11 +423,10 @@
     document.getElementById('mainContent').style.display = 'block';
   }
 
-  // CHARGER CHANSONS
   async function chargerChansons() {
     var res = await sb
       .from('chansons')
-      .select('id, numero, titre, rubrique, langue, style, audio_url, partition_url')
+      .select('id, numero, titre, rubrique, langue, style, audio_url')
       .order('rubrique')
       .order('titre');
 
@@ -168,17 +434,14 @@
 
     toutesChansons = res.data || [];
 
-    var avecPartition = toutesChansons.filter(function(c) { return c.partition_url; }).length;
-    var avecAudio     = toutesChansons.filter(function(c) { return c.audio_url; }).length;
+    var avecAudio = toutesChansons.filter(function(c) { return c.audio_url; }).length;
 
-    document.querySelector('#statTotal .stat-num').textContent     = toutesChansons.length;
-    document.querySelector('#statPartitions .stat-num').textContent = avecPartition;
-    document.querySelector('#statAudios .stat-num').textContent    = avecAudio;
+    document.querySelector('#statTotal .stat-num').textContent  = toutesChansons.length;
+    document.querySelector('#statAudios .stat-num').textContent = avecAudio;
 
     filtrer();
   }
 
-  // FILTRES TABS
   document.getElementById('filtreTabs').addEventListener('click', function(e) {
     var btn = e.target.closest('.ftab');
     if (!btn) return;
@@ -198,13 +461,19 @@
     var liste = toutesChansons.filter(function(c) {
       if (q && !c.titre.toLowerCase().includes(q)) return false;
       if (rubrique && c.rubrique !== rubrique) return false;
-      if (filtreMedia === 'partition') return !!c.partition_url;
-      if (filtreMedia === 'audio')     return !!c.audio_url;
-      if (filtreMedia === 'complet')   return !!c.partition_url && !!c.audio_url;
+      if (filtreMedia === 'audio') return !!c.audio_url;
       return true;
     });
 
     afficher(liste);
+
+    // Scroll vers résultats si recherche active
+    if (q || rubrique || filtreMedia !== 'tous') {
+      var vue = document.getElementById('vueRubrique');
+      if (vue && vue.style.display !== 'none') {
+        vue.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
   }
 
   function afficher(liste) {
@@ -235,61 +504,54 @@
     vue.innerHTML = ordre
       .filter(function(r) { return groupes[r]; })
       .map(function(r) {
-        return '<section class="rubrique-section">' +
-          '<div class="rubrique-section-header">' +
-            '<span class="rubrique-section-nom">' + escHtml(r) + '</span>' +
-            '<span class="rubrique-section-nb">' + groupes[r].length + '</span>' +
-          '</div>' +
-          '<div class="biblio-liste">' +
-            groupes[r].map(function(c) { return renderChanson(c); }).join('') +
-          '</div>' +
-        '</section>';
+        return '<section class="rubrique-section">'
+          + '<div class="rubrique-section-header">'
+            + '<span class="rubrique-section-nom">' + escHtml(r) + '</span>'
+            + '<span class="rubrique-section-nb">' + groupes[r].length + '</span>'
+          + '</div>'
+          + '<div class="biblio-liste">'
+            + groupes[r].map(function(c) { return renderChanson(c); }).join('')
+          + '</div>'
+        + '</section>';
       }).join('');
 
-    // Attacher les listeners audio après rendu
     vue.querySelectorAll('.btn-play').forEach(function(btn) {
       btn.addEventListener('click', function() {
-        var url     = btn.getAttribute('data-url');
-        var titre   = btn.getAttribute('data-titre');
-        var rubr    = btn.getAttribute('data-rubrique');
-        lireAudio(url, titre, rubr);
+        lireAudio(
+          btn.getAttribute('data-url'),
+          btn.getAttribute('data-titre'),
+          btn.getAttribute('data-rubrique')
+        );
       });
     });
   }
 
   function renderChanson(c) {
-    var hasP = !!c.partition_url;
     var hasA = !!c.audio_url;
-    var dotsClass = (hasP && hasA) ? 'dots-complet' : (hasP || hasA) ? 'dots-partiel' : 'dots-vide';
 
     var audioBtn = hasA
-      ? '<button class="btn-media btn-play"' +
-          ' data-url="' + escHtml(c.audio_url) + '"' +
-          ' data-titre="' + escHtml(c.titre) + '"' +
-          ' data-rubrique="' + escHtml(c.rubrique || '') + '"' +
-          ' title="Écouter">▶ Écouter</button>'
-      : '<span class="media-absent" title="Pas d\'audio">🎵 —</span>';
+      ? '<button class="btn-media btn-play"'
+          + ' data-url="' + escHtml(c.audio_url) + '"'
+          + ' data-titre="' + escHtml(c.titre) + '"'
+          + ' data-rubrique="' + escHtml(c.rubrique || '') + '"'
+          + ' title="Ecouter">&#9654; Ecouter</button>'
+      : '<span class="media-absent" title="Pas d\'audio">&#127925; &mdash;</span>';
 
-    var partBtn = hasP
-      ? '<a href="' + escHtml(c.partition_url) + '" target="_blank" class="btn-media btn-partition" title="Voir la partition">📄 Partition</a>'
-      : '<span class="media-absent" title="Pas de partition">📄 —</span>';
-
-    return '<div class="biblio-item">' +
-      '<div class="biblio-item-left">' +
-        (c.numero ? '<span class="item-num">#' + escHtml(String(c.numero)) + '</span>' : '') +
-        '<div class="item-info">' +
-          '<a href="chanson.html?id=' + escHtml(c.id) + '" class="item-titre">' + escHtml(c.titre) + '</a>' +
-          '<span class="item-langue">' + escHtml(c.langue || '') + (c.style ? ' · ' + escHtml(c.style) : '') + '</span>' +
-        '</div>' +
-      '</div>' +
-      '<div class="biblio-item-right">' +
-        audioBtn + partBtn +
-        '<div class="item-dots ' + dotsClass + '"></div>' +
-      '</div>' +
-    '</div>';
+    return '<div class="biblio-item">'
+      + '<div class="biblio-item-left">'
+        + (c.numero ? '<span class="item-num">#' + escHtml(String(c.numero)) + '</span>' : '')
+        + '<div class="item-info">'
+          + '<a href="chanson.html?id=' + escHtml(c.id) + '" class="item-titre">' + escHtml(c.titre) + '</a>'
+          + '<span class="item-langue">' + escHtml(c.langue || '') + (c.style ? ' · ' + escHtml(c.style) : '') + '</span>'
+        + '</div>'
+      + '</div>'
+      + '<div class="biblio-item-right">'
+        + audioBtn
+        + '<div class="item-dots ' + (hasA ? 'dots-complet' : 'dots-vide') + '"></div>'
+      + '</div>'
+    + '</div>';
   }
 
-  // LECTEUR FLOTTANT
   function lireAudio(url, titre, rubrique) {
     var lecteur = document.getElementById('lecteurFlottant');
     var audio   = document.getElementById('lecteurAudio');
