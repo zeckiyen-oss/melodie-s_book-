@@ -10,109 +10,212 @@
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <style>
+    html,body{background:#0D1B2A!important;color:#FAF6ED!important;min-height:100vh}
+    .loader-overlay{position:fixed;inset:0;z-index:9999;background:#0D1B2A;display:flex;align-items:center;justify-content:center}
+    .loader-cross{width:48px;height:48px;position:relative}
+    .loader-bar{position:absolute;background:#C9A84C;border-radius:3px}
+    .loader-bar-h{width:100%;height:6px;top:50%;transform:translateY(-50%)}
+    .loader-bar-v{height:100%;width:6px;left:50%;transform:translateX(-50%);animation:pulse 1.2s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    .ev-hero{position:relative;overflow:hidden;background:linear-gradient(160deg,#1A2E45 0%,#0D1B2A 100%);border-bottom:1px solid rgba(201,168,76,.2);padding:2rem 1.2rem 1.6rem}
+    .ev-hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(201,168,76,.06) 0%,transparent 65%);pointer-events:none}
+    .ev-hero-content{position:relative;z-index:1}
+    .ev-badge-admin{display:inline-block;margin-bottom:.6rem;font-family:'Cinzel',serif;font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#F0D98A;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);border-radius:20px;padding:.2rem .8rem}
+    .ev-title{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:700;color:#FAF6ED;margin:0 0 .4rem}
+    .ev-subtitle{font-size:.82rem;color:rgba(250,246,237,.45);margin:0}
+    .ev-hero-ornement{position:absolute;right:-20px;top:-20px;width:180px;height:180px;border-radius:50%;border:1px solid rgba(201,168,76,.08);pointer-events:none}
+    .ev-main{max-width:960px;margin:0 auto;padding:1.4rem 1rem 4rem}
+    .ev-layout{display:grid;grid-template-columns:1fr;gap:1.2rem}
+    @media(min-width:680px){.ev-layout{grid-template-columns:1fr 320px}}
+    .ev-toolbar{display:flex;gap:.7rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap}
+    .ev-filter-tabs{display:flex;gap:.4rem;flex-wrap:wrap}
+    .ev-tab{padding:.4rem .9rem;border:1px solid rgba(201,168,76,.2);border-radius:20px;background:transparent;color:rgba(250,246,237,.5);font-family:'Lato',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s}
+    .ev-tab:hover{color:#F0D98A}
+    .ev-tab.active{background:rgba(201,168,76,.15);border-color:#C9A84C;color:#F0D98A}
+    .ev-count{font-size:.78rem;color:rgba(250,246,237,.35);margin-bottom:.7rem}
+    .ev-list{display:flex;flex-direction:column;gap:.6rem}
+    .ev-item{background:linear-gradient(145deg,#1A2E45,#152438);border:1px solid rgba(201,168,76,.18);border-radius:14px;padding:.9rem 1rem;display:flex;align-items:flex-start;gap:.9rem;transition:border-color .2s}
+    .ev-item:hover{border-color:rgba(201,168,76,.35)}
+    .ev-item-passe{opacity:.55}
+    .ev-item-cal{flex-shrink:0;width:48px;height:52px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+    .ev-cal-jour{font-family:'Cinzel',serif;font-size:1.2rem;font-weight:700;color:#F0D98A;line-height:1}
+    .ev-cal-mois{font-size:.6rem;font-weight:700;color:#C9A84C;text-transform:uppercase;letter-spacing:.06em}
+    .ev-item-content{flex:1;min-width:0}
+    .ev-item-titre{font-family:'Cinzel',serif;font-size:.9rem;font-weight:700;color:#FAF6ED;margin-bottom:.2rem}
+    .ev-item-desc{font-size:.76rem;color:rgba(250,246,237,.45);margin-bottom:.35rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ev-item-date-full{font-size:.72rem;color:rgba(250,246,237,.35);margin-bottom:.4rem}
+    .ev-item-meta{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+    .ev-statut-badge{font-size:.65rem;font-weight:700;padding:.15rem .6rem;border-radius:20px}
+    .ev-statut-en_preparation{background:rgba(201,168,76,.12);color:#F0D98A;border:1px solid rgba(201,168,76,.3)}
+    .ev-statut-valide{background:rgba(76,175,130,.12);color:#7ecfaf;border:1px solid rgba(76,175,130,.3)}
+    .ev-statut-archive{background:rgba(250,246,237,.06);color:rgba(250,246,237,.4);border:1px solid rgba(250,246,237,.12)}
+    .ev-prep-badge{font-size:.65rem;color:rgba(250,246,237,.4);display:flex;align-items:center;gap:.25rem}
+    .ev-prep-badge.assigned{color:#C5B3E8}
+    .ev-item-right{display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;flex-shrink:0}
+    .ev-countdown{font-family:'Cinzel',serif;font-size:.7rem;font-weight:700;color:#F0D98A;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:.12rem .45rem;white-space:nowrap}
+    .ev-passe-badge{font-size:.65rem;color:rgba(250,246,237,.3);font-style:italic}
+    .ev-item-actions{display:flex;gap:.3rem}
+    .gt-btn-edit,.gt-btn-delete{background:transparent;border:1px solid rgba(201,168,76,.2);border-radius:6px;padding:.25rem .5rem;font-size:.8rem;cursor:pointer;color:rgba(250,246,237,.6);transition:all .2s}
+    .gt-btn-edit:hover{border-color:#C9A84C;color:#F0D98A}
+    .gt-btn-delete:hover{border-color:rgba(192,57,43,.5);color:#e09696}
+    .ev-skeleton{height:90px;border-radius:14px;background:linear-gradient(90deg,#1A2E45 25%,#1f3550 50%,#1A2E45 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    .ev-empty{text-align:center;color:rgba(250,246,237,.3);font-style:italic;padding:2rem 0;font-size:.85rem}
+    .ev-aside{display:flex;flex-direction:column;gap:1rem}
+    .ev-form-card{background:linear-gradient(145deg,#1A2E45,#152438);border:1px solid rgba(201,168,76,.2);border-radius:16px;overflow:hidden}
+    .ev-form-idle{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.8rem;padding:2.5rem 1.5rem;text-align:center}
+    .ev-form-idle-icon{font-size:1.8rem;opacity:.4}
+    .ev-form-idle p{font-size:.82rem;color:rgba(250,246,237,.35);margin:0}
+    .ev-form-body{padding:1.2rem}
+    .ev-form-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+    .ev-form-header h2{font-family:'Cinzel',serif;font-size:.95rem;color:#FAF6ED;margin:0}
+    .ev-form-close{background:transparent;border:none;color:rgba(250,246,237,.4);font-size:1rem;cursor:pointer}
+    .ev-form-close:hover{color:#FAF6ED}
+    .form-group{margin-bottom:.9rem}
+    .form-label{display:block;font-family:'Cinzel',serif;font-size:.72rem;font-weight:700;color:#C9A84C;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.4rem}
+    .required{color:#e09696}
+    .form-input,.form-textarea,.form-select{width:100%;box-sizing:border-box;background:rgba(13,27,42,.6);border:1px solid rgba(201,168,76,.25);border-radius:8px;color:#FAF6ED;font-family:'Lato',sans-serif;font-size:.88rem;padding:.55rem .8rem;outline:none;transition:border-color .2s}
+    .form-textarea{resize:vertical}
+    .form-select{appearance:none;-webkit-appearance:none;cursor:pointer}
+    .form-select option{background:#1A2E45}
+    .form-input::placeholder,.form-textarea::placeholder{color:rgba(250,246,237,.25)}
+    .form-input:focus,.form-textarea:focus,.form-select:focus{border-color:#C9A84C}
+    .ev-form-actions{display:flex;gap:.6rem;margin-top:1rem}
+    .btn-primary,.btn-secondary,.btn-danger{padding:.55rem 1rem;border-radius:8px;font-family:'Lato',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;border:none;transition:all .2s}
+    .btn-primary{background:linear-gradient(135deg,#C9A84C,#F0D98A);color:#0D1B2A}
+    .btn-primary:hover{opacity:.9}
+    .btn-secondary{background:rgba(250,246,237,.08);color:rgba(250,246,237,.7);border:1px solid rgba(250,246,237,.15)!important}
+    .btn-secondary:hover{background:rgba(250,246,237,.13)}
+    .btn-danger{background:rgba(192,57,43,.8);color:#FAF6ED}
+    .btn-danger:hover{background:rgba(192,57,43,1)}
+    .ev-prochain{background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:1.1rem}
+    .ev-prochain-label{font-family:'Cinzel',serif;font-size:.68rem;font-weight:700;color:#C9A84C;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem}
+    .ev-prochain-titre{font-family:'Cinzel',serif;font-size:.95rem;color:#FAF6ED;font-weight:700;margin-bottom:.3rem}
+    .ev-prochain-date{font-size:.78rem;color:rgba(250,246,237,.45);margin-bottom:.4rem}
+    .ev-prochain-countdown{font-family:'Cinzel',serif;font-size:.82rem;font-weight:700;color:#F0D98A}
+    .modal-overlay{position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem}
+    .modal-box{background:linear-gradient(145deg,#1A2E45,#0D1B2A);border:1px solid rgba(201,168,76,.35);border-radius:16px;padding:1.8rem 1.4rem;max-width:380px;width:100%;text-align:center}
+    .modal-box.modal-danger{border-color:rgba(192,57,43,.4)}
+    .modal-danger-icon{font-size:2rem;color:#e09696;margin-bottom:.8rem}
+    .modal-success-icon{font-size:2rem;margin-bottom:.8rem}
+    .modal-box h3{font-family:'Cinzel',serif;font-size:1rem;color:#FAF6ED;margin:0 0 .6rem}
+    .modal-box p{font-size:.83rem;color:rgba(250,246,237,.55);margin:0;line-height:1.5}
+    .modal-actions{display:flex;gap:.7rem;margin-top:1.4rem}
+    .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:#1A2E45;border:1px solid rgba(201,168,76,.35);color:#FAF6ED;padding:.6rem 1.2rem;border-radius:8px;font-size:.85rem;z-index:9999;opacity:0;transition:all .3s}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .toast-success{border-color:#4CAF82}
+    .toast-error{border-color:#e07070}
+  </style>
 </head>
 <body class="page-evenements">
-
   <div id="loader" class="loader-overlay">
-    <div class="loader-cross">
-      <div class="loader-bar loader-bar-h"></div>
-      <div class="loader-bar loader-bar-v"></div>
-    </div>
+    <div class="loader-cross"><div class="loader-bar loader-bar-h"></div><div class="loader-bar loader-bar-v"></div></div>
   </div>
-
   <div id="toast" class="toast" aria-live="polite"></div>
-
-  <!-- NAVBAR injectée par navbar.js -->
 
   <header class="ev-hero">
     <div class="ev-hero-bg"></div>
     <div class="ev-hero-content">
-      <div class="ev-badge-admin">⚙ Administration</div>
+      <div class="ev-badge-admin">&#9881; Administration</div>
       <h1 class="ev-title">Gestion des Événements</h1>
-      <p class="ev-subtitle">Planifiez et gérez les temps forts de la communauté</p>
+      <p class="ev-subtitle">Planifiez, désignez un préparateur et validez les programmes</p>
     </div>
     <div class="ev-hero-ornement"></div>
   </header>
 
   <main class="ev-main">
     <div class="ev-layout">
-
       <section class="ev-left">
         <div class="ev-toolbar">
           <div class="ev-filter-tabs" id="evFilterTabs">
-            <button class="ev-tab active" data-filtre="a_venir">📅 À venir</button>
-            <button class="ev-tab" data-filtre="passes">📁 Passés</button>
+            <button class="ev-tab active" data-filtre="a_venir">&#128197; À venir</button>
+            <button class="ev-tab" data-filtre="passes">&#128193; Passés</button>
             <button class="ev-tab" data-filtre="all">Tous</button>
           </div>
-          <button class="btn-primary" id="btnNouvelEvenement">✦ Nouvel événement</button>
+          <button class="btn-primary" id="btnNouvelEvenement">&#10022; Nouvel événement</button>
         </div>
-
         <div class="ev-count" id="evCount">Chargement…</div>
         <div class="ev-list" id="evList">
-          <div class="ev-skeleton"></div>
-          <div class="ev-skeleton"></div>
-          <div class="ev-skeleton"></div>
+          <div class="ev-skeleton"></div><div class="ev-skeleton"></div>
         </div>
       </section>
 
       <aside class="ev-aside">
-        <div class="ev-form-card" id="evFormCard">
+        <div class="ev-form-card">
           <div class="ev-form-idle" id="evFormIdle">
-            <div class="ev-form-idle-icon">🗓️</div>
-            <p>Sélectionnez un événement pour le modifier, ou créez-en un nouveau.</p>
+            <div class="ev-form-idle-icon">&#128197;</div>
+            <p>Sélectionnez un événement ou créez-en un nouveau.</p>
             <button class="btn-primary" id="btnCreerDepuisIdle">+ Créer un événement</button>
           </div>
-
           <div class="ev-form-body" id="evFormBody" style="display:none;">
             <div class="ev-form-header">
               <h2 id="evFormTitle">Nouvel événement</h2>
-              <button class="ev-form-close" id="btnFermerForm" title="Fermer">✕</button>
+              <button class="ev-form-close" id="btnFermerForm">&#10005;</button>
             </div>
-
             <input type="hidden" id="evId" />
-
             <div class="form-group">
               <label for="evTitre" class="form-label">Titre <span class="required">*</span></label>
-              <input type="text" id="evTitre" class="form-input" placeholder="Ex: Culte de Noël, Retraite spirituelle…" />
+              <input type="text" id="evTitre" class="form-input" placeholder="Ex: Culte de Noël…" />
             </div>
-
             <div class="form-group">
               <label for="evDate" class="form-label">Date <span class="required">*</span></label>
               <input type="date" id="evDate" class="form-input" />
             </div>
-
             <div class="form-group">
               <label for="evDesc" class="form-label">Description</label>
-              <textarea id="evDesc" class="form-textarea" rows="4" placeholder="Décrivez cet événement…"></textarea>
+              <textarea id="evDesc" class="form-textarea" rows="3" placeholder="Décrivez cet événement…"></textarea>
             </div>
-
+            <div class="form-group">
+              <label for="evPreparateur" class="form-label">Désigner un préparateur</label>
+              <select id="evPreparateur" class="form-select">
+                <option value="">— Aucun préparateur —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="evStatut" class="form-label">Statut</label>
+              <select id="evStatut" class="form-select">
+                <option value="en_preparation">En préparation</option>
+                <option value="valide">Validé</option>
+                <option value="archive">Archivé</option>
+              </select>
+            </div>
             <div class="ev-form-actions">
               <button class="btn-secondary" id="btnAnnulerForm">Annuler</button>
-              <button class="btn-primary" id="btnSauvegarder">💾 Sauvegarder</button>
+              <button class="btn-primary" id="btnSauvegarder">&#128190; Sauvegarder</button>
             </div>
           </div>
         </div>
-
         <div class="ev-prochain" id="evProchain" style="display:none;">
-          <div class="ev-prochain-label">✦ Prochain événement</div>
+          <div class="ev-prochain-label">&#10022; Prochain événement</div>
           <div class="ev-prochain-titre" id="evProchainTitre">—</div>
-          <div class="ev-prochain-date" id="evProchainDate">—</div>
+          <div class="ev-prochain-date"  id="evProchainDate">—</div>
           <div class="ev-prochain-countdown" id="evProchainCountdown">—</div>
         </div>
       </aside>
-
     </div>
   </main>
 
-  <!-- MODAL SUPPRESSION -->
   <div id="modalSupprimer" class="modal-overlay" style="display:none;">
     <div class="modal-box modal-danger">
-      <div class="modal-danger-icon">⚠</div>
+      <div class="modal-danger-icon">&#9888;</div>
       <h3>Supprimer cet événement ?</h3>
-      <p>Cette action est irréversible. L'événement sera définitivement supprimé.</p>
+      <p>Le programme associé sera également supprimé. Cette action est irréversible.</p>
       <div class="modal-actions">
         <button class="btn-secondary" id="btnAnnulerSupprimer">Annuler</button>
         <button class="btn-danger" id="btnConfirmerSupprimer">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalValider" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-success-icon">&#10003;</div>
+      <h3>Valider le programme ?</h3>
+      <p id="modalValiderMsg">Ce programme sera visible par toute la chorale.</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btnAnnulerValider">Annuler</button>
+        <button class="btn-primary" id="btnConfirmerValider">&#10022; Valider</button>
       </div>
     </div>
   </div>
@@ -122,217 +225,171 @@
     var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
     var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
     window._sb = sb;
+    var evenements = []; var membres = []; var filtre = 'a_venir';
+    var evASupprimer = null; var evAValider = null;
 
-    var evenements = [];
-    var filtre = 'a_venir';
-    var evASupprimer = null;
+    function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+    function hideLoader(){document.getElementById('loader').style.opacity='0';setTimeout(function(){document.getElementById('loader').style.display='none';},400);}
+    function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast toast-'+(type||'info')+' show';setTimeout(function(){t.classList.remove('show');},3500);}
 
-    function escHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    function hideLoader() {
-      document.getElementById('loader').style.opacity = '0';
-      setTimeout(function() { document.getElementById('loader').style.display = 'none'; }, 400);
-    }
-
-    function showToast(msg, type) {
-      var t = document.getElementById('toast');
-      t.textContent = msg;
-      t.className = 'toast toast-' + (type || 'info') + ' show';
-      setTimeout(function() { t.classList.remove('show'); }, 3500);
-    }
-
-    async function init() {
-      var sessionData = await sb.auth.getSession();
-      var session = sessionData.data.session;
-      if (!session) { window.location.href = 'index.html'; return; }
-
-      var profilData = await sb.from('profils').select('*').eq('id', session.user.id).single();
-      var profil = profilData.data;
-      if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
-      if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
-
-      buildSharedNavbar(profil, 'evenements');
-      await chargerEvenements();
+    async function init(){
+      var s=await sb.auth.getSession();
+      if(!s.data.session){window.location.href='index.html';return;}
+      var p=await sb.from('profils').select('*').eq('id',s.data.session.user.id).single();
+      if(!p.data||!p.data.actif){window.location.href='index.html';return;}
+      if(p.data.role!=='admin'){window.location.href='dashboard.html';return;}
+      buildSharedNavbar(p.data,'evenements');
+      await Promise.all([chargerMembres(),chargerEvenements()]);
       hideLoader();
     }
 
-    async function chargerEvenements() {
-      var res = await sb.from('evenements').select('*').order('date_event', { ascending: true });
-      if (res.error) { showToast('Erreur de chargement.', 'error'); return; }
-      evenements = res.data || [];
-      afficherProchain();
-      appliquerFiltre();
+    async function chargerMembres(){
+      var res=await sb.from('profils').select('id,nom,email,role').eq('actif',true).order('nom');
+      membres=res.data||[];
+      var sel=document.getElementById('evPreparateur');
+      sel.innerHTML='<option value="">— Aucun préparateur —</option>';
+      membres.forEach(function(m){
+        var opt=document.createElement('option');
+        opt.value=m.id;
+        opt.textContent=(m.nom||m.email)+(m.role==='preparateur'?' (Prép.)':m.role==='admin'?' (Admin)':'');
+        sel.appendChild(opt);
+      });
     }
 
-    function afficherProchain() {
-      var auj = new Date(); auj.setHours(0,0,0,0);
-      var prochain = evenements.find(function(e) { return new Date(e.date_event) >= auj; });
-      var bloc = document.getElementById('evProchain');
-      if (!prochain) { bloc.style.display = 'none'; return; }
-      var diff = Math.ceil((new Date(prochain.date_event) - auj) / 86400000);
-      document.getElementById('evProchainTitre').textContent    = prochain.titre;
-      document.getElementById('evProchainDate').textContent     = new Date(prochain.date_event).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-      document.getElementById('evProchainCountdown').textContent = diff === 0 ? "C'est aujourd'hui !" : diff === 1 ? 'Demain !' : 'Dans ' + diff + ' jours';
-      bloc.style.display = 'block';
+    async function chargerEvenements(){
+      var res=await sb.from('evenements').select('*,profils(id,nom,email)').order('date_event',{ascending:true});
+      if(res.error){showToast('Erreur de chargement.','error');return;}
+      evenements=res.data||[];
+      afficherProchain();appliquerFiltre();
     }
 
-    document.getElementById('evFilterTabs').addEventListener('click', function(e) {
-      var tab = e.target.closest('.ev-tab');
-      if (!tab) return;
-      document.querySelectorAll('.ev-tab').forEach(function(t) { t.classList.remove('active'); });
-      tab.classList.add('active');
-      filtre = tab.getAttribute('data-filtre');
-      appliquerFiltre();
+    function afficherProchain(){
+      var auj=new Date();auj.setHours(0,0,0,0);
+      var p=evenements.find(function(e){return new Date(e.date_event)>=auj;});
+      var bloc=document.getElementById('evProchain');
+      if(!p){bloc.style.display='none';return;}
+      var diff=Math.ceil((new Date(p.date_event)-auj)/86400000);
+      document.getElementById('evProchainTitre').textContent=p.titre;
+      document.getElementById('evProchainDate').textContent=new Date(p.date_event).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      document.getElementById('evProchainCountdown').textContent=diff===0?"C'est aujourd'hui !":diff===1?'Demain !':'Dans '+diff+' jours';
+      bloc.style.display='block';
+    }
+
+    document.getElementById('evFilterTabs').addEventListener('click',function(e){
+      var tab=e.target.closest('.ev-tab');if(!tab)return;
+      document.querySelectorAll('.ev-tab').forEach(function(t){t.classList.remove('active');});
+      tab.classList.add('active');filtre=tab.getAttribute('data-filtre');appliquerFiltre();
     });
 
-    function appliquerFiltre() {
-      var auj = new Date(); auj.setHours(0,0,0,0);
-      var liste = evenements;
-      if (filtre === 'a_venir') {
-        liste = evenements.filter(function(e) { return new Date(e.date_event) >= auj; });
-      } else if (filtre === 'passes') {
-        liste = evenements.filter(function(e) { return new Date(e.date_event) < auj; }).reverse();
-      }
+    function appliquerFiltre(){
+      var auj=new Date();auj.setHours(0,0,0,0);var liste=evenements;
+      if(filtre==='a_venir')liste=evenements.filter(function(e){return new Date(e.date_event)>=auj;});
+      else if(filtre==='passes')liste=evenements.filter(function(e){return new Date(e.date_event)<auj;}).reverse();
       renderListe(liste);
     }
 
-    function renderListe(liste) {
-      var container = document.getElementById('evList');
-      var count = document.getElementById('evCount');
-      count.textContent = liste.length + ' événement' + (liste.length !== 1 ? 's' : '');
-
-      if (liste.length === 0) {
-        container.innerHTML = '<div class="ev-empty">Aucun événement dans cette catégorie.</div>';
-        return;
-      }
-
-      var auj = new Date(); auj.setHours(0,0,0,0);
-      container.innerHTML = '';
-
-      liste.forEach(function(ev) {
-        var dateEv = new Date(ev.date_event);
-        var passe = dateEv < auj;
-        var diff = Math.ceil((dateEv - auj) / 86400000);
-        var dateStr = dateEv.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
-        var countdownStr = passe ? '' : (diff === 0 ? "Aujourd'hui" : diff === 1 ? 'Demain' : 'J-' + diff);
-
-        var div = document.createElement('div');
-        div.className = 'ev-item' + (passe ? ' ev-item-passe' : '');
-        div.innerHTML =
-          '<div class="ev-item-cal">' +
-            '<span class="ev-cal-jour">' + dateEv.getDate() + '</span>' +
-            '<span class="ev-cal-mois">' + dateEv.toLocaleDateString('fr-FR', { month:'short' }) + '</span>' +
-          '</div>' +
-          '<div class="ev-item-content">' +
-            '<div class="ev-item-titre">' + escHtml(ev.titre) + '</div>' +
-            (ev.description ? '<div class="ev-item-desc">' + escHtml(ev.description) + '</div>' : '') +
-            '<div class="ev-item-date-full">' + dateStr + '</div>' +
-          '</div>' +
-          '<div class="ev-item-right">' +
-            (countdownStr ? '<span class="ev-countdown">' + countdownStr + '</span>' : '<span class="ev-passe-badge">Passé</span>') +
-            '<div class="ev-item-actions">' +
-              '<button class="gt-btn-edit btn-edit-ev" data-id="' + ev.id + '" title="Modifier">✏️</button>' +
-              '<button class="gt-btn-delete btn-del-ev" data-id="' + ev.id + '" title="Supprimer">🗑️</button>' +
-            '</div>' +
-          '</div>';
+    function renderListe(liste){
+      var container=document.getElementById('evList');
+      document.getElementById('evCount').textContent=liste.length+' événement'+(liste.length!==1?'s':'');
+      if(liste.length===0){container.innerHTML='<div class="ev-empty">Aucun événement dans cette catégorie.</div>';return;}
+      var auj=new Date();auj.setHours(0,0,0,0);
+      container.innerHTML='';
+      liste.forEach(function(ev){
+        var dateEv=new Date(ev.date_event);var passe=dateEv<auj;
+        var diff=Math.ceil((dateEv-auj)/86400000);
+        var dateStr=dateEv.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+        var statut=ev.statut||'en_preparation';
+        var statutLabel={en_preparation:'En préparation',valide:'Validé',archive:'Archivé'}[statut]||statut;
+        var prep=ev.profils;
+        var prepHtml=prep?'<span class="ev-prep-badge assigned">&#128101; '+escHtml(prep.nom||prep.email)+'</span>':'<span class="ev-prep-badge">Aucun préparateur</span>';
+        var cdHtml=passe?'<span class="ev-passe-badge">Passé</span>':(diff===0?'<span class="ev-countdown">Aujourd\'hui</span>':diff===1?'<span class="ev-countdown">Demain</span>':'<span class="ev-countdown">J-'+diff+'</span>');
+        var btnVal=(!passe&&statut==='en_preparation')?'<button class="gt-btn-edit btn-valider-ev" data-id="'+ev.id+'" style="color:#7ecfaf;border-color:rgba(76,175,130,.3);">&#10003; Valider</button>':'';
+        var div=document.createElement('div');
+        div.className='ev-item'+(passe?' ev-item-passe':'');
+        div.innerHTML='<div class="ev-item-cal"><span class="ev-cal-jour">'+dateEv.getDate()+'</span><span class="ev-cal-mois">'+dateEv.toLocaleDateString('fr-FR',{month:'short'})+'</span></div>'
+          +'<div class="ev-item-content"><div class="ev-item-titre">'+escHtml(ev.titre)+'</div>'
+          +(ev.description?'<div class="ev-item-desc">'+escHtml(ev.description)+'</div>':'')
+          +'<div class="ev-item-date-full">&#128197; '+dateStr+'</div>'
+          +'<div class="ev-item-meta"><span class="ev-statut-badge ev-statut-'+statut+'">'+escHtml(statutLabel)+'</span>'+prepHtml+'</div></div>'
+          +'<div class="ev-item-right">'+cdHtml+'<div class="ev-item-actions">'+btnVal
+          +'<button class="gt-btn-edit btn-edit-ev" data-id="'+ev.id+'">&#9999;&#65039;</button>'
+          +'<button class="gt-btn-delete btn-del-ev" data-id="'+ev.id+'">&#128465;</button></div></div>';
         container.appendChild(div);
       });
-
-      container.querySelectorAll('.btn-edit-ev').forEach(function(btn) {
-        btn.addEventListener('click', function() { editerEvenement(btn.getAttribute('data-id')); });
-      });
-      container.querySelectorAll('.btn-del-ev').forEach(function(btn) {
-        btn.addEventListener('click', function() { demanderSuppression(btn.getAttribute('data-id')); });
-      });
+      container.querySelectorAll('.btn-edit-ev').forEach(function(btn){btn.addEventListener('click',function(){editerEvenement(btn.getAttribute('data-id'));});});
+      container.querySelectorAll('.btn-del-ev').forEach(function(btn){btn.addEventListener('click',function(){demanderSuppression(btn.getAttribute('data-id'));});});
+      container.querySelectorAll('.btn-valider-ev').forEach(function(btn){btn.addEventListener('click',function(){demanderValidation(btn.getAttribute('data-id'));});});
     }
 
-    function ouvrirFormulaire(ev) {
-      document.getElementById('evFormIdle').style.display = 'none';
-      document.getElementById('evFormBody').style.display = 'block';
-      if (ev) {
-        document.getElementById('evFormTitle').textContent = "Modifier l'événement";
-        document.getElementById('evId').value    = ev.id;
-        document.getElementById('evTitre').value = ev.titre;
-        document.getElementById('evDate').value  = ev.date_event;
-        document.getElementById('evDesc').value  = ev.description || '';
+    function ouvrirFormulaire(ev){
+      document.getElementById('evFormIdle').style.display='none';
+      document.getElementById('evFormBody').style.display='block';
+      if(ev){
+        document.getElementById('evFormTitle').textContent="Modifier l'événement";
+        document.getElementById('evId').value=ev.id;document.getElementById('evTitre').value=ev.titre;
+        document.getElementById('evDate').value=ev.date_event;document.getElementById('evDesc').value=ev.description||'';
+        document.getElementById('evPreparateur').value=ev.preparateur_id||'';
+        document.getElementById('evStatut').value=ev.statut||'en_preparation';
       } else {
-        document.getElementById('evFormTitle').textContent = 'Nouvel événement';
-        document.getElementById('evId').value    = '';
-        document.getElementById('evTitre').value = '';
-        document.getElementById('evDate').value  = '';
-        document.getElementById('evDesc').value  = '';
+        document.getElementById('evFormTitle').textContent='Nouvel événement';
+        document.getElementById('evId').value='';document.getElementById('evTitre').value='';
+        document.getElementById('evDate').value='';document.getElementById('evDesc').value='';
+        document.getElementById('evPreparateur').value='';document.getElementById('evStatut').value='en_preparation';
       }
     }
+    function fermerFormulaire(){document.getElementById('evFormIdle').style.display='flex';document.getElementById('evFormBody').style.display='none';}
+    function editerEvenement(id){var ev=evenements.find(function(e){return String(e.id)===String(id);});if(ev)ouvrirFormulaire(ev);}
 
-    function fermerFormulaire() {
-      document.getElementById('evFormIdle').style.display = 'flex';
-      document.getElementById('evFormBody').style.display = 'none';
-    }
-
-    function editerEvenement(id) {
-      var ev = evenements.find(function(e) { return e.id === id; });
-      if (ev) ouvrirFormulaire(ev);
-    }
-
-    document.getElementById('btnSauvegarder').addEventListener('click', async function() {
-      var id          = document.getElementById('evId').value;
-      var titre       = document.getElementById('evTitre').value.trim();
-      var date_event  = document.getElementById('evDate').value;
-      var description = document.getElementById('evDesc').value.trim();
-
-      if (!titre)      { showToast('Le titre est obligatoire.', 'error'); return; }
-      if (!date_event) { showToast('La date est obligatoire.', 'error'); return; }
-
-      var btn = document.getElementById('btnSauvegarder');
-      btn.disabled = true;
-
-      var res;
-      if (id) {
-        res = await sb.from('evenements').update({ titre: titre, date_event: date_event, description: description || null }).eq('id', id);
-      } else {
-        res = await sb.from('evenements').insert({ titre: titre, date_event: date_event, description: description || null });
-      }
-      btn.disabled = false;
-
-      if (res.error) { showToast('Erreur lors de la sauvegarde.', 'error'); return; }
-      showToast(id ? 'Événement modifié.' : 'Événement créé.', 'success');
-      fermerFormulaire();
-      await chargerEvenements();
+    document.getElementById('btnSauvegarder').addEventListener('click',async function(){
+      var id=document.getElementById('evId').value;
+      var titre=document.getElementById('evTitre').value.trim();
+      var date_event=document.getElementById('evDate').value;
+      var description=document.getElementById('evDesc').value.trim();
+      var preparateur_id=document.getElementById('evPreparateur').value||null;
+      var statut=document.getElementById('evStatut').value;
+      if(!titre){showToast('Le titre est obligatoire.','error');return;}
+      if(!date_event){showToast('La date est obligatoire.','error');return;}
+      var btn=this;btn.disabled=true;
+      var payload={titre:titre,date_event:date_event,description:description||null,preparateur_id:preparateur_id,statut:statut};
+      var res=id?await sb.from('evenements').update(payload).eq('id',id):await sb.from('evenements').insert(payload);
+      btn.disabled=false;
+      if(res.error){showToast('Erreur lors de la sauvegarde.','error');return;}
+      if(preparateur_id){await sb.from('profils').update({role:'preparateur'}).eq('id',preparateur_id);}
+      showToast(id?'Événement modifié.':'Événement créé.','success');
+      fermerFormulaire();await chargerEvenements();
     });
 
-    function demanderSuppression(id) {
-      evASupprimer = id;
-      document.getElementById('modalSupprimer').style.display = 'flex';
+    function demanderValidation(id){
+      evAValider=id;
+      var ev=evenements.find(function(e){return String(e.id)===String(id);});
+      document.getElementById('modalValiderMsg').textContent='Le programme de "'+(ev?ev.titre:'cet événement')+'" sera validé et visible par toute la chorale.';
+      document.getElementById('modalValider').style.display='flex';
     }
+    document.getElementById('btnConfirmerValider').addEventListener('click',async function(){
+      if(!evAValider)return;var btn=this;btn.disabled=true;
+      var res=await sb.from('evenements').update({statut:'valide'}).eq('id',evAValider);
+      btn.disabled=false;document.getElementById('modalValider').style.display='none';evAValider=null;
+      if(res.error){showToast('Erreur lors de la validation.','error');return;}
+      showToast('Programme validé !','success');await chargerEvenements();
+    });
+    document.getElementById('btnAnnulerValider').addEventListener('click',function(){document.getElementById('modalValider').style.display='none';evAValider=null;});
 
-    function fermerModalSupprimer() {
-      document.getElementById('modalSupprimer').style.display = 'none';
-      evASupprimer = null;
-    }
-
-    document.getElementById('btnAnnulerSupprimer').addEventListener('click', fermerModalSupprimer);
-    document.getElementById('modalSupprimer').addEventListener('click', function(e) {
-      if (e.target === document.getElementById('modalSupprimer')) fermerModalSupprimer();
+    function demanderSuppression(id){evASupprimer=id;document.getElementById('modalSupprimer').style.display='flex';}
+    function fermerModalSupprimer(){document.getElementById('modalSupprimer').style.display='none';evASupprimer=null;}
+    document.getElementById('btnAnnulerSupprimer').addEventListener('click',fermerModalSupprimer);
+    document.getElementById('modalSupprimer').addEventListener('click',function(e){if(e.target===this)fermerModalSupprimer();});
+    document.getElementById('btnConfirmerSupprimer').addEventListener('click',async function(){
+      if(!evASupprimer)return;
+      await sb.from('programme_evenement').delete().eq('evenement_id',evASupprimer);
+      var res=await sb.from('evenements').delete().eq('id',evASupprimer);
+      if(res.error){showToast('Erreur lors de la suppression.','error');return;}
+      showToast('Événement supprimé.','success');fermerModalSupprimer();fermerFormulaire();await chargerEvenements();
     });
 
-    document.getElementById('btnConfirmerSupprimer').addEventListener('click', async function() {
-      if (!evASupprimer) return;
-      var res = await sb.from('evenements').delete().eq('id', evASupprimer);
-      if (res.error) { showToast('Erreur lors de la suppression.', 'error'); return; }
-      showToast('Événement supprimé.', 'success');
-      fermerModalSupprimer();
-      fermerFormulaire();
-      await chargerEvenements();
-    });
-
-    document.getElementById('btnNouvelEvenement').addEventListener('click', function() { ouvrirFormulaire(null); });
-    document.getElementById('btnCreerDepuisIdle').addEventListener('click', function() { ouvrirFormulaire(null); });
-    document.getElementById('btnFermerForm').addEventListener('click', fermerFormulaire);
-    document.getElementById('btnAnnulerForm').addEventListener('click', fermerFormulaire);
-
+    document.getElementById('btnNouvelEvenement').addEventListener('click',function(){ouvrirFormulaire(null);});
+    document.getElementById('btnCreerDepuisIdle').addEventListener('click',function(){ouvrirFormulaire(null);});
+    document.getElementById('btnFermerForm').addEventListener('click',fermerFormulaire);
+    document.getElementById('btnAnnulerForm').addEventListener('click',fermerFormulaire);
     init();
   </script>
 </body>
