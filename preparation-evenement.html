@@ -8,279 +8,110 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
-
   <style>
-    html, body { background: #0D1B2A !important; color: #FAF6ED !important; min-height: 100vh; margin: 0; padding: 0; font-family: 'Lato', sans-serif; }
-
-    /* ── LOADER ── */
-    .page-loader {
-      position: fixed; inset: 0; z-index: 9999; background: #0D1B2A;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
-    }
-    .loader-cross { font-size: 2.5rem; color: #C9A84C; animation: spin 1.5s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .page-loader p { font-size: 0.85rem; color: rgba(250,246,237,0.4); }
-
-    /* ── MAIN ── */
-    .prep-main { max-width: 860px; margin: 0 auto; padding: 1.2rem 1rem 5rem; }
-
-    /* ── HEADER ── */
-    .prep-header {
-      display: flex; align-items: flex-start; justify-content: space-between;
-      gap: 1rem; flex-wrap: wrap; margin-bottom: 1.2rem;
-      background: linear-gradient(145deg, #1A2E45, #0D1B2A);
-      border: 1px solid rgba(201,168,76,0.2); border-radius: 14px;
-      padding: 1rem 1.2rem;
-    }
-    .prep-header-left { display: flex; align-items: center; gap: 0.8rem; }
-    .prep-header-icon { font-size: 1.6rem; }
-    .prep-title { font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700; color: #FAF6ED; margin: 0 0 0.2rem; }
-    .prep-meta  { font-size: 0.75rem; color: rgba(250,246,237,0.4); margin: 0; }
-    .prep-header-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
-
-    /* ── BOUTONS ── */
-    .btn-gold {
-      background: linear-gradient(135deg, #C9A84C, #F0D98A); color: #0D1B2A;
-      border: none; border-radius: 8px; padding: 0.5rem 1rem;
-      font-family: 'Lato', sans-serif; font-size: 0.82rem; font-weight: 700;
-      cursor: pointer; transition: opacity 0.2s;
-    }
-    .btn-gold:hover { opacity: 0.88; }
-    .btn-outline-gold {
-      background: transparent; color: #F0D98A;
-      border: 1px solid rgba(201,168,76,0.4); border-radius: 8px;
-      padding: 0.5rem 1rem; font-family: 'Lato', sans-serif;
-      font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
-    }
-    .btn-outline-gold:hover { background: rgba(201,168,76,0.1); }
-    .btn-danger {
-      background: rgba(192,57,43,0.8); color: #FAF6ED; border: none;
-      border-radius: 8px; padding: 0.5rem 1rem;
-      font-family: 'Lato', sans-serif; font-size: 0.82rem; font-weight: 700; cursor: pointer;
-    }
-    .btn-danger:hover { background: rgba(192,57,43,1); }
-
-    /* ── NOTES ── */
-    .prep-verset-section, .prep-notes-section { margin-bottom: 1.2rem; }
-    .prep-section-label {
-      display: block; font-family: 'Cinzel', serif; font-size: 0.72rem; font-weight: 700;
-      color: #C9A84C; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.4rem;
-    }
-    .prep-verset-input, .prep-notes-input {
-      width: 100%; box-sizing: border-box;
-      background: rgba(26,46,69,0.7); border: 1px solid rgba(201,168,76,0.2);
-      border-radius: 10px; color: #FAF6ED; font-family: 'Playfair Display', serif;
-      font-size: 0.88rem; padding: 0.7rem 0.9rem; outline: none;
-      resize: vertical; transition: border-color 0.2s;
-    }
-    .prep-notes-input { font-family: 'Lato', sans-serif; }
-    .prep-verset-input:focus, .prep-notes-input:focus { border-color: #C9A84C; }
-    .prep-verset-input::placeholder, .prep-notes-input::placeholder { color: rgba(250,246,237,0.25); }
-
-    /* ── RECAP ── */
-    .prep-recap {
-      background: rgba(201,168,76,0.07); border: 1px solid rgba(201,168,76,0.18);
-      border-radius: 10px; padding: 0.7rem 1rem; margin-bottom: 1rem;
-      display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
-    }
-    .recap-label { font-size: 0.75rem; color: rgba(250,246,237,0.45); }
-    .recap-nb { font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 700; color: #F0D98A; }
-
-    /* ── RUBRIQUES ── */
-    .prep-rubriques-titre {
-      font-family: 'Cinzel', serif; font-size: 0.82rem; font-weight: 700;
-      color: #F0D98A; margin: 0 0 0.8rem; letter-spacing: 0.05em;
-    }
-    .rubrique-bloc {
-      background: linear-gradient(145deg, #1A2E45, #152438);
-      border: 1px solid rgba(201,168,76,0.18); border-radius: 14px;
-      margin-bottom: 0.9rem; overflow: hidden;
-    }
-    .rubrique-header {
-      display: flex; align-items: center; gap: 0.7rem;
-      padding: 0.8rem 1rem; cursor: pointer;
-      user-select: none; -webkit-user-select: none;
-      transition: background 0.2s;
-    }
-    .rubrique-header:hover { background: rgba(201,168,76,0.05); }
-    .rubrique-header.open  { border-bottom: 1px solid rgba(201,168,76,0.15); }
-    .rubrique-nom {
-      font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: 700;
-      color: #FAF6ED; flex: 1;
-    }
-    .rubrique-nb {
-      font-size: 0.72rem; color: #C9A84C; font-weight: 700;
-      background: rgba(201,168,76,0.12); padding: 1px 8px; border-radius: 10px;
-    }
-    .rubrique-chevron { color: #C9A84C; font-size: 0.8rem; transition: transform 0.2s; }
-    .rubrique-chevron.open { transform: rotate(90deg); }
-
-    .rubrique-body { display: none; padding: 0.8rem 1rem 1rem; }
-    .rubrique-body.open { display: block; }
-
-    /* Tonalité par rubrique */
-    .rubrique-tonalite-row {
-      display: flex; align-items: center; gap: 0.6rem;
-      margin-bottom: 0.8rem; flex-wrap: wrap;
-    }
-    .rubrique-tonalite-label { font-size: 0.72rem; color: rgba(250,246,237,0.5); font-weight: 700; white-space: nowrap; }
-    .tonal-select, .tonal-libre {
-      background: rgba(13,27,42,0.7); border: 1px solid rgba(201,168,76,0.25);
-      border-radius: 6px; color: #FAF6ED;
-      font-family: 'Lato', sans-serif; font-size: 0.8rem;
-      padding: 0.3rem 0.6rem; outline: none;
-    }
-    .tonal-select option { background: #1A2E45; }
-    .tonal-libre { min-width: 100px; }
-    .tonal-libre::placeholder { color: rgba(250,246,237,0.25); }
-
-    /* Recherche dans rubrique */
-    .rubrique-search-row {
-      display: flex; align-items: center; gap: 0.5rem;
-      background: rgba(13,27,42,0.5); border: 1px solid rgba(201,168,76,0.15);
-      border-radius: 8px; padding: 0.35rem 0.7rem; margin-bottom: 0.7rem;
-    }
-    .rubrique-search-row input {
-      background: transparent; border: none; outline: none;
-      color: #FAF6ED; font-family: 'Lato', sans-serif; font-size: 0.8rem; width: 100%;
-    }
-    .rubrique-search-row input::placeholder { color: rgba(250,246,237,0.25); }
-
-    /* Liste chansons à cocher */
-    .chansons-liste { display: flex; flex-direction: column; gap: 0.35rem; max-height: 260px; overflow-y: auto; margin-bottom: 0.7rem; }
-    .chansons-liste::-webkit-scrollbar { width: 4px; }
-    .chansons-liste::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.25); border-radius: 2px; }
-
-    .chanson-check-item {
-      display: flex; align-items: center; gap: 0.7rem;
-      padding: 0.45rem 0.7rem; border-radius: 8px;
-      cursor: pointer; transition: background 0.15s;
-      border: 1px solid transparent;
-    }
-    .chanson-check-item:hover { background: rgba(201,168,76,0.07); }
-    .chanson-check-item.selectionne {
-      background: rgba(201,168,76,0.12);
-      border-color: rgba(201,168,76,0.3);
-    }
-    .check-box {
-      width: 18px; height: 18px; border-radius: 5px;
-      border: 1.5px solid rgba(201,168,76,0.35); flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      background: transparent; transition: all 0.15s;
-    }
-    .chanson-check-item.selectionne .check-box {
-      background: linear-gradient(135deg, #C9A84C, #F0D98A);
-      border-color: #C9A84C; color: #0D1B2A; font-size: 0.7rem; font-weight: 700;
-    }
-    .chanson-check-info { flex: 1; min-width: 0; }
-    .chanson-check-num   { font-size: 0.68rem; color: rgba(201,168,76,0.7); }
-    .chanson-check-titre { font-size: 0.85rem; color: #FAF6ED; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .chanson-check-langue{ font-size: 0.7rem; color: rgba(250,246,237,0.35); }
-    .rubrique-empty { font-size: 0.8rem; color: rgba(250,246,237,0.25); font-style: italic; padding: 0.5rem 0; }
-
-    /* Chansons sélectionnées */
-    .rubrique-selectionnees { border-top: 1px solid rgba(201,168,76,0.1); padding-top: 0.7rem; margin-top: 0.3rem; }
-    .rubrique-selectionnees-titre {
-      font-size: 0.68rem; color: #C9A84C; font-weight: 700;
-      letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.4rem;
-    }
-    .prog-item {
-      display: flex; align-items: center; gap: 0.6rem;
-      padding: 0.4rem 0.6rem; background: rgba(13,27,42,0.5);
-      border-radius: 7px; margin-bottom: 0.3rem;
-      border-left: 2px solid rgba(201,168,76,0.3);
-    }
-    .prog-item-ordre {
-      width: 20px; height: 20px; border-radius: 50%;
-      background: rgba(201,168,76,0.15); color: #C9A84C;
-      font-family: 'Cinzel', serif; font-size: 0.65rem; font-weight: 700;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .prog-item-titre { flex: 1; font-size: 0.82rem; color: #FAF6ED; }
-    .prog-item-del {
-      background: transparent; border: none;
-      color: rgba(250,246,237,0.3); font-size: 0.8rem; cursor: pointer; padding: 0 0.2rem;
-    }
-    .prog-item-del:hover { color: #e09696; }
-
-    /* ── ACCÈS REFUSÉ ── */
-    .acces-refuse {
-      text-align: center; padding: 3rem 1rem;
-      display: flex; flex-direction: column; align-items: center; gap: 1rem;
-    }
-    .acces-refuse-icon { font-size: 2.5rem; opacity: 0.4; }
-    .acces-refuse-titre { font-family: 'Cinzel', serif; font-size: 1rem; color: rgba(250,246,237,0.5); }
-    .acces-refuse-desc  { font-size: 0.82rem; color: rgba(250,246,237,0.3); }
-
-    /* ── PDF OVERLAY ── */
-    #pdfOverlay {
-      display: none; position: fixed; inset: 0; z-index: 9999;
-      background: #fff; overflow-y: auto;
-    }
-    #pdfActions {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0.8rem 1rem; background: #0D1B2A;
-      border-bottom: 2px solid #C9A84C; position: sticky; top: 0; z-index: 1; gap: 0.5rem;
-    }
-    #pdfCorps { padding: 1.2rem 1rem; max-width: 560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-    #pdfCorps { font-family: 'Lato', sans-serif; color: #1A1A2E; font-size: 0.9rem; }
-    #pdfCorps .pdf-header { text-align: center; border-bottom: 2px solid #C9A84C; padding-bottom: 0.7rem; margin-bottom: 1rem; }
-    #pdfCorps .pdf-church { font-family: 'Cinzel', serif; font-size: 0.62rem; color: #C9A84C; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.2rem; }
-    #pdfCorps .pdf-titre  { font-family: 'Cinzel', serif; font-size: 1.3rem; font-weight: 700; color: #0D1B2A; line-height: 1.2; margin-bottom: 0.15rem; }
-    #pdfCorps .pdf-date   { font-size: 0.78rem; color: #555; }
-    #pdfCorps .pdf-desc   { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.82rem; color: #4A4A6A; border-left: 3px solid #C9A84C; padding: 0.45rem 0.8rem; margin: 0.7rem 0 1rem; background: #FAF6ED; line-height: 1.6; border-radius: 0 4px 4px 0; }
-    #pdfCorps .pdf-programme-title { font-family: 'Cinzel', serif; font-size: 0.68rem; font-weight: 700; color: #C9A84C; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.5rem; }
-    #pdfCorps .pdf-rubrique-header { display: flex; align-items: center; gap: 0.5rem; background: #0D1B2A; color: #F0D98A; padding: 0.38rem 0.65rem; border-radius: 4px 4px 0 0; margin-top: 0.75rem; }
-    #pdfCorps .pdf-rubrique-header:first-child { margin-top: 0; }
-    #pdfCorps .pdf-rubrique-name  { font-family: 'Cinzel', serif; font-size: 0.75rem; font-weight: 700; flex: 1; letter-spacing: 0.05em; }
-    #pdfCorps .pdf-rubrique-tonal { font-size: 0.68rem; color: #F0D98A; font-style: italic; background: rgba(201,168,76,0.2); padding: 0.1rem 0.4rem; border-radius: 20px; white-space: nowrap; }
-    #pdfCorps .pdf-chanson-row    { display: flex; align-items: center; gap: 0.5rem; padding: 0.42rem 0.65rem; border: 1px solid #E0D8C8; border-top: none; background: #FFFDF8; }
-    #pdfCorps .pdf-chanson-num    { font-family: 'Cinzel', serif; font-size: 0.7rem; color: #C9A84C; font-weight: 700; min-width: 1.8rem; flex-shrink: 0; }
-    #pdfCorps .pdf-chanson-titre  { font-size: 0.88rem; color: #1A1A2E; word-break: break-word; line-height: 1.3; }
-    #pdfCorps .pdf-notes          { margin-top: 1rem; padding: 0.75rem; border: 1px dashed #C9A84C; border-radius: 6px; background: #FAF6ED; }
-    #pdfCorps .pdf-notes-title    { font-family: 'Cinzel', serif; font-size: 0.65rem; color: #C9A84C; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.35rem; font-weight: 700; }
-    #pdfCorps .pdf-notes p        { font-size: 0.8rem; color: #1A1A2E; line-height: 1.6; }
-    #pdfCorps .pdf-footer         { text-align: center; margin-top: 1rem; font-size: 0.65rem; color: #999; border-top: 1px solid #eee; padding-top: 0.4rem; }
-    @media print {
-      @page { size: A4 portrait; margin: 1.5cm 2cm; }
-      body > *:not(#pdfOverlay) { display: none !important; }
-      #pdfOverlay { position: static !important; display: block !important; background: #fff; overflow: visible; }
-      #pdfActions { display: none !important; }
-      #pdfCorps   { padding: 0 !important; max-width: 100% !important; font-size: 10pt; }
-      #pdfCorps .pdf-titre { font-size: 18pt; }
-    }
-
-    /* ── MODAL ── */
-    .modal-overlay {
-      position: fixed; inset: 0; z-index: 8000;
-      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center; padding: 1rem;
-    }
-    .modal-box {
-      background: linear-gradient(145deg, #1A2E45, #0D1B2A);
-      border: 1px solid rgba(201,168,76,0.35); border-radius: 16px;
-      padding: 1.8rem 1.4rem; max-width: 360px; width: 100%; text-align: center;
-    }
-    .modal-title { font-family: 'Cinzel', serif; font-size: 1rem; color: #FAF6ED; margin: 0 0 0.5rem; }
-    .modal-desc  { font-size: 0.82rem; color: rgba(250,246,237,0.5); margin: 0 0 1.2rem; line-height: 1.5; }
-    .modal-actions { display: flex; gap: 0.7rem; }
-
-    /* ── TOAST ── */
-    .toast-container { position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
-    .toast {
-      background: #1A2E45; border: 1px solid rgba(201,168,76,0.35); color: #FAF6ED;
-      padding: 0.55rem 1.1rem; border-radius: 8px; font-size: 0.82rem;
-      opacity: 0; transform: translateY(10px); transition: all 0.25s; white-space: nowrap;
-    }
-    .toast.toast-show { opacity: 1; transform: translateY(0); }
-    .toast-success { border-color: #4CAF82; }
-    .toast-error   { border-color: #e07070; }
-    .toast-info    { border-color: rgba(201,168,76,0.35); }
+    html,body{background:#0D1B2A!important;color:#FAF6ED!important;min-height:100vh;margin:0;padding:0;font-family:'Lato',sans-serif}
+    .page-loader{position:fixed;inset:0;z-index:9999;background:#0D1B2A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem}
+    .loader-cross{font-size:2.5rem;color:#C9A84C;animation:spin 1.5s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .page-loader p{font-size:.85rem;color:rgba(250,246,237,.4)}
+    .prep-main{max-width:860px;margin:0 auto;padding:1.2rem 1rem 5rem}
+    .prep-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.2rem;background:linear-gradient(145deg,#1A2E45,#0D1B2A);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:1rem 1.2rem}
+    .prep-header-left{display:flex;align-items:center;gap:.8rem}
+    .prep-header-icon{font-size:1.6rem}
+    .prep-title{font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700;color:#FAF6ED;margin:0 0 .2rem}
+    .prep-meta{font-size:.75rem;color:rgba(250,246,237,.4);margin:0}
+    .prep-header-actions{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+    .btn-gold{background:linear-gradient(135deg,#C9A84C,#F0D98A);color:#0D1B2A;border:none;border-radius:8px;padding:.5rem 1rem;font-family:'Lato',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;transition:opacity .2s}
+    .btn-gold:hover{opacity:.88}
+    .btn-outline-gold{background:transparent;color:#F0D98A;border:1px solid rgba(201,168,76,.4);border-radius:8px;padding:.5rem 1rem;font-family:'Lato',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s}
+    .btn-outline-gold:hover{background:rgba(201,168,76,.1)}
+    .btn-danger{background:rgba(192,57,43,.8);color:#FAF6ED;border:none;border-radius:8px;padding:.5rem 1rem;font-family:'Lato',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer}
+    .btn-danger:hover{background:rgba(192,57,43,1)}
+    .prep-verset-section,.prep-notes-section{margin-bottom:1.2rem}
+    .prep-section-label{display:block;font-family:'Cinzel',serif;font-size:.72rem;font-weight:700;color:#C9A84C;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem}
+    .prep-verset-input,.prep-notes-input{width:100%;box-sizing:border-box;background:rgba(26,46,69,.7);border:1px solid rgba(201,168,76,.2);border-radius:10px;color:#FAF6ED;font-family:'Playfair Display',serif;font-size:.88rem;padding:.7rem .9rem;outline:none;resize:vertical;transition:border-color .2s}
+    .prep-notes-input{font-family:'Lato',sans-serif}
+    .prep-verset-input:focus,.prep-notes-input:focus{border-color:#C9A84C}
+    .prep-verset-input::placeholder,.prep-notes-input::placeholder{color:rgba(250,246,237,.25)}
+    .prep-recap{background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.18);border-radius:10px;padding:.7rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+    .recap-label{font-size:.75rem;color:rgba(250,246,237,.45)}
+    .recap-nb{font-family:'Cinzel',serif;font-size:1rem;font-weight:700;color:#F0D98A}
+    .prep-rubriques-titre{font-family:'Cinzel',serif;font-size:.82rem;font-weight:700;color:#F0D98A;margin:0 0 .8rem;letter-spacing:.05em}
+    .rubrique-bloc{background:linear-gradient(145deg,#1A2E45,#152438);border:1px solid rgba(201,168,76,.18);border-radius:14px;margin-bottom:.9rem;overflow:hidden}
+    .rubrique-header{display:flex;align-items:center;gap:.7rem;padding:.8rem 1rem;cursor:pointer;user-select:none;-webkit-user-select:none;transition:background .2s}
+    .rubrique-header:hover{background:rgba(201,168,76,.05)}
+    .rubrique-header.open{border-bottom:1px solid rgba(201,168,76,.15)}
+    .rubrique-nom{font-family:'Cinzel',serif;font-size:.85rem;font-weight:700;color:#FAF6ED;flex:1}
+    .rubrique-nb{font-size:.72rem;color:#C9A84C;font-weight:700;background:rgba(201,168,76,.12);padding:1px 8px;border-radius:10px}
+    .rubrique-chevron{color:#C9A84C;font-size:.8rem;transition:transform .2s}
+    .rubrique-chevron.open{transform:rotate(90deg)}
+    .rubrique-body{display:none;padding:.8rem 1rem 1rem}
+    .rubrique-body.open{display:block}
+    .rubrique-tonalite-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.8rem;flex-wrap:wrap}
+    .rubrique-tonalite-label{font-size:.72rem;color:rgba(250,246,237,.5);font-weight:700;white-space:nowrap}
+    .tonal-select,.tonal-libre{background:rgba(13,27,42,.7);border:1px solid rgba(201,168,76,.25);border-radius:6px;color:#FAF6ED;font-family:'Lato',sans-serif;font-size:.8rem;padding:.3rem .6rem;outline:none}
+    .tonal-select option{background:#1A2E45}
+    .tonal-libre{min-width:100px}
+    .tonal-libre::placeholder{color:rgba(250,246,237,.25)}
+    .rubrique-search-row{display:flex;align-items:center;gap:.5rem;background:rgba(13,27,42,.5);border:1px solid rgba(201,168,76,.15);border-radius:8px;padding:.35rem .7rem;margin-bottom:.7rem}
+    .rubrique-search-row input{background:transparent;border:none;outline:none;color:#FAF6ED;font-family:'Lato',sans-serif;font-size:.8rem;width:100%}
+    .rubrique-search-row input::placeholder{color:rgba(250,246,237,.25)}
+    .chansons-liste{display:flex;flex-direction:column;gap:.35rem;max-height:260px;overflow-y:auto;margin-bottom:.7rem}
+    .chansons-liste::-webkit-scrollbar{width:4px}
+    .chansons-liste::-webkit-scrollbar-thumb{background:rgba(201,168,76,.25);border-radius:2px}
+    .chanson-check-item{display:flex;align-items:center;gap:.7rem;padding:.45rem .7rem;border-radius:8px;cursor:pointer;transition:background .15s;border:1px solid transparent}
+    .chanson-check-item:hover{background:rgba(201,168,76,.07)}
+    .chanson-check-item.selectionne{background:rgba(201,168,76,.12);border-color:rgba(201,168,76,.3)}
+    .check-box{width:18px;height:18px;border-radius:5px;border:1.5px solid rgba(201,168,76,.35);flex-shrink:0;display:flex;align-items:center;justify-content:center;background:transparent;transition:all .15s}
+    .chanson-check-item.selectionne .check-box{background:linear-gradient(135deg,#C9A84C,#F0D98A);border-color:#C9A84C;color:#0D1B2A;font-size:.7rem;font-weight:700}
+    .chanson-check-info{flex:1;min-width:0}
+    .chanson-check-num{font-size:.68rem;color:rgba(201,168,76,.7)}
+    .chanson-check-titre{font-size:.85rem;color:#FAF6ED;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .chanson-check-langue{font-size:.7rem;color:rgba(250,246,237,.35)}
+    .rubrique-empty{font-size:.8rem;color:rgba(250,246,237,.25);font-style:italic;padding:.5rem 0}
+    .rubrique-selectionnees{border-top:1px solid rgba(201,168,76,.1);padding-top:.7rem;margin-top:.3rem}
+    .rubrique-selectionnees-titre{font-size:.68rem;color:#C9A84C;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.4rem}
+    .prog-item{display:flex;align-items:center;gap:.6rem;padding:.4rem .6rem;background:rgba(13,27,42,.5);border-radius:7px;margin-bottom:.3rem;border-left:2px solid rgba(201,168,76,.3)}
+    .prog-item-ordre{width:20px;height:20px;border-radius:50%;background:rgba(201,168,76,.15);color:#C9A84C;font-family:'Cinzel',serif;font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .prog-item-titre{flex:1;font-size:.82rem;color:#FAF6ED}
+    .prog-item-del{background:transparent;border:none;color:rgba(250,246,237,.3);font-size:.8rem;cursor:pointer;padding:0 .2rem}
+    .prog-item-del:hover{color:#e09696}
+    .acces-refuse{text-align:center;padding:3rem 1rem;display:flex;flex-direction:column;align-items:center;gap:1rem}
+    .acces-refuse-icon{font-size:2.5rem;opacity:.4}
+    .acces-refuse-titre{font-family:'Cinzel',serif;font-size:1rem;color:rgba(250,246,237,.6)}
+    .acces-refuse-desc{font-size:.82rem;color:rgba(250,246,237,.35)}
+    #pdfOverlay{display:none;position:fixed;inset:0;z-index:9999;background:#fff;overflow-y:auto}
+    #pdfActions{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1rem;background:#0D1B2A;border-bottom:2px solid #C9A84C;position:sticky;top:0;z-index:1;gap:.5rem}
+    #pdfCorps{padding:1.2rem 1rem;max-width:560px;margin:0 auto;width:100%;box-sizing:border-box;font-family:'Lato',sans-serif;color:#1A1A2E;font-size:.9rem}
+    #pdfCorps .pdf-header{text-align:center;border-bottom:2px solid #C9A84C;padding-bottom:.7rem;margin-bottom:1rem}
+    #pdfCorps .pdf-church{font-family:'Cinzel',serif;font-size:.62rem;color:#C9A84C;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.2rem}
+    #pdfCorps .pdf-titre{font-family:'Cinzel',serif;font-size:1.3rem;font-weight:700;color:#0D1B2A;line-height:1.2;margin-bottom:.15rem}
+    #pdfCorps .pdf-date{font-size:.78rem;color:#555}
+    #pdfCorps .pdf-desc{font-family:'Playfair Display',serif;font-style:italic;font-size:.82rem;color:#4A4A6A;border-left:3px solid #C9A84C;padding:.45rem .8rem;margin:.7rem 0 1rem;background:#FAF6ED;line-height:1.6;border-radius:0 4px 4px 0}
+    #pdfCorps .pdf-programme-title{font-family:'Cinzel',serif;font-size:.68rem;font-weight:700;color:#C9A84C;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.5rem}
+    #pdfCorps .pdf-rubrique-header{display:flex;align-items:center;gap:.5rem;background:#0D1B2A;color:#F0D98A;padding:.38rem .65rem;border-radius:4px 4px 0 0;margin-top:.75rem}
+    #pdfCorps .pdf-rubrique-header:first-child{margin-top:0}
+    #pdfCorps .pdf-rubrique-name{font-family:'Cinzel',serif;font-size:.75rem;font-weight:700;flex:1;letter-spacing:.05em}
+    #pdfCorps .pdf-rubrique-tonal{font-size:.68rem;color:#F0D98A;font-style:italic;background:rgba(201,168,76,.2);padding:.1rem .4rem;border-radius:20px;white-space:nowrap}
+    #pdfCorps .pdf-chanson-row{display:flex;align-items:center;gap:.5rem;padding:.42rem .65rem;border:1px solid #E0D8C8;border-top:none;background:#FFFDF8}
+    #pdfCorps .pdf-chanson-num{font-family:'Cinzel',serif;font-size:.7rem;color:#C9A84C;font-weight:700;min-width:1.8rem;flex-shrink:0}
+    #pdfCorps .pdf-chanson-titre{font-size:.88rem;color:#1A1A2E;word-break:break-word;line-height:1.3}
+    #pdfCorps .pdf-footer{text-align:center;margin-top:1rem;font-size:.65rem;color:#999;border-top:1px solid #eee;padding-top:.4rem}
+    @media print{@page{size:A4 portrait;margin:1.5cm 2cm}body>*:not(#pdfOverlay){display:none!important}#pdfOverlay{position:static!important;display:block!important;background:#fff;overflow:visible}#pdfActions{display:none!important}#pdfCorps{padding:0!important;max-width:100%!important;font-size:10pt}}
+    .modal-overlay{position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem}
+    .modal-box{background:linear-gradient(145deg,#1A2E45,#0D1B2A);border:1px solid rgba(201,168,76,.35);border-radius:16px;padding:1.8rem 1.4rem;max-width:360px;width:100%;text-align:center}
+    .modal-title{font-family:'Cinzel',serif;font-size:1rem;color:#FAF6ED;margin:0 0 .5rem}
+    .modal-desc{font-size:.82rem;color:rgba(250,246,237,.5);margin:0 0 1.2rem;line-height:1.5}
+    .modal-actions{display:flex;gap:.7rem}
+    .toast-container{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;align-items:center;gap:.4rem}
+    .toast{background:#1A2E45;border:1px solid rgba(201,168,76,.35);color:#FAF6ED;padding:.55rem 1.1rem;border-radius:8px;font-size:.82rem;opacity:0;transform:translateY(10px);transition:all .25s;white-space:nowrap}
+    .toast.toast-show{opacity:1;transform:translateY(0)}
+    .toast-success{border-color:#4CAF82}
+    .toast-error{border-color:#e07070}
+    .toast-info{border-color:rgba(201,168,76,.35)}
   </style>
 </head>
 <body>
-
-  <!-- NAVBAR injectée par navbar.js -->
 
   <div class="page-loader" id="pageLoader">
     <div class="loader-cross">&#10022;</div>
@@ -288,9 +119,7 @@
   </div>
 
   <main class="prep-main" id="prepMain" style="display:none;">
-
-    <!-- HEADER -->
-    <header class="prep-header" id="prepHeader">
+    <header class="prep-header">
       <div class="prep-header-left">
         <div class="prep-header-icon">&#128197;</div>
         <div>
@@ -304,42 +133,35 @@
       </div>
     </header>
 
-    <!-- DESCRIPTION -->
     <div class="prep-verset-section">
-      <label class="prep-section-label" for="descEvenement">&#128221; Description de l'événement</label>
+      <label class="prep-section-label" for="descEvenement">&#128221; Description / Thème</label>
       <textarea class="prep-verset-input" id="descEvenement" rows="2" placeholder="Thème, contexte, objectif de cet événement…"></textarea>
     </div>
 
-    <!-- RECAP -->
-    <div class="prep-recap" id="prepRecap">
-      <span class="recap-label">Total programme :</span>
+    <div class="prep-recap">
+      <span class="recap-label">Total :</span>
       <span class="recap-nb" id="recapNb">0</span>
       <span class="recap-label">chanson(s) sélectionnée(s)</span>
     </div>
 
-    <!-- RUBRIQUES -->
-    <div class="prep-rubriques-titre">&#128197; Programme par rubrique</div>
+    <div class="prep-rubriques-titre">&#127925; Programme par rubrique</div>
     <div id="rubriquesContainer"></div>
 
-    <!-- NOTES -->
     <div class="prep-notes-section">
       <label class="prep-section-label" for="notesPrep">&#128221; Notes du préparateur</label>
-      <textarea class="prep-notes-input" id="notesPrep" rows="4" placeholder="Instructions, remarques, points à travailler…"></textarea>
+      <textarea class="prep-notes-input" id="notesPrep" rows="4" placeholder="Instructions, remarques…"></textarea>
     </div>
-
   </main>
 
-  <!-- PDF OVERLAY -->
   <div id="pdfOverlay">
     <div id="pdfActions">
-      <button id="btnFermerPDF" style="background:transparent; border:1px solid rgba(201,168,76,0.4); color:#F0D98A; font-family:'Lato',sans-serif; font-size:0.82rem; padding:0.4rem 0.8rem; border-radius:6px; cursor:pointer;">&#10005; Fermer</button>
-      <span style="font-family:'Cinzel',serif; font-size:0.85rem; color:#F0D98A; font-weight:600; flex:1; text-align:center;">Aperçu programme</span>
-      <button id="btnImprimerPDF" style="background:linear-gradient(135deg,#C9A84C,#F0D98A); border:none; color:#0D1B2A; font-family:'Cinzel',serif; font-size:0.82rem; font-weight:700; padding:0.4rem 0.9rem; border-radius:6px; cursor:pointer;">&#128424; Imprimer / PDF</button>
+      <button id="btnFermerPDF" style="background:transparent;border:1px solid rgba(201,168,76,.4);color:#F0D98A;font-family:'Lato',sans-serif;font-size:.82rem;padding:.4rem .8rem;border-radius:6px;cursor:pointer;">&#10005; Fermer</button>
+      <span style="font-family:'Cinzel',serif;font-size:.85rem;color:#F0D98A;font-weight:600;flex:1;text-align:center;">Aperçu programme</span>
+      <button id="btnImprimerPDF" style="background:linear-gradient(135deg,#C9A84C,#F0D98A);border:none;color:#0D1B2A;font-family:'Cinzel',serif;font-size:.82rem;font-weight:700;padding:.4rem .9rem;border-radius:6px;cursor:pointer;">&#128424; Imprimer</button>
     </div>
     <div id="pdfCorps"></div>
   </div>
 
-  <!-- MODAL SUPPRESSION -->
   <div class="modal-overlay" id="modalSuppr" style="display:none;">
     <div class="modal-box">
       <h3 class="modal-title">Retirer cette chanson ?</h3>
@@ -359,521 +181,205 @@
     var sb = supabase.createClient(SUPA_URL, SUPA_KEY);
     window._sb = sb;
 
-    var evenementId   = null;
-    var evenementData = null;
-    var profilUser    = null;
-
-    // programme[rubrique] = [ {id, chanson_id, ordre, tonalite, tonalite_libre, titre, numero, langue} ]
-    var programme = {};
-    // tonalites[rubrique] = { note, libre }
-    var tonalites = {};
-    // chansonsByRubrique[rubrique] = [ chanson, ... ]
-    var chansonsByRubrique = {};
-
+    var evenementId = null; var evenementData = null; var profilUser = null;
+    var programme = {}; var tonalites = {}; var chansonsByRubrique = {};
     var pendingSupprInfo = null;
-
     var RUBRIQUES_ORDER = ["Prélude","Adoration","Louange","Offrande","Méditation","Envoi","Chant de réflexion"];
-    var NOTES_GAMMES    = ["Do","Do#/Ré♭","Ré","Ré#/Mi♭","Mi","Fa","Fa#/Sol♭","Sol","Sol#/La♭","La","La#/Si♭","Si"];
+    var NOTES_GAMMES = ["Do","Do#/Ré♭","Ré","Ré#/Mi♭","Mi","Fa","Fa#/Sol♭","Sol","Sol#/La♭","La","La#/Si♭","Si"];
 
-    function escHtml(str) {
-      if (str == null) return "";
-      return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    function escHtml(s){if(s==null)return"";return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+    function showToast(msg,type){var tc=document.getElementById("toastContainer");var t=document.createElement("div");t.className="toast toast-"+(type||"info");t.textContent=msg;tc.appendChild(t);setTimeout(function(){t.classList.add("toast-show");},10);setTimeout(function(){t.classList.remove("toast-show");setTimeout(function(){if(tc.contains(t))tc.removeChild(t);},400);},3500);}
+    function hideLoader(){document.getElementById("pageLoader").style.display="none";document.getElementById("prepMain").style.display="block";}
+    function formatDate(d){if(!d)return"";var p=d.split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:d;}
+    function totalChansons(){var n=0;RUBRIQUES_ORDER.forEach(function(r){if(programme[r])n+=programme[r].length;});return n;}
+    function majRecap(){document.getElementById("recapNb").textContent=totalChansons();}
+
+    function afficherAccesRefuse(titre,desc){
+      var main=document.getElementById("prepMain");
+      main.innerHTML='<div class="acces-refuse"><div class="acces-refuse-icon">&#128274;</div><div class="acces-refuse-titre">'+escHtml(titre)+'</div><div class="acces-refuse-desc">'+escHtml(desc)+'</div></div>';
+      main.style.display="block";
     }
 
-    function showToast(msg, type) {
-      type = type || "info";
-      var tc = document.getElementById("toastContainer");
-      var t  = document.createElement("div");
-      t.className = "toast toast-" + type;
-      t.textContent = msg;
-      tc.appendChild(t);
-      setTimeout(function() { t.classList.add("toast-show"); }, 10);
-      setTimeout(function() {
-        t.classList.remove("toast-show");
-        setTimeout(function() { if (tc.contains(t)) tc.removeChild(t); }, 400);
-      }, 3500);
-    }
-
-    function hideLoader() {
-      document.getElementById("pageLoader").style.display = "none";
-      document.getElementById("prepMain").style.display   = "block";
-    }
-
-    function formatDate(d) {
-      if (!d) return "";
-      var parts = d.split("-");
-      return parts.length === 3 ? parts[2] + "/" + parts[1] + "/" + parts[0] : d;
-    }
-
-    function totalChansons() {
-      var n = 0;
-      RUBRIQUES_ORDER.forEach(function(r) { if (programme[r]) n += programme[r].length; });
-      return n;
-    }
-
-    function majRecap() {
-      document.getElementById("recapNb").textContent = totalChansons();
-    }
-
-    // ── AUTH ─────────────────────────────────────────────────
-    async function authGuard() {
-      var r = await sb.auth.getSession();
-      if (!r.data.session) { window.location.href = "index.html"; return null; }
-      var p = await sb.from("profils").select("*").eq("id", r.data.session.user.id).single();
-      if (!p.data || !p.data.actif) { window.location.href = "index.html"; return null; }
-      if (p.data.role !== "preparateur" && p.data.role !== "admin") {
-        showToast("Accès réservé au préparateur ou à l'admin.", "error");
-        setTimeout(function() { window.location.href = "dashboard.html"; }, 2000);
-        return null;
-      }
+    async function authGuard(){
+      var r=await sb.auth.getSession();
+      if(!r.data.session){window.location.href="index.html";return null;}
+      var p=await sb.from("profils").select("*").eq("id",r.data.session.user.id).single();
+      if(!p.data||!p.data.actif){window.location.href="index.html";return null;}
+      /* Membres ordinaires n'ont pas accès */
+      if(p.data.role==="membre"){window.location.href="dashboard.html";return null;}
       return p.data;
     }
 
-    // ── CHARGER ÉVÉNEMENT ─────────────────────────────────────
-    async function chargerEvenement() {
-      var params = new URLSearchParams(window.location.search);
-      evenementId = params.get("id");
-
+    async function chargerEvenement(){
+      var params=new URLSearchParams(window.location.search);
+      evenementId=params.get("id");
       var res;
-      if (evenementId) {
-        res = await sb.from("evenements").select("*").eq("id", evenementId).single();
+      if(evenementId){
+        res=await sb.from("evenements").select("*").eq("id",evenementId).single();
       } else {
-        // Chercher l'événement assigné au préparateur connecté
-        res = await sb.from("evenements").select("*")
-          .eq("statut", "en_preparation")
-          .eq("preparateur_id", profilUser.id)
-          .order("date_event", { ascending: true })
-          .limit(1).single();
+        /* Chercher l'événement en préparation assigné à ce préparateur */
+        res=await sb.from("evenements").select("*").eq("statut","en_preparation").eq("preparateur_id",profilUser.id).order("date_event",{ascending:true}).limit(1).single();
       }
-
-      if (res.error || !res.data) {
-        // Admin : prendre le premier événement en préparation
-        if (profilUser.role === "admin" && !evenementId) {
-          var res2 = await sb.from("evenements").select("*")
-            .eq("statut", "en_preparation")
-            .order("date_event", { ascending: true })
-            .limit(1).single();
-          if (res2.error || !res2.data) {
-            afficherAccesRefuse("Aucun événement en préparation", "Créez un événement via la page Événements.");
-            hideLoader(); return false;
-          }
-          evenementData = res2.data;
+      if(res.error||!res.data){
+        if(profilUser.role==="admin"&&!evenementId){
+          var res2=await sb.from("evenements").select("*").eq("statut","en_preparation").order("date_event",{ascending:true}).limit(1).single();
+          if(res2.error||!res2.data){afficherAccesRefuse("Aucun événement en préparation","Créez un événement depuis la page Événements.");hideLoader();return false;}
+          evenementData=res2.data;
         } else {
-          afficherAccesRefuse("Aucun événement assigné", "Vous n'avez pas d'événement en préparation pour le moment.");
-          hideLoader(); return false;
+          afficherAccesRefuse("Aucun événement assigné","Vous n'avez pas d'événement en préparation pour le moment.");hideLoader();return false;
         }
       } else {
-        evenementData = res.data;
+        evenementData=res.data;
       }
-
-      // Vérifier que le préparateur est bien désigné (sauf admin)
-      if (profilUser.role === "preparateur" && evenementData.preparateur_id !== profilUser.id) {
-        afficherAccesRefuse("Accès non autorisé", "Vous n'êtes pas le préparateur désigné pour cet événement.");
-        hideLoader(); return false;
+      /* Vérification stricte : seul le préparateur désigné ou un admin peut accéder */
+      if(profilUser.role==="preparateur"&&evenementData.preparateur_id!==profilUser.id){
+        afficherAccesRefuse("Accès non autorisé","Vous n'êtes pas le préparateur désigné pour cet événement.");hideLoader();return false;
       }
-
-      evenementId = evenementData.id;
-      document.getElementById("prepTitre").textContent = evenementData.titre || "Événement du " + formatDate(evenementData.date_event);
-      document.getElementById("prepMeta").textContent  = "📅 " + formatDate(evenementData.date_event) + "  |  Statut : En préparation";
-
-      // Pré-remplir description si stockée dans la colonne description
-      if (evenementData.description) {
-        document.getElementById("descEvenement").value = evenementData.description || "";
-      }
-
+      evenementId=evenementData.id;
+      document.getElementById("prepTitre").textContent=evenementData.titre||"Événement du "+formatDate(evenementData.date_event);
+      document.getElementById("prepMeta").textContent="&#128197; "+formatDate(evenementData.date_event)+"  |  Statut : En préparation";
+      if(evenementData.description){document.getElementById("descEvenement").value=evenementData.description||"";}
       return true;
     }
 
-    function afficherAccesRefuse(titre, desc) {
-      var main = document.getElementById("prepMain");
-      main.innerHTML =
-        '<div class="acces-refuse">'
-          + '<div class="acces-refuse-icon">&#128197;</div>'
-          + '<div class="acces-refuse-titre">' + escHtml(titre) + '</div>'
-          + '<div class="acces-refuse-desc">' + escHtml(desc) + '</div>'
-        + '</div>';
-      main.style.display = "block";
+    async function chargerChansons(){
+      var res=await sb.from("chansons").select("id,titre,numero,rubrique,langue").order("titre");
+      var all=res.data||[];
+      chansonsByRubrique={};RUBRIQUES_ORDER.forEach(function(r){chansonsByRubrique[r]=[];});
+      all.forEach(function(c){var r=c.rubrique||"Autre";if(!chansonsByRubrique[r])chansonsByRubrique[r]=[];chansonsByRubrique[r].push(c);});
     }
 
-    // ── CHARGER CHANSONS ──────────────────────────────────────
-    async function chargerChansons() {
-      var res = await sb.from("chansons").select("id, titre, numero, rubrique, langue").order("titre");
-      var all = res.data || [];
-      chansonsByRubrique = {};
-      RUBRIQUES_ORDER.forEach(function(r) { chansonsByRubrique[r] = []; });
-      all.forEach(function(c) {
-        var r = c.rubrique || "Autre";
-        if (!chansonsByRubrique[r]) chansonsByRubrique[r] = [];
-        chansonsByRubrique[r].push(c);
+    async function chargerProgramme(){
+      var res=await sb.from("programme_evenement").select("id,chanson_id,rubrique,ordre,tonalite,tonalite_libre,chansons(id,titre,numero,langue)").eq("evenement_id",evenementId).order("ordre",{ascending:true});
+      programme={};tonalites={};
+      RUBRIQUES_ORDER.forEach(function(r){programme[r]=[];tonalites[r]={note:"",libre:""};});
+      (res.data||[]).forEach(function(p){
+        var r=p.rubrique||"Autre";if(!programme[r])programme[r]=[];
+        programme[r].push({id:p.id,chanson_id:p.chanson_id,ordre:p.ordre,tonalite:p.tonalite||"",tonalite_libre:p.tonalite_libre||"",titre:p.chansons?p.chansons.titre:"N/A",numero:p.chansons?p.chansons.numero:"",langue:p.chansons?p.chansons.langue:""});
+        if(!tonalites[r])tonalites[r]={note:"",libre:""};
+        if(!tonalites[r].note&&p.tonalite)tonalites[r].note=p.tonalite;
+        if(!tonalites[r].libre&&p.tonalite_libre)tonalites[r].libre=p.tonalite_libre;
       });
     }
 
-    // ── CHARGER PROGRAMME ÉVÉNEMENT ───────────────────────────
-    async function chargerProgramme() {
-      var res = await sb.from("programme_evenement")
-        .select("id, chanson_id, rubrique, ordre, tonalite, tonalite_libre, chansons(id, titre, numero, langue)")
-        .eq("evenement_id", evenementId)
-        .order("ordre", { ascending: true });
-
-      programme = {};
-      tonalites = {};
-      RUBRIQUES_ORDER.forEach(function(r) {
-        programme[r] = [];
-        tonalites[r] = { note: "", libre: "" };
+    function renderRubriques(){
+      var container=document.getElementById("rubriquesContainer");container.innerHTML="";
+      RUBRIQUES_ORDER.forEach(function(rubrique){
+        var ton=tonalites[rubrique]||{note:"",libre:""};var nbSel=(programme[rubrique]||[]).length;var key=rubrique.replace(/\s/g,"_");
+        var bloc=document.createElement("div");bloc.className="rubrique-bloc";bloc.setAttribute("data-rubrique",rubrique);
+        var header=document.createElement("div");header.className="rubrique-header";
+        header.innerHTML='<span class="rubrique-nom">'+escHtml(rubrique)+'</span><span class="rubrique-nb" id="rNb_'+key+'">'+nbSel+'</span><span class="rubrique-chevron" id="rChev_'+key+'">&#9654;</span>';
+        var body=document.createElement("div");body.className="rubrique-body";body.id="rBody_"+key;
+        var optHtml='<option value="">— Tonalité —</option>';
+        NOTES_GAMMES.forEach(function(n){optHtml+='<option value="'+escHtml(n)+'"'+(ton.note===n?' selected':'')+'>'+escHtml(n)+'</option>';});
+        optHtml+='<option value="autre"'+(ton.note==="autre"?' selected':'')+'>Autre…</option>';
+        var libreStyle=ton.note==="autre"?"":" style='display:none'";
+        body.innerHTML='<div class="rubrique-tonalite-row"><span class="rubrique-tonalite-label">&#127925; Tonalité :</span><select class="tonal-select" id="tonSel_'+key+'">'+optHtml+'</select><input class="tonal-libre" id="tonLibre_'+key+'" type="text" placeholder="Saisir…" value="'+escHtml(ton.libre)+'"'+libreStyle+' /></div>'
+          +'<div class="rubrique-search-row"><span>&#128269;</span><input type="text" placeholder="Rechercher…" id="rSearch_'+key+'" /></div>'
+          +'<div class="chansons-liste" id="rListe_'+key+'"></div>'
+          +'<div class="rubrique-selectionnees" id="rSel_'+key+'"></div>';
+        bloc.appendChild(header);bloc.appendChild(body);container.appendChild(bloc);
+        renderListeChansonsPourRubrique(rubrique);renderSelectionnesPourRubrique(rubrique);
+        header.addEventListener("click",function(){var b=document.getElementById("rBody_"+key);var ch=document.getElementById("rChev_"+key);var isOpen=b.classList.contains("open");b.classList.toggle("open",!isOpen);header.classList.toggle("open",!isOpen);ch.classList.toggle("open",!isOpen);});
+        var tonSelEl=document.getElementById("tonSel_"+key);var tonLibreEl=document.getElementById("tonLibre_"+key);
+        tonSelEl.addEventListener("change",function(){if(!tonalites[rubrique])tonalites[rubrique]={note:"",libre:""};tonalites[rubrique].note=tonSelEl.value;tonLibreEl.style.display=tonSelEl.value==="autre"?"inline-block":"none";});
+        tonLibreEl.addEventListener("input",function(){if(!tonalites[rubrique])tonalites[rubrique]={note:"",libre:""};tonalites[rubrique].libre=tonLibreEl.value;});
+        document.getElementById("rSearch_"+key).addEventListener("input",function(){renderListeChansonsPourRubrique(rubrique);});
       });
-
-      (res.data || []).forEach(function(p) {
-        var r = p.rubrique || "Autre";
-        if (!programme[r]) programme[r] = [];
-        programme[r].push({
-          id:             p.id,
-          chanson_id:     p.chanson_id,
-          ordre:          p.ordre,
-          tonalite:       p.tonalite || "",
-          tonalite_libre: p.tonalite_libre || "",
-          titre:          p.chansons ? p.chansons.titre  : "N/A",
-          numero:         p.chansons ? p.chansons.numero : "",
-          langue:         p.chansons ? p.chansons.langue : ""
-        });
-        if (!tonalites[r]) tonalites[r] = { note: "", libre: "" };
-        if (!tonalites[r].note && p.tonalite)       tonalites[r].note  = p.tonalite;
-        if (!tonalites[r].libre && p.tonalite_libre) tonalites[r].libre = p.tonalite_libre;
-      });
-    }
-
-    // ── RENDRE LES RUBRIQUES ──────────────────────────────────
-    function renderRubriques() {
-      var container = document.getElementById("rubriquesContainer");
-      container.innerHTML = "";
-
-      RUBRIQUES_ORDER.forEach(function(rubrique) {
-        var ton  = tonalites[rubrique] || { note: "", libre: "" };
-        var nbSel = (programme[rubrique] || []).length;
-        var key  = rubrique.replace(/\s/g,"_");
-
-        var bloc = document.createElement("div");
-        bloc.className = "rubrique-bloc";
-        bloc.setAttribute("data-rubrique", rubrique);
-
-        // En-tête
-        var header = document.createElement("div");
-        header.className = "rubrique-header";
-        header.innerHTML =
-          '<span class="rubrique-nom">' + escHtml(rubrique) + '</span>'
-          + '<span class="rubrique-nb" id="rNb_' + key + '">' + nbSel + '</span>'
-          + '<span class="rubrique-chevron" id="rChev_' + key + '">&#9654;</span>';
-
-        // Corps
-        var body = document.createElement("div");
-        body.className = "rubrique-body";
-        body.id = "rBody_" + key;
-
-        var optionsHtml = '<option value="">— Tonalité —</option>';
-        NOTES_GAMMES.forEach(function(n) {
-          optionsHtml += '<option value="' + escHtml(n) + '"' + (ton.note === n ? ' selected' : '') + '>' + escHtml(n) + '</option>';
-        });
-        optionsHtml += '<option value="autre"' + (ton.note === "autre" ? ' selected' : '') + '>Autre…</option>';
-
-        var libreStyle = (ton.note === "autre") ? "" : ' style="display:none"';
-
-        body.innerHTML =
-          '<div class="rubrique-tonalite-row">'
-            + '<span class="rubrique-tonalite-label">&#127925; Tonalité :</span>'
-            + '<select class="tonal-select" id="tonSel_' + key + '">' + optionsHtml + '</select>'
-            + '<input class="tonal-libre" id="tonLibre_' + key + '" type="text"'
-              + ' placeholder="Saisir tonalité…" value="' + escHtml(ton.libre) + '"' + libreStyle + ' />'
-          + '</div>'
-          + '<div class="rubrique-search-row">'
-            + '<span>🔍</span>'
-            + '<input type="text" placeholder="Rechercher dans ' + escHtml(rubrique) + '…" id="rSearch_' + key + '" />'
-          + '</div>'
-          + '<div class="chansons-liste" id="rListe_' + key + '"></div>'
-          + '<div class="rubrique-selectionnees" id="rSel_' + key + '"></div>';
-
-        bloc.appendChild(header);
-        bloc.appendChild(body);
-        container.appendChild(bloc);
-
-        renderListeChansonsPourRubrique(rubrique);
-        renderSelectionnesPourRubrique(rubrique);
-
-        // Toggle open/close
-        header.addEventListener("click", function() {
-          var b    = document.getElementById("rBody_" + key);
-          var chev = document.getElementById("rChev_" + key);
-          var isOpen = b.classList.contains("open");
-          b.classList.toggle("open", !isOpen);
-          header.classList.toggle("open", !isOpen);
-          chev.classList.toggle("open", !isOpen);
-        });
-
-        // Tonalité select
-        var tonSelEl   = document.getElementById("tonSel_" + key);
-        var tonLibreEl = document.getElementById("tonLibre_" + key);
-        tonSelEl.addEventListener("change", function() {
-          if (!tonalites[rubrique]) tonalites[rubrique] = { note: "", libre: "" };
-          tonalites[rubrique].note = tonSelEl.value;
-          tonLibreEl.style.display = (tonSelEl.value === "autre") ? "inline-block" : "none";
-        });
-        tonLibreEl.addEventListener("input", function() {
-          if (!tonalites[rubrique]) tonalites[rubrique] = { note: "", libre: "" };
-          tonalites[rubrique].libre = tonLibreEl.value;
-        });
-
-        // Recherche
-        var searchEl = document.getElementById("rSearch_" + key);
-        searchEl.addEventListener("input", function() {
-          renderListeChansonsPourRubrique(rubrique);
-        });
-      });
-
       majRecap();
     }
 
-    function renderListeChansonsPourRubrique(rubrique) {
-      var key      = rubrique.replace(/\s/g,"_");
-      var liste    = document.getElementById("rListe_" + key);
-      var searchEl = document.getElementById("rSearch_" + key);
-      var q        = searchEl ? searchEl.value.toLowerCase().trim() : "";
-      var chansons = chansonsByRubrique[rubrique] || [];
-      var selIds   = (programme[rubrique] || []).map(function(p) { return p.chanson_id; });
-      var filtrees = q ? chansons.filter(function(c) { return c.titre.toLowerCase().includes(q); }) : chansons;
-
-      if (filtrees.length === 0) {
-        liste.innerHTML = '<p class="rubrique-empty">Aucune chanson dans cette rubrique.</p>';
-        return;
-      }
-
-      liste.innerHTML = "";
-      filtrees.forEach(function(c) {
-        var estSel = selIds.indexOf(c.id) !== -1;
-        var item   = document.createElement("div");
-        item.className = "chanson-check-item" + (estSel ? " selectionne" : "");
-        item.setAttribute("data-id", c.id);
-        item.innerHTML =
-          '<div class="check-box">' + (estSel ? "&#10003;" : "") + '</div>'
-          + '<div class="chanson-check-info">'
-            + (c.numero ? '<span class="chanson-check-num">#' + escHtml(String(c.numero)) + '</span> ' : '')
-            + '<span class="chanson-check-titre">' + escHtml(c.titre) + '</span>'
-            + (c.langue ? '<div class="chanson-check-langue">' + escHtml(c.langue) + '</div>' : '')
-          + '</div>';
-        item.addEventListener("click", function() { toggleChanson(rubrique, c); });
+    function renderListeChansonsPourRubrique(rubrique){
+      var key=rubrique.replace(/\s/g,"_");var liste=document.getElementById("rListe_"+key);
+      var q=(document.getElementById("rSearch_"+key)||{}).value||"";q=q.toLowerCase().trim();
+      var chansons=chansonsByRubrique[rubrique]||[];var selIds=(programme[rubrique]||[]).map(function(p){return p.chanson_id;});
+      var filtrees=q?chansons.filter(function(c){return c.titre.toLowerCase().includes(q);}):chansons;
+      if(filtrees.length===0){liste.innerHTML='<p class="rubrique-empty">Aucune chanson dans cette rubrique.</p>';return;}
+      liste.innerHTML="";
+      filtrees.forEach(function(c){
+        var estSel=selIds.indexOf(c.id)!==-1;var item=document.createElement("div");
+        item.className="chanson-check-item"+(estSel?" selectionne":"");item.setAttribute("data-id",c.id);
+        item.innerHTML='<div class="check-box">'+(estSel?"&#10003;":"")+'</div><div class="chanson-check-info">'+(c.numero?'<span class="chanson-check-num">#'+escHtml(String(c.numero))+'</span> ':'')+
+          '<span class="chanson-check-titre">'+escHtml(c.titre)+'</span>'+(c.langue?'<div class="chanson-check-langue">'+escHtml(c.langue)+'</div>':'')+'</div>';
+        item.addEventListener("click",function(){toggleChanson(rubrique,c);});
         liste.appendChild(item);
       });
     }
 
-    function renderSelectionnesPourRubrique(rubrique) {
-      var key   = rubrique.replace(/\s/g,"_");
-      var sel   = document.getElementById("rSel_" + key);
-      var nbEl  = document.getElementById("rNb_" + key);
-      var items = programme[rubrique] || [];
-
-      if (nbEl) nbEl.textContent = items.length;
-
-      if (items.length === 0) { sel.innerHTML = ""; return; }
-
-      var html = '<div class="rubrique-selectionnees-titre">Chansons retenues (' + items.length + ')</div>';
-      items.forEach(function(p, i) {
-        html +=
-          '<div class="prog-item">'
-            + '<span class="prog-item-ordre">' + (i+1) + '</span>'
-            + '<span class="prog-item-titre">'
-              + (p.numero ? '<span style="font-size:0.68rem;color:#C9A84C;">#' + escHtml(String(p.numero)) + '</span> ' : '')
-              + escHtml(p.titre)
-            + '</span>'
-            + '<button class="prog-item-del"'
-              + ' data-rubrique="' + escHtml(rubrique) + '"'
-              + ' data-chansonid="' + escHtml(p.chanson_id) + '"'
-              + ' data-titre="' + escHtml(p.titre) + '"'
-              + ' title="Retirer">&#10005;</button>'
-          + '</div>';
-      });
-      sel.innerHTML = html;
-
-      sel.querySelectorAll(".prog-item-del").forEach(function(btn) {
-        btn.addEventListener("click", function(e) {
-          e.stopPropagation();
-          demanderSuppression(
-            btn.getAttribute("data-rubrique"),
-            btn.getAttribute("data-chansonid"),
-            btn.getAttribute("data-titre")
-          );
-        });
-      });
+    function renderSelectionnesPourRubrique(rubrique){
+      var key=rubrique.replace(/\s/g,"_");var sel=document.getElementById("rSel_"+key);var nbEl=document.getElementById("rNb_"+key);
+      var items=programme[rubrique]||[];if(nbEl)nbEl.textContent=items.length;
+      if(items.length===0){sel.innerHTML="";return;}
+      var html='<div class="rubrique-selectionnees-titre">Chansons retenues ('+items.length+')</div>';
+      items.forEach(function(p,i){html+='<div class="prog-item"><span class="prog-item-ordre">'+(i+1)+'</span><span class="prog-item-titre">'+(p.numero?'<span style="font-size:.68rem;color:#C9A84C;">#'+escHtml(String(p.numero))+'</span> ':'')+escHtml(p.titre)+'</span><button class="prog-item-del" data-rubrique="'+escHtml(rubrique)+'" data-chansonid="'+escHtml(p.chanson_id)+'" data-titre="'+escHtml(p.titre)+'" title="Retirer">&#10005;</button></div>';});
+      sel.innerHTML=html;
+      sel.querySelectorAll(".prog-item-del").forEach(function(btn){btn.addEventListener("click",function(e){e.stopPropagation();demanderSuppression(btn.getAttribute("data-rubrique"),btn.getAttribute("data-chansonid"),btn.getAttribute("data-titre"));});});
     }
 
-    // ── TOGGLE CHANSON ────────────────────────────────────────
-    async function toggleChanson(rubrique, chanson) {
-      var selIds = (programme[rubrique] || []).map(function(p) { return p.chanson_id; });
-      var idx    = selIds.indexOf(chanson.id);
-
-      if (idx === -1) {
-        var ordre = (programme[rubrique] || []).length + 1;
-        var res = await sb.from("programme_evenement").insert({
-          evenement_id:   evenementId,
-          chanson_id:     chanson.id,
-          rubrique:       rubrique,
-          ordre:          ordre,
-          tonalite:       "",
-          tonalite_libre: ""
-        }).select().single();
-
-        if (res.error) { showToast("Erreur lors de l'ajout.", "error"); return; }
-
-        if (!programme[rubrique]) programme[rubrique] = [];
-        programme[rubrique].push({
-          id:             res.data.id,
-          chanson_id:     chanson.id,
-          ordre:          ordre,
-          tonalite:       "",
-          tonalite_libre: "",
-          titre:          chanson.titre,
-          numero:         chanson.numero,
-          langue:         chanson.langue || ""
-        });
-        showToast(chanson.titre + " ajoutée.", "success");
+    async function toggleChanson(rubrique,chanson){
+      var selIds=(programme[rubrique]||[]).map(function(p){return p.chanson_id;});var idx=selIds.indexOf(chanson.id);
+      if(idx===-1){
+        var ordre=(programme[rubrique]||[]).length+1;
+        var res=await sb.from("programme_evenement").insert({evenement_id:evenementId,chanson_id:chanson.id,rubrique:rubrique,ordre:ordre,tonalite:"",tonalite_libre:""}).select().single();
+        if(res.error){showToast("Erreur lors de l'ajout.","error");return;}
+        if(!programme[rubrique])programme[rubrique]=[];
+        programme[rubrique].push({id:res.data.id,chanson_id:chanson.id,ordre:ordre,tonalite:"",tonalite_libre:"",titre:chanson.titre,numero:chanson.numero,langue:chanson.langue||""});
+        showToast(chanson.titre+" ajoutée.","success");
       } else {
-        var entry = programme[rubrique][idx];
-        var res = await sb.from("programme_evenement").delete().eq("id", entry.id);
-        if (res.error) { showToast("Erreur lors du retrait.", "error"); return; }
-        programme[rubrique].splice(idx, 1);
-        showToast(chanson.titre + " retirée.", "info");
+        var entry=programme[rubrique][idx];
+        var res=await sb.from("programme_evenement").delete().eq("id",entry.id);
+        if(res.error){showToast("Erreur lors du retrait.","error");return;}
+        programme[rubrique].splice(idx,1);showToast(chanson.titre+" retirée.","info");
       }
-
-      renderListeChansonsPourRubrique(rubrique);
-      renderSelectionnesPourRubrique(rubrique);
-      majRecap();
+      renderListeChansonsPourRubrique(rubrique);renderSelectionnesPourRubrique(rubrique);majRecap();
     }
 
-    // ── SUPPRESSION ───────────────────────────────────────────
-    function demanderSuppression(rubrique, chansonId, titre) {
-      pendingSupprInfo = { rubrique: rubrique, chanson_id: chansonId, titre: titre };
-      document.getElementById("modalSupprDesc").textContent = 'Retirer "' + titre + '" du programme ?';
-      document.getElementById("modalSuppr").style.display = "flex";
+    function demanderSuppression(rubrique,chansonId,titre){
+      pendingSupprInfo={rubrique:rubrique,chanson_id:chansonId,titre:titre};
+      document.getElementById("modalSupprDesc").textContent='Retirer "'+titre+'" du programme ?';
+      document.getElementById("modalSuppr").style.display="flex";
     }
-
-    function fermerModal() {
-      document.getElementById("modalSuppr").style.display = "none";
-      pendingSupprInfo = null;
-    }
-
-    document.getElementById("btnAnnulerSuppr").addEventListener("click", fermerModal);
-    document.getElementById("modalSuppr").addEventListener("click", function(e) { if (e.target === this) fermerModal(); });
-
-    document.getElementById("btnConfirmSuppr").addEventListener("click", async function() {
-      if (!pendingSupprInfo) return;
-      var r  = pendingSupprInfo.rubrique;
-      var id = pendingSupprInfo.chanson_id;
-      fermerModal();
-      var selIds = (programme[r] || []).map(function(p) { return p.chanson_id; });
-      var idx    = selIds.indexOf(id);
-      if (idx === -1) return;
-      var entry = programme[r][idx];
-      var res   = await sb.from("programme_evenement").delete().eq("id", entry.id);
-      if (res.error) { showToast("Erreur lors du retrait.", "error"); return; }
-      programme[r].splice(idx, 1);
-      renderListeChansonsPourRubrique(r);
-      renderSelectionnesPourRubrique(r);
-      majRecap();
-      showToast("Chanson retirée.", "info");
+    function fermerModal(){document.getElementById("modalSuppr").style.display="none";pendingSupprInfo=null;}
+    document.getElementById("btnAnnulerSuppr").addEventListener("click",fermerModal);
+    document.getElementById("modalSuppr").addEventListener("click",function(e){if(e.target===this)fermerModal();});
+    document.getElementById("btnConfirmSuppr").addEventListener("click",async function(){
+      if(!pendingSupprInfo)return;var r=pendingSupprInfo.rubrique;var id=pendingSupprInfo.chanson_id;fermerModal();
+      var selIds=(programme[r]||[]).map(function(p){return p.chanson_id;});var idx=selIds.indexOf(id);if(idx===-1)return;
+      var entry=programme[r][idx];var res=await sb.from("programme_evenement").delete().eq("id",entry.id);
+      if(res.error){showToast("Erreur lors du retrait.","error");return;}
+      programme[r].splice(idx,1);renderListeChansonsPourRubrique(r);renderSelectionnesPourRubrique(r);majRecap();showToast("Chanson retirée.","info");
     });
 
-    // ── SAUVEGARDER ──────────────────────────────────────────
-    document.getElementById("btnSauvegarder").addEventListener("click", async function() {
-      var btn = this;
-      btn.disabled = true; btn.textContent = "Sauvegarde…";
-      try {
-        var promises = [];
-        RUBRIQUES_ORDER.forEach(function(rubrique) {
-          var items = programme[rubrique] || [];
-          var ton   = tonalites[rubrique] || { note: "", libre: "" };
-          items.forEach(function(p, i) {
-            promises.push(
-              sb.from("programme_evenement").update({
-                ordre:          i + 1,
-                tonalite:       ton.note,
-                tonalite_libre: ton.libre
-              }).eq("id", p.id)
-            );
-          });
-        });
-        // Sauvegarder description dans la colonne description de evenements
-        promises.push(
-          sb.from("evenements").update({
-            description: document.getElementById("descEvenement").value
-          }).eq("id", evenementId)
-        );
-        await Promise.all(promises);
-        showToast("Programme sauvegardé.", "success");
-      } catch(err) {
-        showToast("Erreur lors de la sauvegarde.", "error");
-      }
-      btn.disabled = false;
-      btn.innerHTML = "&#128190; Sauvegarder";
+    document.getElementById("btnSauvegarder").addEventListener("click",async function(){
+      var btn=this;btn.disabled=true;btn.textContent="Sauvegarde…";
+      try{
+        var promises=[];
+        RUBRIQUES_ORDER.forEach(function(rubrique){var items=programme[rubrique]||[];var ton=tonalites[rubrique]||{note:"",libre:""};items.forEach(function(p,i){promises.push(sb.from("programme_evenement").update({ordre:i+1,tonalite:ton.note,tonalite_libre:ton.libre}).eq("id",p.id));});});
+        promises.push(sb.from("evenements").update({description:document.getElementById("descEvenement").value}).eq("id",evenementId));
+        await Promise.all(promises);showToast("Programme sauvegardé.","success");
+      }catch(err){showToast("Erreur lors de la sauvegarde.","error");}
+      btn.disabled=false;btn.innerHTML="&#128190; Sauvegarder";
     });
 
-    // ── PDF ───────────────────────────────────────────────────
-    document.getElementById("btnPdf").addEventListener("click", function() {
-      var desc   = document.getElementById("descEvenement").value;
-      var notes  = document.getElementById("notesPrep").value;
-      var dateF  = formatDate(evenementData ? evenementData.date_event : "");
-      var titre  = evenementData ? (evenementData.titre || "Événement") : "Événement";
-      var contenu = "";
-
-      RUBRIQUES_ORDER.forEach(function(rubrique) {
-        var items = programme[rubrique] || [];
-        if (items.length === 0) return;
-        var ton = tonalites[rubrique] || { note: "", libre: "" };
-        var tonAff = ton.note === "autre" ? (ton.libre || "") : (ton.note || "");
-        contenu += '<div class="pdf-rubrique-header">'
-          + '<span class="pdf-rubrique-name">' + escHtml(rubrique) + '</span>'
-          + (tonAff ? '<span class="pdf-rubrique-tonal">Tonalité : ' + escHtml(tonAff) + '</span>' : '')
-          + '</div>';
-        items.forEach(function(p) {
-          contenu += '<div class="pdf-chanson-row">'
-            + (p.numero ? '<span class="pdf-chanson-num">#' + escHtml(String(p.numero)) + '</span>' : '<span class="pdf-chanson-num"></span>')
-            + '<span class="pdf-chanson-titre">' + escHtml(p.titre) + '</span>'
-            + '</div>';
-        });
+    document.getElementById("btnPdf").addEventListener("click",function(){
+      var desc=document.getElementById("descEvenement").value;var dateF=formatDate(evenementData?evenementData.date_event:"");var titre=evenementData?(evenementData.titre||"Événement"):"Événement";var contenu="";
+      RUBRIQUES_ORDER.forEach(function(rubrique){var items=programme[rubrique]||[];if(items.length===0)return;var ton=tonalites[rubrique]||{note:"",libre:""};var tonAff=ton.note==="autre"?(ton.libre||""):(ton.note||"");
+        contenu+='<div class="pdf-rubrique-header"><span class="pdf-rubrique-name">'+escHtml(rubrique)+"</span>"+(tonAff?'<span class="pdf-rubrique-tonal">Tonalité : '+escHtml(tonAff)+"</span>":"")+"</div>";
+        items.forEach(function(p){contenu+='<div class="pdf-chanson-row">'+(p.numero?'<span class="pdf-chanson-num">#'+escHtml(String(p.numero))+"</span>":'<span class="pdf-chanson-num"></span>')+'<span class="pdf-chanson-titre">'+escHtml(p.titre)+"</span></div>";});
       });
-
-      var descBlock  = desc  ? '<blockquote class="pdf-desc">' + escHtml(desc).replace(/\n/g,"<br>") + '</blockquote>' : "";
-      var notesBlock = notes ? '<div class="pdf-notes"><div class="pdf-notes-title">Notes du préparateur</div><p>' + escHtml(notes).replace(/\n/g,"<br>") + '</p></div>' : "";
-
-      document.getElementById("pdfCorps").innerHTML =
-        '<div class="pdf-header">'
-          + '<div class="pdf-church">Mélodie\'s Book — Programme d\'Événement</div>'
-          + '<div class="pdf-titre">' + escHtml(titre) + '</div>'
-          + '<div class="pdf-date">&#128197; ' + escHtml(dateF) + '</div>'
-        + '</div>'
-        + descBlock
-        + '<div class="pdf-programme-title">Programme</div>'
-        + contenu
-        + notesBlock
-        + '<div class="pdf-footer">Mélodie\'s Book · ' + escHtml(dateF) + '</div>';
-
-      var overlay = document.getElementById("pdfOverlay");
-      overlay.style.display = "block";
-      overlay.scrollTop = 0;
-      document.body.style.overflow = "hidden";
+      var descBlock=desc?'<blockquote class="pdf-desc">'+escHtml(desc).replace(/\n/g,"<br>")+"</blockquote>":"";
+      document.getElementById("pdfCorps").innerHTML='<div class="pdf-header"><div class="pdf-church">Mélodie\'s Book — Programme d\'Événement</div><div class="pdf-titre">'+escHtml(titre)+'</div><div class="pdf-date">&#128197; '+escHtml(dateF)+'</div></div>'+descBlock+'<div class="pdf-programme-title">Programme</div>'+contenu+'<div class="pdf-footer">Mélodie\'s Book · '+escHtml(dateF)+'</div>';
+      var overlay=document.getElementById("pdfOverlay");overlay.style.display="block";overlay.scrollTop=0;document.body.style.overflow="hidden";
     });
+    document.getElementById("btnFermerPDF").addEventListener("click",function(){document.getElementById("pdfOverlay").style.display="none";document.body.style.overflow="";});
+    document.getElementById("btnImprimerPDF").addEventListener("click",function(){window.print();});
 
-    document.getElementById("btnFermerPDF").addEventListener("click", function() {
-      document.getElementById("pdfOverlay").style.display = "none";
-      document.body.style.overflow = "";
-    });
-    document.getElementById("btnImprimerPDF").addEventListener("click", function() { window.print(); });
-
-    // ── INIT ─────────────────────────────────────────────────
-    (async function init() {
-      profilUser = await authGuard();
-      if (!profilUser) return;
-      buildSharedNavbar(profilUser, "preparation-evenement");
-      var ok = await chargerEvenement();
-      if (!ok) return;
-      await Promise.all([chargerChansons(), chargerProgramme()]);
-      renderRubriques();
-      hideLoader();
+    (async function init(){
+      profilUser=await authGuard();if(!profilUser)return;
+      buildSharedNavbar(profilUser,"preparation-evenement");
+      var ok=await chargerEvenement();if(!ok)return;
+      await Promise.all([chargerChansons(),chargerProgramme()]);
+      renderRubriques();hideLoader();
     })();
   </script>
 </body>
