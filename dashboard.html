@@ -12,27 +12,17 @@
   <script src="navbar.js"></script>
 
   <style>
-    /* =============================================
-       DASHBOARD — MÉLODIE'S BOOK
-       À coller dans css/style.css
-    ============================================= */
-
-    /* --- Variables globales (si pas encore dans style.css) --- */
     :root {
       --bleu-nuit:    #0D1B2A;
       --bleu-profond: #1A2E45;
       --or:           #C9A84C;
       --or-clair:     #F0D98A;
       --ivoire:       #FAF6ED;
-      --blanc:        #FFFFFF;
       --texte-clair:  #E8DFC8;
       --texte-muted:  #8A9BB0;
       --danger:       #C0392B;
       --succes:       #1E7A5A;
-      --ombre-or:     rgba(201,168,76,0.18);
-      --ombre-nuit:   rgba(13,27,42,0.7);
     }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body.dashboard-body {
@@ -42,35 +32,19 @@
       min-height: 100vh;
       overflow-x: hidden;
     }
-
-    /* --- FOND ÉTOILÉ --- */
     body.dashboard-body::before {
       content: '';
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background:
         radial-gradient(ellipse at 20% 10%, rgba(201,168,76,0.06) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 80%, rgba(26,46,69,0.8) 0%, transparent 60%),
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 0;
+        radial-gradient(ellipse at 80% 80%, rgba(26,46,69,0.8) 0%, transparent 60%);
+      pointer-events: none; z-index: 0;
     }
 
-    /* --- PARTICULES DORÉES --- */
-    .particles {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
-    }
+    .particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
     .particle {
-      position: absolute;
-      width: 2px;
-      height: 2px;
-      background: var(--or-clair);
-      border-radius: 50%;
-      opacity: 0;
+      position: absolute; width: 2px; height: 2px;
+      background: var(--or-clair); border-radius: 50%; opacity: 0;
       animation: floatParticle linear infinite;
     }
     @keyframes floatParticle {
@@ -80,544 +54,144 @@
       100% { opacity: 0; transform: translateY(-20px) scale(1.5); }
     }
 
-    /* ============================================
-       ACCÈS EN ATTENTE
-    ============================================ */
-    .waiting-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 80vh;
-      text-align: center;
-      padding: 2rem;
-      position: relative;
-      z-index: 1;
+    /* LOADING */
+    .loading-overlay {
+      position: fixed; inset: 0; background: var(--bleu-nuit);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; transition: opacity 0.4s ease;
     }
-    .waiting-icon {
-      font-size: 4rem;
-      margin-bottom: 1.5rem;
-      animation: pulseGlow 2.5s ease-in-out infinite;
-    }
-    @keyframes pulseGlow {
-      0%, 100% { filter: drop-shadow(0 0 8px rgba(201,168,76,0.3)); transform: scale(1); }
-      50%       { filter: drop-shadow(0 0 20px rgba(201,168,76,0.7)); transform: scale(1.05); }
-    }
-    .waiting-title {
-      font-family: 'Cinzel', serif;
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--or-clair);
-      margin-bottom: 0.8rem;
-    }
-    .waiting-text {
-      font-family: 'Lato', sans-serif;
-      font-size: 1rem;
-      color: var(--texte-muted);
-      max-width: 440px;
-      line-height: 1.7;
-      margin-bottom: 2rem;
-    }
-    .waiting-verset {
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-size: 0.95rem;
-      color: rgba(201,168,76,0.6);
-      max-width: 380px;
-      border-left: 2px solid rgba(201,168,76,0.3);
-      padding-left: 1rem;
-      line-height: 1.7;
-    }
+    .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+    .loading-logo { font-family: 'Cinzel', serif; font-size: 1.5rem; font-weight: 700; color: var(--or-clair); margin-bottom: 1.5rem; letter-spacing: 0.08em; }
+    .loading-spinner { width: 40px; height: 40px; border: 3px solid rgba(201,168,76,0.15); border-top-color: var(--or); border-radius: 50%; animation: spin 0.85s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ============================================
-       CONTENU PRINCIPAL
-    ============================================ */
-    .main-content {
-      position: relative;
-      z-index: 1;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2.5rem 2rem 4rem;
-    }
+    /* WAITING */
+    .waiting-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; text-align: center; padding: 2rem; position: relative; z-index: 1; }
+    .waiting-icon { font-size: 4rem; margin-bottom: 1.5rem; animation: pulseGlow 2.5s ease-in-out infinite; }
+    @keyframes pulseGlow { 0%,100%{filter:drop-shadow(0 0 8px rgba(201,168,76,0.3));transform:scale(1)} 50%{filter:drop-shadow(0 0 20px rgba(201,168,76,0.7));transform:scale(1.05)} }
+    .waiting-title { font-family: 'Cinzel', serif; font-size: 1.8rem; font-weight: 700; color: var(--or-clair); margin-bottom: 0.8rem; }
+    .waiting-text { font-size: 1rem; color: var(--texte-muted); max-width: 440px; line-height: 1.7; margin-bottom: 2rem; }
+    .waiting-verset { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.95rem; color: rgba(201,168,76,0.6); max-width: 380px; border-left: 2px solid rgba(201,168,76,0.3); padding-left: 1rem; line-height: 1.7; }
 
-    /* --- EN-TÊTE DASHBOARD --- */
-    .dashboard-header {
-      margin-bottom: 2.5rem;
-      animation: fadeSlideDown 0.5s ease both;
-    }
-    @keyframes fadeSlideDown {
-      from { opacity: 0; transform: translateY(-18px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .dashboard-greeting {
-      font-family: 'Lato', sans-serif;
-      font-size: 0.9rem;
-      color: var(--texte-muted);
-      font-weight: 300;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 0.3rem;
-    }
-    .dashboard-title {
-      font-family: 'Cinzel', serif;
-      font-size: 2.2rem;
-      font-weight: 700;
-      color: var(--or-clair);
-      letter-spacing: 0.03em;
-      line-height: 1.15;
-    }
-    .dashboard-verset {
-      margin-top: 0.8rem;
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-size: 0.9rem;
-      color: rgba(201,168,76,0.55);
-      max-width: 500px;
-      line-height: 1.6;
-    }
+    /* MAIN */
+    .main-content { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 2.5rem 2rem 4rem; }
 
-    /* --- SÉPARATEUR DORÉ --- */
-    .divider-or {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin: 2rem 0 1.5rem;
-    }
-    .divider-or::before,
-    .divider-or::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(201,168,76,0.35), transparent);
-    }
-    .divider-or-label {
-      font-family: 'Cinzel', serif;
-      font-size: 0.72rem;
-      font-weight: 600;
-      color: rgba(201,168,76,0.5);
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
+    /* HEADER */
+    .dashboard-header { margin-bottom: 2.5rem; animation: fadeSlideDown 0.5s ease both; }
+    @keyframes fadeSlideDown { from{opacity:0;transform:translateY(-18px)} to{opacity:1;transform:translateY(0)} }
+    .dashboard-greeting { font-size: 0.9rem; color: var(--texte-muted); font-weight: 300; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.3rem; }
+    .dashboard-title { font-family: 'Cinzel', serif; font-size: 2.2rem; font-weight: 700; color: var(--or-clair); letter-spacing: 0.03em; line-height: 1.15; }
+    .dashboard-verset { margin-top: 0.8rem; font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.9rem; color: rgba(201,168,76,0.55); max-width: 500px; line-height: 1.6; }
 
-    /* ============================================
-       STATS RAPIDES
-    ============================================ */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2.5rem;
-    }
+    /* DIVIDER */
+    .divider-or { display: flex; align-items: center; gap: 1rem; margin: 2rem 0 1.5rem; }
+    .divider-or::before, .divider-or::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,168,76,0.35), transparent); }
+    .divider-or-label { font-family: 'Cinzel', serif; font-size: 0.72rem; font-weight: 600; color: rgba(201,168,76,0.5); letter-spacing: 0.15em; text-transform: uppercase; white-space: nowrap; }
 
+    /* STATS */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2.5rem; }
     .stat-card {
       background: linear-gradient(135deg, rgba(26,46,69,0.8), rgba(13,27,42,0.9));
-      border: 1px solid rgba(201,168,76,0.2);
-      border-radius: 14px;
-      padding: 1.4rem 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      position: relative;
-      overflow: hidden;
+      border: 1px solid rgba(201,168,76,0.2); border-radius: 14px;
+      padding: 1.4rem 1.5rem; display: flex; flex-direction: column; gap: 0.5rem;
+      position: relative; overflow: hidden;
       transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
       animation: fadeSlideUp 0.5s ease both;
     }
-    .stat-card:nth-child(2) { animation-delay: 0.07s; }
-    .stat-card:nth-child(3) { animation-delay: 0.14s; }
-    .stat-card:nth-child(4) { animation-delay: 0.21s; }
-    @keyframes fadeSlideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--or), transparent);
-      opacity: 0;
-      transition: opacity 0.22s ease;
-    }
-    .stat-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.35), 0 0 0 1px rgba(201,168,76,0.3);
-      border-color: rgba(201,168,76,0.4);
-    }
-    .stat-card:hover::before { opacity: 1; }
+    .stat-card:nth-child(2){animation-delay:0.07s} .stat-card:nth-child(3){animation-delay:0.14s} .stat-card:nth-child(4){animation-delay:0.21s} .stat-card:nth-child(5){animation-delay:0.28s}
+    @keyframes fadeSlideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--or),transparent); opacity:0; transition:opacity 0.22s; }
+    .stat-card:hover { transform:translateY(-3px); box-shadow:0 12px 32px rgba(0,0,0,0.35),0 0 0 1px rgba(201,168,76,0.3); border-color:rgba(201,168,76,0.4); }
+    .stat-card:hover::before { opacity:1; }
+    .stat-icon { font-size: 1.6rem; margin-bottom: 0.2rem; }
+    .stat-value { font-family: 'Cinzel', serif; font-size: 2rem; font-weight: 700; color: var(--or-clair); line-height: 1; }
+    .stat-label { font-size: 0.78rem; font-weight: 700; color: var(--texte-muted); letter-spacing: 0.08em; text-transform: uppercase; }
 
-    .stat-icon {
-      font-size: 1.6rem;
-      margin-bottom: 0.2rem;
-    }
-    .stat-value {
-      font-family: 'Cinzel', serif;
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--or-clair);
-      line-height: 1;
-    }
-    .stat-label {
-      font-family: 'Lato', sans-serif;
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--texte-muted);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    /* ============================================
-       GRILLE PRINCIPALE
-    ============================================ */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-    }
+    /* GRID */
+    .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
     .dashboard-grid .col-full { grid-column: 1 / -1; }
 
-    /* --- CARTE SECTION --- */
+    /* SECTION CARD */
     .section-card {
       background: linear-gradient(145deg, rgba(26,46,69,0.75), rgba(13,27,42,0.85));
-      border: 1px solid rgba(201,168,76,0.18);
-      border-radius: 16px;
-      overflow: hidden;
-      transition: box-shadow 0.25s ease;
-      animation: fadeSlideUp 0.5s ease both;
+      border: 1px solid rgba(201,168,76,0.18); border-radius: 16px; overflow: hidden;
+      transition: box-shadow 0.25s ease; animation: fadeSlideUp 0.5s ease both;
     }
-    .section-card:nth-child(2) { animation-delay: 0.08s; }
-    .section-card:nth-child(3) { animation-delay: 0.16s; }
-    .section-card:nth-child(4) { animation-delay: 0.24s; }
-    .section-card:hover {
-      box-shadow: 0 8px 28px rgba(0,0,0,0.3), 0 0 0 1px rgba(201,168,76,0.25);
-    }
-
-    .section-card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.2rem 1.5rem;
-      border-bottom: 1px solid rgba(201,168,76,0.12);
-      background: rgba(201,168,76,0.04);
-    }
-    .section-card-title {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      font-family: 'Cinzel', serif;
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--or-clair);
-      letter-spacing: 0.04em;
-    }
-    .section-card-title .s-icon { font-size: 1.1rem; }
-    .section-card-link {
-      font-family: 'Lato', sans-serif;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--or);
-      text-decoration: none;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      transition: color 0.2s ease;
-    }
+    .section-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.3), 0 0 0 1px rgba(201,168,76,0.25); }
+    .section-card-header { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(201,168,76,0.12); background: rgba(201,168,76,0.04); }
+    .section-card-title { display: flex; align-items: center; gap: 0.6rem; font-family: 'Cinzel', serif; font-size: 0.95rem; font-weight: 600; color: var(--or-clair); letter-spacing: 0.04em; }
+    .section-card-link { font-size: 0.75rem; font-weight: 700; color: var(--or); text-decoration: none; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.2s; }
     .section-card-link:hover { color: var(--or-clair); }
     .section-card-body { padding: 1.2rem 1.5rem; }
 
-    /* ============================================
-       ACCÈS RAPIDES (MENU CARDS)
-    ============================================ */
-    .quick-access-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
-      gap: 0.85rem;
-    }
-
+    /* ACCÈS RAPIDES */
+    .quick-access-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.85rem; }
     .qa-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.6rem;
+      display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
       padding: 1.2rem 0.8rem;
-      background: rgba(13,27,42,0.5);
-      border: 1px solid rgba(201,168,76,0.15);
-      border-radius: 12px;
-      text-decoration: none;
-      color: var(--texte-clair);
-      transition: all 0.22s ease;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
+      background: rgba(13,27,42,0.5); border: 1px solid rgba(201,168,76,0.15); border-radius: 12px;
+      text-decoration: none; color: var(--texte-clair);
+      transition: all 0.22s ease; cursor: pointer; position: relative; overflow: hidden;
     }
-    .qa-card::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(201,168,76,0.06), transparent);
-      opacity: 0;
-      transition: opacity 0.22s ease;
-    }
-    .qa-card:hover {
-      border-color: rgba(201,168,76,0.45);
-      transform: translateY(-3px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-    }
-    .qa-card:hover::after { opacity: 1; }
-    .qa-icon {
-      font-size: 1.7rem;
-      line-height: 1;
-      filter: drop-shadow(0 0 6px rgba(201,168,76,0.2));
-    }
-    .qa-label {
-      font-family: 'Lato', sans-serif;
-      font-size: 0.78rem;
-      font-weight: 700;
-      text-align: center;
-      color: var(--texte-muted);
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      line-height: 1.3;
-      transition: color 0.22s ease;
-    }
+    .qa-card::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(201,168,76,0.06),transparent); opacity:0; transition:opacity 0.22s; }
+    .qa-card:hover { border-color:rgba(201,168,76,0.45); transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,0.3); }
+    .qa-card:hover::after { opacity:1; }
+    .qa-icon { font-size: 1.7rem; line-height: 1; }
+    .qa-label { font-size: 0.78rem; font-weight: 700; text-align: center; color: var(--texte-muted); letter-spacing: 0.05em; text-transform: uppercase; line-height: 1.3; transition: color 0.22s; }
     .qa-card:hover .qa-label { color: var(--or-clair); }
-    .qa-badge {
-      position: absolute;
-      top: 8px; right: 8px;
-      background: var(--or);
-      color: var(--bleu-nuit);
-      font-size: 0.6rem;
-      font-weight: 900;
-      padding: 1px 6px;
-      border-radius: 10px;
-      font-family: 'Lato', sans-serif;
-    }
+    .qa-badge { position:absolute; top:8px; right:8px; background:var(--or); color:var(--bleu-nuit); font-size:0.6rem; font-weight:900; padding:1px 6px; border-radius:10px; }
 
-    /* ============================================
-       PROCHAIN CULTE
-    ============================================ */
-    .culte-card {
-      display: flex;
-      align-items: stretch;
-      gap: 1.2rem;
-    }
-    .culte-date-block {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-width: 72px;
-      background: linear-gradient(135deg, var(--or), #A8852E);
-      border-radius: 10px;
-      padding: 0.8rem 0.5rem;
-      box-shadow: 0 4px 14px rgba(201,168,76,0.25);
-    }
-    .culte-date-day {
-      font-family: 'Cinzel', serif;
-      font-size: 2rem;
-      font-weight: 900;
-      color: var(--bleu-nuit);
-      line-height: 1;
-    }
-    .culte-date-month {
-      font-family: 'Lato', sans-serif;
-      font-size: 0.7rem;
-      font-weight: 900;
-      color: rgba(13,27,42,0.7);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-    .culte-info { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; justify-content: center; }
-    .culte-theme {
-      font-family: 'Cinzel', serif;
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: var(--or-clair);
-    }
-    .culte-meta {
-      font-family: 'Lato', sans-serif;
-      font-size: 0.82rem;
-      color: var(--texte-muted);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .culte-statut {
-      display: inline-block;
-      padding: 2px 10px;
-      border-radius: 20px;
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    .statut-preparation { background: rgba(126,87,194,0.15); color: #B39DDB; border: 1px solid rgba(126,87,194,0.3); }
-    .statut-valide      { background: rgba(30,122,90,0.15);  color: #6EC99A; border: 1px solid rgba(30,122,90,0.3); }
-    .statut-archive     { background: rgba(90,90,90,0.15);   color: #9E9E9E; border: 1px solid rgba(90,90,90,0.3); }
-    .culte-chansons-count {
-      font-family: 'Lato', sans-serif;
-      font-size: 0.8rem;
-      color: var(--texte-muted);
-      margin-top: 0.3rem;
-    }
-    .culte-chansons-count span { color: var(--or); font-weight: 700; }
+    /* PROCHAIN CULTE */
+    .culte-card { display: flex; align-items: stretch; gap: 1.2rem; }
+    .culte-date-block { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:72px; background:linear-gradient(135deg,var(--or),#A8852E); border-radius:10px; padding:0.8rem 0.5rem; box-shadow:0 4px 14px rgba(201,168,76,0.25); }
+    .culte-date-day { font-family:'Cinzel',serif; font-size:2rem; font-weight:900; color:var(--bleu-nuit); line-height:1; }
+    .culte-date-month { font-size:0.7rem; font-weight:900; color:rgba(13,27,42,0.7); text-transform:uppercase; letter-spacing:0.1em; }
+    .culte-info { flex:1; display:flex; flex-direction:column; gap:0.4rem; justify-content:center; }
+    .culte-theme { font-family:'Cinzel',serif; font-size:1.05rem; font-weight:600; color:var(--or-clair); }
+    .culte-statut { display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.68rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; }
+    .statut-preparation { background:rgba(126,87,194,0.15); color:#B39DDB; border:1px solid rgba(126,87,194,0.3); }
+    .statut-valide      { background:rgba(30,122,90,0.15); color:#6EC99A; border:1px solid rgba(30,122,90,0.3); }
+    .statut-archive     { background:rgba(90,90,90,0.15); color:#9E9E9E; border:1px solid rgba(90,90,90,0.3); }
+    .no-culte { text-align:center; padding:1.5rem 1rem; color:var(--texte-muted); font-style:italic; font-family:'Playfair Display',serif; font-size:0.92rem; }
 
-    .no-culte {
-      text-align: center;
-      padding: 1.5rem 1rem;
-      color: var(--texte-muted);
-      font-style: italic;
-      font-family: 'Playfair Display', serif;
-      font-size: 0.92rem;
-    }
+    /* PROCHAIN ÉVÉNEMENT */
+    .event-card { display:flex; align-items:center; gap:1rem; }
+    .event-date-block { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:62px; background:linear-gradient(135deg,rgba(201,168,76,0.2),rgba(201,168,76,0.08)); border:1px solid rgba(201,168,76,0.35); border-radius:10px; padding:0.7rem 0.5rem; flex-shrink:0; }
+    .event-date-day { font-family:'Cinzel',serif; font-size:1.6rem; font-weight:900; color:var(--or-clair); line-height:1; }
+    .event-date-month { font-size:0.65rem; font-weight:900; color:#C9A84C; text-transform:uppercase; letter-spacing:0.1em; }
+    .event-info { flex:1; display:flex; flex-direction:column; gap:0.3rem; }
+    .event-titre { font-family:'Cinzel',serif; font-size:0.95rem; font-weight:600; color:var(--or-clair); }
+    .event-countdown { display:inline-block; font-family:'Cinzel',serif; font-size:0.72rem; font-weight:700; color:#F0D98A; background:rgba(201,168,76,0.12); border:1px solid rgba(201,168,76,0.25); border-radius:8px; padding:0.15rem 0.5rem; }
+    .event-prep { font-size:0.75rem; color:var(--texte-muted); }
 
-    /* ============================================
-       ACTIVITÉ RÉCENTE
-    ============================================ */
-    .activity-list { display: flex; flex-direction: column; gap: 0.6rem; }
-    .activity-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.9rem;
-      padding: 0.7rem 0;
-      border-bottom: 1px solid rgba(201,168,76,0.07);
-    }
-    .activity-item:last-child { border-bottom: none; }
-    .activity-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      margin-top: 5px;
-      flex-shrink: 0;
-    }
-    .dot-or      { background: var(--or); box-shadow: 0 0 6px rgba(201,168,76,0.4); }
-    .dot-bleu    { background: #5BA3C9; box-shadow: 0 0 6px rgba(91,163,201,0.4); }
-    .dot-violet  { background: #9C7ECC; box-shadow: 0 0 6px rgba(156,126,204,0.4); }
-    .dot-vert    { background: #5BAA7D; box-shadow: 0 0 6px rgba(91,170,125,0.4); }
+    /* ACTIVITÉ */
+    .activity-list { display:flex; flex-direction:column; gap:0.6rem; }
+    .activity-item { display:flex; align-items:flex-start; gap:0.9rem; padding:0.7rem 0; border-bottom:1px solid rgba(201,168,76,0.07); }
+    .activity-item:last-child { border-bottom:none; }
+    .activity-dot { width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+    .dot-or     { background:var(--or); box-shadow:0 0 6px rgba(201,168,76,0.4); }
+    .dot-bleu   { background:#5BA3C9; box-shadow:0 0 6px rgba(91,163,201,0.4); }
+    .dot-violet { background:#9C7ECC; box-shadow:0 0 6px rgba(156,126,204,0.4); }
+    .dot-vert   { background:#5BAA7D; box-shadow:0 0 6px rgba(91,170,125,0.4); }
+    .activity-content { flex:1; }
+    .activity-text { font-size:0.83rem; color:var(--texte-clair); line-height:1.4; }
+    .activity-text strong { color:var(--or-clair); font-weight:700; }
+    .activity-time { font-size:0.72rem; color:var(--texte-muted); margin-top:2px; }
 
-    .activity-content { flex: 1; }
-    .activity-text {
-      font-family: 'Lato', sans-serif;
-      font-size: 0.83rem;
-      color: var(--texte-clair);
-      line-height: 1.4;
-    }
-    .activity-text strong { color: var(--or-clair); font-weight: 700; }
-    .activity-time {
-      font-family: 'Lato', sans-serif;
-      font-size: 0.72rem;
-      color: var(--texte-muted);
-      margin-top: 2px;
-    }
+    /* PROPOSITIONS */
+    .proposition-item { display:flex; align-items:center; justify-content:space-between; padding:0.7rem 0; border-bottom:1px solid rgba(201,168,76,0.07); }
+    .proposition-item:last-child { border-bottom:none; }
+    .proposition-titre { font-size:0.85rem; color:var(--texte-clair); font-weight:700; }
+    .proposition-artiste { font-size:0.76rem; color:var(--texte-muted); margin-top:1px; }
+    .btn-voir { padding:0.3rem 0.8rem; background:transparent; border:1px solid rgba(201,168,76,0.3); color:var(--or); font-size:0.73rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; border-radius:6px; cursor:pointer; text-decoration:none; transition:all 0.2s; flex-shrink:0; }
+    .btn-voir:hover { background:rgba(201,168,76,0.1); border-color:var(--or); }
 
-    /* ============================================
-       PROPOSITIONS EN ATTENTE (admin)
-    ============================================ */
-    .proposition-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.7rem 0;
-      border-bottom: 1px solid rgba(201,168,76,0.07);
-    }
-    .proposition-item:last-child { border-bottom: none; }
-    .proposition-titre {
-      font-family: 'Lato', sans-serif;
-      font-size: 0.85rem;
-      color: var(--texte-clair);
-      font-weight: 700;
-    }
-    .proposition-artiste {
-      font-size: 0.76rem;
-      color: var(--texte-muted);
-      margin-top: 1px;
-    }
-    .btn-voir {
-      padding: 0.3rem 0.8rem;
-      background: transparent;
-      border: 1px solid rgba(201,168,76,0.3);
-      color: var(--or);
-      font-size: 0.73rem;
-      font-family: 'Lato', sans-serif;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      border-radius: 6px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.2s ease;
-      flex-shrink: 0;
-    }
-    .btn-voir:hover {
-      background: rgba(201,168,76,0.1);
-      border-color: var(--or);
-    }
+    /* VERSET */
+    .verset-du-jour { background:linear-gradient(135deg,rgba(201,168,76,0.07),rgba(13,27,42,0.5)); border:1px solid rgba(201,168,76,0.2); border-left:3px solid var(--or); border-radius:12px; padding:1.5rem 1.8rem; margin-bottom:1.5rem; }
+    .verset-texte { font-family:'Playfair Display',serif; font-style:italic; font-size:1.05rem; color:var(--ivoire); line-height:1.7; margin-bottom:0.5rem; }
+    .verset-ref { font-family:'Cinzel',serif; font-size:0.75rem; color:rgba(201,168,76,0.6); letter-spacing:0.1em; }
 
-    /* ============================================
-       VERSET DU JOUR
-    ============================================ */
-    .verset-du-jour {
-      background: linear-gradient(135deg, rgba(201,168,76,0.07), rgba(13,27,42,0.5));
-      border: 1px solid rgba(201,168,76,0.2);
-      border-left: 3px solid var(--or);
-      border-radius: 12px;
-      padding: 1.5rem 1.8rem;
-      margin-bottom: 1.5rem;
-      animation: fadeSlideUp 0.4s ease both;
-    }
-    .verset-texte {
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-size: 1.05rem;
-      color: var(--ivoire);
-      line-height: 1.7;
-      margin-bottom: 0.5rem;
-    }
-    .verset-ref {
-      font-family: 'Cinzel', serif;
-      font-size: 0.75rem;
-      color: rgba(201,168,76,0.6);
-      letter-spacing: 0.1em;
-    }
-
-    /* ============================================
-       LOADING
-    ============================================ */
-    .loading-overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--bleu-nuit);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      transition: opacity 0.4s ease;
-    }
-    .loading-overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .loading-logo {
-      font-family: 'Cinzel', serif;
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--or-clair);
-      margin-bottom: 1.5rem;
-      letter-spacing: 0.08em;
-    }
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(201,168,76,0.15);
-      border-top-color: var(--or);
-      border-radius: 50%;
-      animation: spin 0.85s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ============================================
-       RESPONSIVE
-    ============================================ */
+    /* RESPONSIVE */
     @media (max-width: 768px) {
       .main-content { padding: 1.5rem 1rem 3rem; }
       .dashboard-title { font-size: 1.6rem; }
@@ -629,109 +203,89 @@
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .quick-access-grid { grid-template-columns: repeat(2, 1fr); }
     }
-
-    /* hidden utility */
     .hidden { display: none !important; }
   </style>
 </head>
 
 <body class="dashboard-body">
 
-  <!-- LOADING -->
   <div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-logo">✦ Mélodie's Book</div>
+    <div class="loading-logo">&#10022; Mélodie's Book</div>
     <div class="loading-spinner"></div>
   </div>
 
-  <!-- PARTICULES DÉCORATIVES -->
   <div class="particles" id="particles"></div>
 
-  <!-- NAVBAR injectée par navbar.js via buildSharedNavbar() -->
+  <!-- NAVBAR injectée par navbar.js -->
 
-  <!-- ==================== ACCÈS EN ATTENTE ==================== -->
+  <!-- ATTENTE -->
   <div class="waiting-screen hidden" id="waitingScreen">
-    <div class="waiting-icon">⏳</div>
+    <div class="waiting-icon">&#9203;</div>
     <h2 class="waiting-title">Accès en attente de validation</h2>
-    <p class="waiting-text">
-      Votre compte a bien été enregistré. Un administrateur doit valider votre accès
-      et vous attribuer un rôle avant que vous puissiez accéder au site.
-    </p>
-    <blockquote class="waiting-verset">
-      « Car je sais quels sont mes projets sur vous, dit l'Éternel,
-      projets de paix et non de malheur, afin de vous donner un avenir. »
-      <br/>— Jérémie 29:11
-    </blockquote>
+    <p class="waiting-text">Votre compte a bien été enregistré. Un administrateur doit valider votre accès avant que vous puissiez entrer.</p>
+    <blockquote class="waiting-verset">« Car je sais quels sont mes projets sur vous, dit l'Éternel, projets de paix et non de malheur. » — Jérémie 29:11</blockquote>
   </div>
 
-  <!-- ==================== CONTENU PRINCIPAL ==================== -->
+  <!-- CONTENU PRINCIPAL -->
   <main class="main-content hidden" id="mainContent">
 
-    <!-- Verset du jour -->
     <div class="verset-du-jour">
-      <div class="verset-texte" id="versetTexte">
-        « Chantez à l'Éternel un cantique nouveau ! Que sa louange retentisse dans l'assemblée des fidèles. »
-      </div>
-      <div class="verset-ref" id="versetRef">— Psaume 149:1</div>
+      <div class="verset-texte" id="versetTexte"></div>
+      <div class="verset-ref" id="versetRef"></div>
     </div>
 
-    <!-- En-tête personnalisé -->
     <div class="dashboard-header">
       <div class="dashboard-greeting">Bienvenue,</div>
       <h1 class="dashboard-title" id="dashboardTitle">Chargement…</h1>
       <p class="dashboard-verset" id="dashboardSub"></p>
     </div>
 
-    <!-- STATISTIQUES RAPIDES -->
-    <div class="divider-or">
-      <span class="divider-or-label">✦ Vue d'ensemble</span>
-    </div>
+    <div class="divider-or"><span class="divider-or-label">&#10022; Vue d'ensemble</span></div>
 
-    <div class="stats-grid">
+    <div class="stats-grid" id="statsGrid">
       <div class="stat-card">
-        <div class="stat-icon">🎵</div>
+        <div class="stat-icon">&#127925;</div>
         <div class="stat-value" id="statChansons">—</div>
         <div class="stat-label">Chansons</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">📖</div>
+        <div class="stat-icon">&#128218;</div>
         <div class="stat-value" id="statThemes">—</div>
         <div class="stat-label">Thèmes</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">📅</div>
+        <div class="stat-icon">&#128330;</div>
         <div class="stat-value" id="statCultes">—</div>
         <div class="stat-label">Cultes</div>
       </div>
-      <div class="stat-card" id="statMembresCard">
-        <div class="stat-icon">👥</div>
+      <div class="stat-card" id="statEvenementsCard" style="display:none;">
+        <div class="stat-icon">&#128197;</div>
+        <div class="stat-value" id="statEvenements">—</div>
+        <div class="stat-label">Événements</div>
+      </div>
+      <div class="stat-card" id="statMembresCard" style="display:none;">
+        <div class="stat-icon">&#128101;</div>
         <div class="stat-value" id="statMembres">—</div>
         <div class="stat-label">Membres actifs</div>
       </div>
     </div>
 
-    <!-- GRILLE PRINCIPALE -->
     <div class="dashboard-grid">
 
-      <!-- ACCÈS RAPIDES (colonne pleine) -->
+      <!-- ACCÈS RAPIDES -->
       <div class="section-card col-full">
         <div class="section-card-header">
-          <div class="section-card-title">
-            <span class="s-icon">⚡</span> Accès rapides
-          </div>
+          <div class="section-card-title"><span>&#9889;</span> Accès rapides</div>
         </div>
         <div class="section-card-body">
-          <div class="quick-access-grid" id="quickAccessGrid">
-            <!-- Généré dynamiquement selon le rôle -->
-          </div>
+          <div class="quick-access-grid" id="quickAccessGrid"></div>
         </div>
       </div>
 
       <!-- PROCHAIN CULTE -->
       <div class="section-card">
         <div class="section-card-header">
-          <div class="section-card-title">
-            <span class="s-icon">✝️</span> Prochain culte
-          </div>
+          <div class="section-card-title"><span>&#9997;&#65039;</span> Prochain culte</div>
           <a href="historique.html" class="section-card-link">Voir tout →</a>
         </div>
         <div class="section-card-body" id="prochainCulteBody">
@@ -739,12 +293,21 @@
         </div>
       </div>
 
-      <!-- ACTIVITÉ RÉCENTE -->
-      <div class="section-card">
+      <!-- PROCHAIN ÉVÉNEMENT -->
+      <div class="section-card" id="prochainEvCard">
         <div class="section-card-header">
-          <div class="section-card-title">
-            <span class="s-icon">🕊️</span> Activité récente
-          </div>
+          <div class="section-card-title"><span>&#128197;</span> Prochain événement</div>
+          <a href="evenements.html" class="section-card-link" id="lienEvenements">Gérer →</a>
+        </div>
+        <div class="section-card-body" id="prochainEvBody">
+          <div class="no-culte">Chargement…</div>
+        </div>
+      </div>
+
+      <!-- ACTIVITÉ RÉCENTE -->
+      <div class="section-card col-full">
+        <div class="section-card-header">
+          <div class="section-card-title"><span>&#128330;</span> Activité récente</div>
         </div>
         <div class="section-card-body">
           <div class="activity-list" id="activityList">
@@ -753,12 +316,10 @@
         </div>
       </div>
 
-      <!-- PROPOSITIONS (admin uniquement) -->
+      <!-- PROPOSITIONS (admin) -->
       <div class="section-card col-full" id="propositionsSection" style="display:none;">
         <div class="section-card-header">
-          <div class="section-card-title">
-            <span class="s-icon">💡</span> Propositions en attente
-          </div>
+          <div class="section-card-title"><span>&#128161;</span> Propositions en attente</div>
           <a href="propositions.html" class="section-card-link">Gérer →</a>
         </div>
         <div class="section-card-body" id="propositionsBody">
@@ -766,324 +327,256 @@
         </div>
       </div>
 
-    </div><!-- fin dashboard-grid -->
+    </div>
   </main>
 
-
-  <!-- ==================== JAVASCRIPT ==================== -->
   <script>
-    const SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+    var SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+    var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     window._sb = sb;
 
-    // ---- Versets rotatifs ----
-    const VERSETS = [
+    var VERSETS = [
       { texte: 'Chantez a l\'Eternel un cantique nouveau ! Que sa louange retentisse dans l\'assemblee des fideles.', ref: '— Psaume 149:1' },
       { texte: 'Que la parole de Christ habite parmi vous abondamment. Enseignez-vous et exhortez-vous les uns les autres avec sagesse, par des psaumes, des hymnes, des cantiques spirituels.', ref: '— Colossiens 3:16' },
       { texte: 'Mon coeur est pret, o Dieu ! Je veux chanter et celebrer ma gloire.', ref: '— Psaume 108:1' },
       { texte: 'Louez l\'Eternel, car il est bon ! Car sa bonte dure a toujours !', ref: '— Psaume 136:1' },
-      { texte: 'Chantez a l\'Eternel, benissez son nom ! Annoncez de jour en jour son salut.', ref: '— Psaume 96:2' },
+      { texte: 'Chantez a l\'Eternel, benissez son nom ! Annoncez de jour en jour son salut.', ref: '— Psaume 96:2' }
     ];
 
-    // ---- Accès rapides selon le rôle ----
-    const QUICK_ACCESS = {
-      all: [
-        { icon: '🎵', label: 'Repertoire',   href: 'repertoire.html' },
-        { icon: '📖', label: 'Themes',        href: 'themes.html' },
-        { icon: '📚', label: 'Bibliotheque',  href: 'bibliotheque.html' },
-        { icon: '📜', label: 'Historique',    href: 'historique.html' },
-        { icon: '💡', label: 'Proposer',      href: 'proposer.html' },
-        { icon: '🕊️', label: 'Programme',    href: 'programme.html' },
-      ],
-      admin: [
-        { icon: '➕', label: 'Ajouter chanson',    href: 'ajouter-chanson.html' },
-        { icon: '📋', label: 'Propositions',        href: 'propositions.html', badge: true },
-        { icon: '📅', label: 'Evenements',          href: 'evenements.html' },
-        { icon: '👤', label: 'Designer prep.',      href: 'designateur.html' },
-        { icon: '✅', label: 'Valider programme',   href: 'validation-programme.html' },
-        { icon: '👥', label: 'Comptes',             href: 'comptes.html' },
-        { icon: '📊', label: 'Statistiques',        href: 'statistiques.html' },
-      ],
-      preparateur: [
-        { icon: '🎼', label: 'Preparer culte', href: 'preparation-culte.html' },
-      ]
-    };
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
 
-    // ---- Particules ----
     function createParticles() {
-      const container = document.getElementById('particles');
-      for (let i = 0; i < 22; i++) {
-        const p = document.createElement('div');
+      var container = document.getElementById('particles');
+      for (var i = 0; i < 22; i++) {
+        var p = document.createElement('div');
         p.className = 'particle';
-        p.style.left   = Math.random() * 100 + '%';
-        p.style.width  = (Math.random() * 2 + 1) + 'px';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.width = (Math.random() * 2 + 1) + 'px';
         p.style.height = p.style.width;
-        p.style.animationDuration  = (Math.random() * 14 + 10) + 's';
-        p.style.animationDelay     = (Math.random() * 12) + 's';
-        p.style.opacity = Math.random() * 0.4;
+        p.style.animationDuration = (Math.random() * 14 + 10) + 's';
+        p.style.animationDelay = (Math.random() * 12) + 's';
         container.appendChild(p);
       }
     }
 
-    // ---- Construire les accès rapides ----
-    function buildQuickAccess(role, propositionsCount) {
-      const grid = document.getElementById('quickAccessGrid');
+    function buildQuickAccess(role, nbPropositions) {
+      var grid = document.getElementById('quickAccessGrid');
       grid.innerHTML = '';
 
-      let items = [...QUICK_ACCESS.all];
-      if (role === 'admin')       items = [...items, ...QUICK_ACCESS.admin];
-      if (role === 'preparateur') items = [...items, ...QUICK_ACCESS.preparateur];
+      var items = [
+        { icon: '&#127925;', label: 'Repertoire',  href: 'repertoire.html' },
+        { icon: '&#128218;', label: 'Themes',       href: 'themes.html' },
+        { icon: '&#128218;', label: 'Bibliotheque', href: 'bibliotheque.html' },
+        { icon: '&#128220;', label: 'Historique',   href: 'historique.html' },
+        { icon: '&#128161;', label: 'Proposer',     href: 'proposer.html' },
+        { icon: '&#128330;', label: 'Programme',    href: 'programme.html' }
+      ];
+
+      if (role === 'preparateur') {
+        items.push({ icon: '&#9962;', label: 'Prepa. culte',      href: 'preparation-culte.html' });
+        items.push({ icon: '&#128197;', label: 'Prepa. evenement', href: 'preparation-evenement.html' });
+      }
+
+      if (role === 'admin') {
+        items.push({ icon: '&#10133;',  label: 'Ajouter chanson', href: 'ajouter-chanson.html' });
+        items.push({ icon: '&#128197;', label: 'Evenements',      href: 'evenements.html' });
+        items.push({ icon: '&#127919;', label: 'Designateur',     href: 'designateur.html' });
+        items.push({ icon: '&#10003;',  label: 'Validation',      href: 'validation-programme.html' });
+        items.push({ icon: '&#128101;', label: 'Comptes',         href: 'comptes.html' });
+        items.push({ icon: '&#128202;', label: 'Statistiques',    href: 'statistiques.html' });
+        items.push({ icon: '&#128203;', label: 'Propositions',    href: 'propositions.html', badge: nbPropositions });
+      }
 
       items.forEach(function(item) {
-        const a = document.createElement('a');
+        var a = document.createElement('a');
         a.className = 'qa-card';
         a.href = item.href;
-        if (item.badge && propositionsCount > 0) {
-          a.innerHTML =
-            '<span class="qa-badge">' + propositionsCount + '</span>' +
-            '<span class="qa-icon">' + item.icon + '</span>' +
-            '<span class="qa-label">' + item.label + '</span>';
-        } else {
-          a.innerHTML =
-            '<span class="qa-icon">' + item.icon + '</span>' +
-            '<span class="qa-label">' + item.label + '</span>';
-        }
+        var badgeHtml = (item.badge && item.badge > 0) ? '<span class="qa-badge">' + item.badge + '</span>' : '';
+        a.innerHTML = badgeHtml + '<span class="qa-icon">' + item.icon + '</span><span class="qa-label">' + item.label + '</span>';
         grid.appendChild(a);
       });
     }
 
-    // ---- Afficher le prochain culte ----
-    function escHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+    function displayProchainCulte(culte) {
+      var body = document.getElementById('prochainCulteBody');
+      if (!culte) { body.innerHTML = '<div class="no-culte">Aucun culte a venir.</div>'; return; }
+      var date = new Date(culte.date_culte);
+      var jour  = date.getDate().toString().padStart(2,'0');
+      var mois  = date.toLocaleDateString('fr-FR', { month:'short' }).toUpperCase();
+      var statutClass = { en_preparation:'statut-preparation', valide:'statut-valide', archive:'statut-archive' }[culte.statut] || 'statut-preparation';
+      var statutLabel = { en_preparation:'En preparation', valide:'Valide', archive:'Archive' }[culte.statut] || culte.statut;
+      body.innerHTML =
+        '<div class="culte-card">'
+          + '<div class="culte-date-block"><div class="culte-date-day">' + jour + '</div><div class="culte-date-month">' + mois + '</div></div>'
+          + '<div class="culte-info">'
+            + '<div class="culte-theme">' + escHtml(culte.theme || 'Theme a definir') + '</div>'
+            + '<span class="culte-statut ' + statutClass + '">' + statutLabel + '</span>'
+          + '</div>'
+        + '</div>';
     }
 
-    function displayProchainCulte(culte) {
-      const body = document.getElementById('prochainCulteBody');
-      if (!culte) {
-        body.innerHTML = '<div class="no-culte">Aucun culte a venir pour le moment.</div>';
-        return;
-      }
-      const date = new Date(culte.date_culte);
-      const jour = date.getDate().toString().padStart(2,'0');
-      const mois = date.toLocaleDateString('fr-FR', { month: 'short' }).toUpperCase();
+    function displayProchainEvenement(ev, role) {
+      var body = document.getElementById('prochainEvBody');
+      var card = document.getElementById('prochainEvCard');
+      var lien = document.getElementById('lienEvenements');
 
-      const statutClass = {
-        en_preparation: 'statut-preparation',
-        valide:         'statut-valide',
-        archive:        'statut-archive'
-      }[culte.statut] || 'statut-preparation';
+      // Membres : masquer la carte événements
+      if (role === 'membre') { card.style.display = 'none'; return; }
 
-      const statutLabel = {
-        en_preparation: 'En preparation',
-        valide:         'Valide',
-        archive:        'Archive'
-      }[culte.statut] || culte.statut;
+      // Préparateur : afficher sans lien "Gérer"
+      if (role === 'preparateur') { lien.style.display = 'none'; }
+
+      if (!ev) { body.innerHTML = '<div class="no-culte">Aucun événement a venir.</div>'; return; }
+
+      var date = new Date(ev.date_event);
+      var jour = date.getDate().toString().padStart(2,'0');
+      var mois = date.toLocaleDateString('fr-FR', { month:'short' }).toUpperCase();
+      var auj  = new Date(); auj.setHours(0,0,0,0);
+      var diff = Math.ceil((date - auj) / 86400000);
+      var countdown = diff === 0 ? "Aujourd'hui !" : diff === 1 ? 'Demain !' : 'Dans ' + diff + ' jours';
 
       body.innerHTML =
-        '<div class="culte-card">' +
-          '<div class="culte-date-block">' +
-            '<div class="culte-date-day">' + jour + '</div>' +
-            '<div class="culte-date-month">' + mois + '</div>' +
-          '</div>' +
-          '<div class="culte-info">' +
-            '<div class="culte-theme">' + escHtml(culte.theme || 'Theme a definir') + '</div>' +
-            '<div class="culte-meta">' +
-              '<span class="culte-statut ' + statutClass + '">' + statutLabel + '</span>' +
-            '</div>' +
-            '<div class="culte-chansons-count">Programme en cours de preparation</div>' +
-          '</div>' +
-        '</div>';
+        '<div class="event-card">'
+          + '<div class="event-date-block"><div class="event-date-day">' + jour + '</div><div class="event-date-month">' + mois + '</div></div>'
+          + '<div class="event-info">'
+            + '<div class="event-titre">' + escHtml(ev.titre) + '</div>'
+            + '<span class="event-countdown">' + countdown + '</span>'
+            + (ev.description ? '<div class="event-prep" style="margin-top:0.3rem;">' + escHtml(ev.description.substring(0,60)) + (ev.description.length > 60 ? '…' : '') + '</div>' : '')
+          + '</div>'
+        + '</div>';
     }
 
-    // ---- Activité récente ----
     function displayActivity(chansons, cultes) {
-      const list = document.getElementById('activityList');
-      const items = [];
-
-      if (chansons && chansons.length > 0) {
-        chansons.slice(0, 3).forEach(function(c) {
-          const d = new Date(c.created_at);
-          const diff = Math.floor((Date.now() - d) / 86400000);
-          const timeStr = diff === 0 ? 'Aujourd\'hui' : diff === 1 ? 'Hier' : 'Il y a ' + diff + ' jours';
-          items.push({
-            dot: 'dot-or',
-            text: 'Chanson ajoutee : <strong>' + escHtml(c.titre) + '</strong>',
-            time: timeStr
-          });
-        });
-      }
-
-      if (cultes && cultes.length > 0) {
-        cultes.slice(0, 2).forEach(function(c) {
-          const d = new Date(c.created_at);
-          const diff = Math.floor((Date.now() - d) / 86400000);
-          const timeStr = diff === 0 ? 'Aujourd\'hui' : diff === 1 ? 'Hier' : 'Il y a ' + diff + ' jours';
-          items.push({
-            dot: 'dot-violet',
-            text: 'Culte cree : <strong>' + escHtml(c.theme || 'Sans theme') + '</strong>',
-            time: timeStr
-          });
-        });
-      }
-
-      if (items.length === 0) {
-        list.innerHTML = '<div class="no-culte">Aucune activite recente.</div>';
-        return;
-      }
-
+      var list = document.getElementById('activityList');
+      var items = [];
+      (chansons || []).slice(0,3).forEach(function(c) {
+        var diff = Math.floor((Date.now() - new Date(c.created_at)) / 86400000);
+        var t = diff === 0 ? "Aujourd'hui" : diff === 1 ? 'Hier' : 'Il y a ' + diff + ' jours';
+        items.push({ dot:'dot-or', text:'Chanson ajoutee : <strong>' + escHtml(c.titre) + '</strong>', time: t });
+      });
+      (cultes || []).slice(0,2).forEach(function(c) {
+        var diff = Math.floor((Date.now() - new Date(c.created_at)) / 86400000);
+        var t = diff === 0 ? "Aujourd'hui" : diff === 1 ? 'Hier' : 'Il y a ' + diff + ' jours';
+        items.push({ dot:'dot-violet', text:'Culte cree : <strong>' + escHtml(c.theme || 'Sans theme') + '</strong>', time: t });
+      });
+      if (items.length === 0) { list.innerHTML = '<div class="no-culte">Aucune activite recente.</div>'; return; }
       list.innerHTML = items.map(function(item) {
-        return '<div class="activity-item">' +
-          '<div class="activity-dot ' + item.dot + '"></div>' +
-          '<div class="activity-content">' +
-            '<div class="activity-text">' + item.text + '</div>' +
-            '<div class="activity-time">' + item.time + '</div>' +
-          '</div>' +
-        '</div>';
+        return '<div class="activity-item"><div class="activity-dot ' + item.dot + '"></div>'
+          + '<div class="activity-content"><div class="activity-text">' + item.text + '</div>'
+          + '<div class="activity-time">' + item.time + '</div></div></div>';
       }).join('');
     }
 
-    // ---- Propositions en attente (admin) ----
     async function loadPropositions(role) {
       if (role !== 'admin') return 0;
-      const section = document.getElementById('propositionsSection');
-      section.style.display = 'block';
-
-      const { data, error } = await sb
-        .from('propositions')
-        .select('*')
-        .eq('statut', 'en_attente')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      const body = document.getElementById('propositionsBody');
-
-      if (error || !data || data.length === 0) {
-        body.innerHTML = '<div class="no-culte">Aucune proposition en attente. ✓</div>';
-        return 0;
-      }
-
-      body.innerHTML = data.map(function(p) {
-        return '<div class="proposition-item">' +
-          '<div>' +
-            '<div class="proposition-titre">' + escHtml(p.titre) + '</div>' +
-            '<div class="proposition-artiste">' + escHtml(p.artiste || '') + ' · ' + escHtml(p.langue || '') + '</div>' +
-          '</div>' +
-          '<a href="propositions.html" class="btn-voir">Voir</a>' +
-        '</div>';
+      document.getElementById('propositionsSection').style.display = 'block';
+      var res = await sb.from('propositions').select('*').eq('statut','en_attente').order('created_at',{ascending:false}).limit(5);
+      var body = document.getElementById('propositionsBody');
+      if (!res.data || res.data.length === 0) { body.innerHTML = '<div class="no-culte">Aucune proposition en attente. &#10003;</div>'; return 0; }
+      body.innerHTML = res.data.map(function(p) {
+        return '<div class="proposition-item"><div>'
+          + '<div class="proposition-titre">' + escHtml(p.titre) + '</div>'
+          + '<div class="proposition-artiste">' + escHtml(p.artiste || '') + ' · ' + escHtml(p.langue || '') + '</div>'
+          + '</div><a href="propositions.html" class="btn-voir">Voir</a></div>';
       }).join('');
-
-      return data.length;
+      return res.data.length;
     }
 
-    // ---- INITIALISATION ----
     async function init() {
       createParticles();
-
-      // Verset du jour aléatoire
-      const v = VERSETS[Math.floor(Math.random() * VERSETS.length)];
+      var v = VERSETS[Math.floor(Math.random() * VERSETS.length)];
       document.getElementById('versetTexte').textContent = v.texte;
       document.getElementById('versetRef').textContent   = v.ref;
 
-      // 1. Vérifier la session
-      const { data: { session } } = await sb.auth.getSession();
-      if (!session) {
-        window.location.href = 'index.html';
-        return;
-      }
+      var sessionData = await sb.auth.getSession();
+      if (!sessionData.data.session) { window.location.href = 'index.html'; return; }
 
-      // 2. Charger le profil
-      const { data: profil, error: profErr } = await sb
-        .from('profils')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
+      var profilData = await sb.from('profils').select('*').eq('id', sessionData.data.session.user.id).single();
+      var profil = profilData.data;
+      if (!profil) { window.location.href = 'index.html'; return; }
 
-      if (profErr || !profil) {
-        window.location.href = 'index.html';
-        return;
-      }
-
-      // 3. Vérifier actif
       if (!profil.actif) {
         document.getElementById('loadingOverlay').classList.add('hidden');
         document.getElementById('waitingScreen').classList.remove('hidden');
-        // Navbar minimale pour l'écran d'attente
         buildSharedNavbar(profil, 'dashboard');
         return;
       }
 
-      const role = profil.role || 'membre';
-      const nom  = profil.nom || session.user.email.split('@')[0];
+      var role = profil.role || 'membre';
+      var nom  = profil.nom || sessionData.data.session.user.email.split('@')[0];
 
-      // 4. Navbar partagée (isDashboard=true pour afficher le bouton Quitter)
       buildSharedNavbar(profil, 'dashboard');
 
-      // 5. Titre du dashboard
-      const heure = new Date().getHours();
-      const salut = heure < 12 ? 'Bon matin' : heure < 18 ? 'Bon apres-midi' : 'Bonsoir';
+      var heure = new Date().getHours();
+      var salut = heure < 12 ? 'Bon matin' : heure < 18 ? 'Bon apres-midi' : 'Bonsoir';
       document.getElementById('dashboardTitle').textContent = salut + ', ' + nom;
-
-      const subtitles = {
-        admin:        'Que l\'Eternel benisse votre service aujourd\'hui.',
-        preparateur:  'La preparation du culte vous a ete confiee.',
-        membre:       'Louez l\'Eternel avec tout votre etre.'
-      };
+      var subtitles = { admin:'Que l\'Eternel benisse votre service.', preparateur:'La preparation vous a ete confiee.', membre:'Louez l\'Eternel avec tout votre etre.' };
       document.getElementById('dashboardSub').textContent = subtitles[role] || subtitles.membre;
 
-      // 6. Charger les données en parallèle
-      const [
-        { data: membres },
-        { data: chansonsTri },
-        { data: cultesTri }
-      ] = await Promise.all([
-        role === 'admin' ? sb.from('profils').select('id').eq('actif', true) : Promise.resolve({ data: null }),
-        sb.from('chansons').select('id, titre, created_at').order('created_at', { ascending: false }).limit(3),
-        sb.from('cultes').select('id, theme, date_culte, statut, created_at').order('date_culte', { ascending: false }).limit(3),
+      // Stats count
+      var countRes = await Promise.all([
+        sb.from('chansons').select('*', { count:'exact', head:true }),
+        sb.from('themes').select('*', { count:'exact', head:true }),
+        sb.from('cultes').select('*', { count:'exact', head:true }),
+        sb.from('evenements').select('*', { count:'exact', head:true }),
+        role === 'admin' ? sb.from('profils').select('id').eq('actif', true) : Promise.resolve({ data: null })
       ]);
 
-      // Stats (counts séparés)
-      const { count: nbChansons } = await sb.from('chansons').select('*', { count: 'exact', head: true });
-      const { count: nbThemes }   = await sb.from('themes').select('*', { count: 'exact', head: true });
-      const { count: nbCultes }   = await sb.from('cultes').select('*', { count: 'exact', head: true });
+      document.getElementById('statChansons').textContent = countRes[0].count != null ? countRes[0].count : '—';
+      document.getElementById('statThemes').textContent   = countRes[1].count != null ? countRes[1].count : '—';
+      document.getElementById('statCultes').textContent   = countRes[2].count != null ? countRes[2].count : '—';
 
-      document.getElementById('statChansons').textContent = nbChansons != null ? nbChansons : '—';
-      document.getElementById('statThemes').textContent   = nbThemes   != null ? nbThemes   : '—';
-      document.getElementById('statCultes').textContent   = nbCultes   != null ? nbCultes   : '—';
-
-      if (role === 'admin' && membres) {
-        document.getElementById('statMembres').textContent = membres.length;
-      } else {
-        document.getElementById('statMembresCard').style.display = 'none';
+      if (role === 'admin' || role === 'preparateur') {
+        document.getElementById('statEvenementsCard').style.display = 'flex';
+        document.getElementById('statEvenements').textContent = countRes[3].count != null ? countRes[3].count : '—';
+      }
+      if (role === 'admin' && countRes[4].data) {
+        document.getElementById('statMembresCard').style.display = 'flex';
+        document.getElementById('statMembres').textContent = countRes[4].data.length;
       }
 
+      // Données récentes
+      var dataRes = await Promise.all([
+        sb.from('chansons').select('id, titre, created_at').order('created_at',{ascending:false}).limit(3),
+        sb.from('cultes').select('id, theme, date_culte, statut, created_at').order('date_culte',{ascending:true}),
+        sb.from('evenements').select('id, titre, date_event, description, preparateur_id, statut').order('date_event',{ascending:true})
+      ]);
+
+      var chansons = dataRes[0].data || [];
+      var cultesAll = dataRes[1].data || [];
+      var evsAll    = dataRes[2].data || [];
+
       // Prochain culte
-      const futurCultes = (cultesTri || []).filter(function(c) { return new Date(c.date_culte) >= new Date(); });
-      displayProchainCulte(futurCultes[0] || (cultesTri && cultesTri[0]) || null);
+      var auj = new Date(); auj.setHours(0,0,0,0);
+      var futurCultes = cultesAll.filter(function(c) { return new Date(c.date_culte) >= auj; });
+      displayProchainCulte(futurCultes[0] || cultesAll[0] || null);
 
-      // Activité récente
-      displayActivity(chansonsTri, cultesTri);
+      // Prochain événement
+      var futurEvs = evsAll.filter(function(e) { return new Date(e.date_event) >= auj; });
+      // Pour préparateur : seulement ses événements assignés
+      if (role === 'preparateur') {
+        futurEvs = futurEvs.filter(function(e) { return e.preparateur_id === sessionData.data.session.user.id; });
+      }
+      displayProchainEvenement(futurEvs[0] || null, role);
 
-      // Propositions (admin)
-      const nbPropositions = await loadPropositions(role);
+      // Activité
+      displayActivity(chansons, cultesAll.slice().reverse().slice(0,3));
+
+      // Propositions
+      var nbPropositions = await loadPropositions(role);
 
       // Accès rapides
       buildQuickAccess(role, nbPropositions);
 
-      // 7. Démasquer le contenu
       document.getElementById('loadingOverlay').classList.add('hidden');
       document.getElementById('mainContent').classList.remove('hidden');
     }
 
-    // ---- Lancer ----
     init();
   </script>
-
 </body>
 </html>
