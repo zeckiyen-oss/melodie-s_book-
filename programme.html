@@ -41,8 +41,9 @@
     .prog-culte-nb{font-size:.72rem;color:rgba(250,246,237,.4)}
 
     /* Événements validés */
-    .prog-ev-card{background:linear-gradient(145deg,#1A2E45,#152438);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:1rem 1.3rem;cursor:pointer;user-select:none;-webkit-user-select:none;display:flex;align-items:center;gap:1rem;transition:border-color .2s,box-shadow .2s}
-    .prog-ev-card:hover{border-color:rgba(201,168,76,.4)}
+    .prog-ev-card{background:linear-gradient(145deg,#1A2E45,#152438);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:1rem 1.3rem;cursor:default;user-select:none;-webkit-user-select:none;display:flex;align-items:center;gap:1rem;transition:border-color .2s,box-shadow .2s}
+    .prog-ev-card-clickable{cursor:pointer!important}
+    .prog-ev-card-clickable:hover{border-color:rgba(201,168,76,.4)!important}
     .prog-ev-card.active{border-color:#C9A84C;box-shadow:0 0 0 2px rgba(201,168,76,.2)}
     .prog-ev-cal{flex-shrink:0;width:50px;height:54px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.25);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center}
     .prog-ev-jour{font-family:'Cinzel',serif;font-size:1.2rem;font-weight:700;color:#F0D98A;line-height:1}
@@ -147,12 +148,12 @@
     </div>
 
     <section id="sectionCultes">
-      <div class="prog-pub-section-info">Programmes de culte validés — cliquez pour voir le programme complet.</div>
+      <div class="prog-pub-section-info">Tous les cultes de la chorale. Cliquez sur un culte validé ou archivé pour voir son programme en lecture seule.</div>
       <div id="listeCultes" class="prog-pub-list"><div class="prog-pub-skeleton"></div><div class="prog-pub-skeleton"></div></div>
     </section>
 
     <section id="sectionEvenements" style="display:none;">
-      <div class="prog-pub-section-info">Événements validés organisés par la chorale — cliquez pour voir le programme.</div>
+      <div class="prog-pub-section-info">Événements de la chorale. Les événements validés affichent leur programme complet.</div>
       <div id="listeEvenements" class="prog-pub-list"><div class="prog-pub-skeleton"></div><div class="prog-pub-skeleton"></div></div>
     </section>
 
@@ -218,26 +219,39 @@
 
     // ── CULTES ──
     async function chargerCultes(){
-      var res=await sb.from("cultes").select("id,theme,date_culte,statut,notes,profils(nom)").eq("statut","valide").order("date_culte",{ascending:false});
+      var res=await sb.from("cultes").select("id,theme,date_culte,statut,notes,profils(nom)").order("date_culte",{ascending:false});
       var container=document.getElementById("listeCultes");
       var cultes=res.data||[];
-      if(cultes.length===0){container.innerHTML='<div class="prog-pub-empty">Aucun programme validé pour l\'instant.</div>';return;}
+      if(cultes.length===0){container.innerHTML='<div class="prog-pub-empty">Aucun culte pour l\'instant.</div>';return;}
       container.innerHTML="";
       cultes.forEach(function(c){
-        var div=document.createElement("div");div.className="prog-culte-card";
+        var statut=c.statut||"en_preparation";
         var dateStr=new Date(c.date_culte).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
+        var statutHtml="";
+        if(statut==="valide"){
+          statutHtml='<span class="prog-culte-badge-valide">&#10003; Valid&eacute;</span>';
+        } else if(statut==="archive"){
+          statutHtml='<span style="font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;background:rgba(250,246,237,.06);color:rgba(250,246,237,.4);border:1px solid rgba(250,246,237,.15);white-space:nowrap;">&#128193; Archiv&eacute;</span>';
+        } else {
+          statutHtml='<span style="font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;background:rgba(201,168,76,.12);color:#F0D98A;border:1px solid rgba(201,168,76,.3);white-space:nowrap;">&#9203; En pr&eacute;paration</span>';
+        }
+        var voirProg=(statut==="valide"||statut==="archive")?'<span class="prog-culte-nb">Voir programme &rarr;</span>':"";
+        var div=document.createElement("div");
+        div.className="prog-culte-card";
+        if(statut==="en_preparation"){div.style.cursor="default";}
         div.innerHTML='<div class="prog-culte-left"><div class="prog-culte-theme">'+escHtml(c.theme)+'</div>'
           +'<div class="prog-culte-date">&#128197; '+dateStr+(c.profils?" · "+escHtml(c.profils.nom):"")+'</div></div>'
-          +'<div class="prog-culte-right"><span class="prog-culte-badge-valide">&#10003; Validé</span>'
-          +'<span class="prog-culte-nb">Voir programme →</span></div>';
-        (function(culte,el){
-          el.addEventListener("click",function(){
-            if(culteActifId===culte.id){document.getElementById("progPubDetail").style.display="none";culteActifId=null;el.classList.remove("active");return;}
-            culteActifId=culte.id;evActifId=null;
-            document.querySelectorAll(".prog-culte-card,.prog-ev-card").forEach(function(c){c.classList.remove("active");});
-            el.classList.add("active");afficherDetailCulte(culte);
-          });
-        })(c,div);
+          +'<div class="prog-culte-right">'+statutHtml+voirProg+'</div>';
+        if(statut==="valide"||statut==="archive"){
+          (function(culte,el){
+            el.addEventListener("click",function(){
+              if(culteActifId===culte.id){document.getElementById("progPubDetail").style.display="none";culteActifId=null;el.classList.remove("active");return;}
+              culteActifId=culte.id;evActifId=null;
+              document.querySelectorAll(".prog-culte-card,.prog-ev-card").forEach(function(c){c.classList.remove("active");});
+              el.classList.add("active");afficherDetailCulte(culte);
+            });
+          })(c,div);
+        }
         container.appendChild(div);
       });
     }
@@ -267,10 +281,15 @@
         });
         programmeHtml+="</div>";
       });
-      inner.innerHTML='<div class="prog-detail-header"><div><h2 class="prog-detail-theme">'+escHtml(culte.theme)+'</h2><div class="prog-detail-date">&#128197; '+dateStr+'</div></div><span class="prog-culte-badge-valide">&#10003; Validé</span></div>'
-        +(verset?'<div class="prog-detail-verset">« '+escHtml(verset)+' »</div>':"")
-        +programmeHtml
-        +'<div class="prog-detail-actions"><button class="btn-pdf" id="btnGenPDF">&#128196; Télécharger PDF</button><button class="btn-fermer-detail" id="btnFermerDetail">&#10005; Fermer</button></div>';
+      var culteStatutHtml="";
+      if(culte.statut==="valide"){culteStatutHtml='<span class="prog-culte-badge-valide">&#10003; Valid&eacute;</span>';}
+      else if(culte.statut==="archive"){culteStatutHtml='<span style="font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;background:rgba(250,246,237,.06);color:rgba(250,246,237,.4);border:1px solid rgba(250,246,237,.15);">&#128193; Archiv&eacute;</span>';}
+      var lectureSeuleNote='<div style="font-size:.72rem;color:rgba(201,168,76,.6);background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.15);border-radius:8px;padding:.45rem .8rem;text-align:center;">&#128274; Programme en lecture seule</div>';
+      inner.innerHTML='<div class="prog-detail-header"><div><h2 class="prog-detail-theme">'+escHtml(culte.theme)+'</h2><div class="prog-detail-date">&#128197; '+dateStr+'</div></div>'+culteStatutHtml+'</div>'
+        +lectureSeuleNote
+        +(verset?'<div class="prog-detail-verset">&#171; '+escHtml(verset)+' &#187;</div>':"")
+        +(programmeHtml||'<div style="text-align:center;color:rgba(250,246,237,.3);font-style:italic;padding:1.5rem 0;">Aucune chanson dans ce programme.</div>')
+        +'<div class="prog-detail-actions"><button class="btn-pdf" id="btnGenPDF">&#128196; T&eacute;l&eacute;charger PDF</button><button class="btn-fermer-detail" id="btnFermerDetail">&#10005; Fermer</button></div>';
       inner.querySelectorAll(".prog-btn-ecouter").forEach(function(btn){
         btn.addEventListener("click",function(){
           var audioId=btn.getAttribute("data-audio-id");var url=btn.getAttribute("data-url");var player=document.getElementById(audioId);if(!player)return;
@@ -286,28 +305,54 @@
 
     // ── ÉVÉNEMENTS VALIDÉS ──
     async function chargerEvenements(){
-      var res=await sb.from("evenements").select("id,titre,date_event,description,statut").eq("statut","valide").order("date_event",{ascending:true});
+      var res=await sb.from("evenements").select("id,titre,date_event,description,statut").order("date_event",{ascending:true});
       var container=document.getElementById("listeEvenements");
       var evs=res.data||[];
       var today=new Date();today.setHours(0,0,0,0);
-      if(evs.length===0){container.innerHTML='<div class="prog-pub-empty">Aucun événement validé pour l\'instant.</div>';return;}
+      if(evs.length===0){container.innerHTML='<div class="prog-pub-empty">Aucun événement pour l\'instant.</div>';return;}
       container.innerHTML="";
       evs.forEach(function(ev){
         var d=new Date(ev.date_event);var diff=Math.ceil((d-today)/86400000);var isPasse=diff<0;
-        var div=document.createElement("div");div.className="prog-ev-card";
-        var cdHtml=isPasse?'<span style="font-size:.72rem;color:rgba(250,246,237,.3);font-style:italic;">Passé</span>':(diff===0?'<span class="prog-ev-countdown">Aujourd\'hui</span>':'<span class="prog-ev-countdown">J-'+diff+'</span>');
+        var statut=ev.statut||"en_preparation";
+
+        /* Badge statut */
+        var statutHtml="";
+        if(statut==="valide"){
+          statutHtml='<span style="font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;background:rgba(76,175,130,.15);color:#7ecfaf;border:1px solid rgba(76,175,130,.3);white-space:nowrap;">&#10003; Validé</span>';
+        } else if(statut==="archive"){
+          statutHtml='<span style="font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;background:rgba(250,246,237,.06);color:rgba(250,246,237,.4);border:1px solid rgba(250,246,237,.15);white-space:nowrap;">&#128193; Archivé</span>';
+        } else {
+          statutHtml='<span style="font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;background:rgba(201,168,76,.12);color:#F0D98A;border:1px solid rgba(201,168,76,.3);white-space:nowrap;">&#9203; En préparation</span>';
+        }
+
+        /* Countdown */
+        var cdHtml=isPasse?'<span style="font-size:.7rem;color:rgba(250,246,237,.3);font-style:italic;">Passé</span>':(diff===0?'<span class="prog-ev-countdown">Aujourd\'hui</span>':'<span class="prog-ev-countdown">J-'+diff+'</span>');
+
+        /* Lien programme uniquement si validé */
+        var voirProg=statut==="valide"?'<span style="font-size:.65rem;color:#7ecfaf;margin-top:.2rem;">Voir programme →</span>':"";
+
+        var div=document.createElement("div");
+        div.className="prog-ev-card";
+        if(statut!=="valide")div.style.cursor="default";
+
         div.innerHTML='<div class="prog-ev-cal"><div class="prog-ev-jour">'+d.getDate()+'</div><div class="prog-ev-mois">'+d.toLocaleDateString("fr-FR",{month:"short"}).toUpperCase()+'</div></div>'
           +'<div class="prog-ev-info"><div class="prog-ev-titre">'+escHtml(ev.titre)+'</div>'+(ev.description?'<div class="prog-ev-desc">'+escHtml(ev.description)+'</div>':"")
-          +'<div style="font-size:.72rem;color:rgba(250,246,237,.35);margin-top:.2rem;">&#10003; Programme validé</div></div>'
-          +'<div class="prog-ev-right">'+cdHtml+'<span style="font-size:.65rem;color:#7ecfaf;">Voir programme →</span></div>';
-        (function(evenement,el){
-          el.addEventListener("click",function(){
-            if(evActifId===evenement.id){document.getElementById("progPubDetail").style.display="none";evActifId=null;el.classList.remove("active");return;}
-            evActifId=evenement.id;culteActifId=null;
-            document.querySelectorAll(".prog-culte-card,.prog-ev-card").forEach(function(c){c.classList.remove("active");});
-            el.classList.add("active");afficherDetailEvenement(evenement);
-          });
-        })(ev,div);
+          +'<div style="margin-top:.35rem;">'+statutHtml+'</div></div>'
+          +'<div class="prog-ev-right">'+cdHtml+voirProg+'</div>';
+
+        /* Clic uniquement si validé */
+        if(statut==="valide"){
+          div.classList.add("prog-ev-card-clickable");
+          (function(evenement,el){
+            el.addEventListener("click",function(){
+              if(evActifId===evenement.id){document.getElementById("progPubDetail").style.display="none";evActifId=null;el.classList.remove("active");return;}
+              evActifId=evenement.id;culteActifId=null;
+              document.querySelectorAll(".prog-culte-card,.prog-ev-card").forEach(function(c){c.classList.remove("active");});
+              el.classList.add("active");afficherDetailEvenement(evenement);
+            });
+          })(ev,div);
+        }
+
         container.appendChild(div);
       });
     }
@@ -337,10 +382,15 @@
         programmeHtml+="</div>";
       });
       var nbChansons=programme.length;
-      inner.innerHTML='<div class="prog-detail-header"><div><h2 class="prog-detail-theme">'+escHtml(ev.titre)+'</h2><div class="prog-detail-date">&#128197; '+dateStr+'</div></div><span class="prog-culte-badge-valide">&#10003; Validé</span></div>'
+      var evStatutHtml="";
+      if(ev.statut==="valide"){evStatutHtml='<span class="prog-culte-badge-valide">&#10003; Valid&eacute;</span>';}
+      else if(ev.statut==="archive"){evStatutHtml='<span style="font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;background:rgba(250,246,237,.06);color:rgba(250,246,237,.4);border:1px solid rgba(250,246,237,.15);">&#128193; Archiv&eacute;</span>';}
+      var evLectureSeuleNote='<div style="font-size:.72rem;color:rgba(201,168,76,.6);background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.15);border-radius:8px;padding:.45rem .8rem;text-align:center;">&#128274; Programme en lecture seule</div>';
+      inner.innerHTML='<div class="prog-detail-header"><div><h2 class="prog-detail-theme">'+escHtml(ev.titre)+'</h2><div class="prog-detail-date">&#128197; '+dateStr+'</div></div>'+evStatutHtml+'</div>'
+        +evLectureSeuleNote
         +(ev.description?'<div class="prog-detail-verset">'+escHtml(ev.description)+'</div>':"")
         +(nbChansons>0?programmeHtml:'<div class="prog-pub-empty">Aucune chanson dans ce programme.</div>')
-        +'<div class="prog-detail-actions"><button class="btn-pdf" id="btnGenPDFEv">&#128196; Télécharger PDF</button><button class="btn-fermer-detail" id="btnFermerDetailEv">&#10005; Fermer</button></div>';
+        +'<div class="prog-detail-actions"><button class="btn-pdf" id="btnGenPDFEv">&#128196; T&eacute;l&eacute;charger PDF</button><button class="btn-fermer-detail" id="btnFermerDetailEv">&#10005; Fermer</button></div>';
       inner.querySelectorAll(".prog-btn-ecouter").forEach(function(btn){
         btn.addEventListener("click",function(){
           var audioId=btn.getAttribute("data-audio-id");var url=btn.getAttribute("data-url");var player=document.getElementById(audioId);if(!player)return;
