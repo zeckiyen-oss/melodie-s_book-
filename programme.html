@@ -281,8 +281,14 @@
       });
       d.innerHTML=(verset?'<div class="prog-detail-verset">&laquo; '+escHtml(verset)+' &raquo;</div>':"")
         +(programme.length>0?programmeHtml:'<div class="prog-pub-empty">Aucune chanson dans ce programme.</div>')
-        +'<div class="prog-detail-actions" style="margin-top:.8rem;"><button class="btn-pdf" onclick="genererPDF(\''+escHtml(culte.theme)+'\',\''+escHtml(formatDate(culte.date_culte))+'\',this._prog,\''+escHtml(verset)+'\',\'culte\')">&#128196; T&eacute;l&eacute;charger PDF</button></div>';
-      /* Stocker programme sur le bouton pour le PDF */
+      /* PDF disponible seulement si date >= aujourd'hui */
+      var culteDate=new Date(culte.date_culte);culteDate.setHours(0,0,0,0);
+      var aujourdHui=new Date();aujourdHui.setHours(0,0,0,0);
+      var pdfDispo=culteDate>=aujourdHui;
+      var pdfBtn=pdfDispo
+        ?'<button class="btn-pdf" onclick="genererPDF(\''+escHtml(culte.theme)+'\',\''+escHtml(formatDate(culte.date_culte))+'\',this._prog,\''+escHtml(verset)+'\',\'culte\')">&#128196; T&eacute;l&eacute;charger PDF</button>'
+        :'<span style="font-size:.75rem;color:rgba(250,246,237,.35);font-style:italic;padding:.4rem .6rem;border:1px solid rgba(250,246,237,.1);border-radius:6px;">&#128274; PDF non disponible (culte passé)</span>';
+      d.innerHTML+='<div class="prog-detail-actions" style="margin-top:.8rem;">'+pdfBtn+'</div>';
       var btnPdf=d.querySelector(".btn-pdf");if(btnPdf)btnPdf._prog=programme;
       /* Audio players */
       d.querySelectorAll(".prog-btn-ecouter").forEach(function(btn){
@@ -298,7 +304,7 @@
 
     // ── ÉVÉNEMENTS VALIDÉS ──
     async function chargerEvenements(){
-      var res=await sb.from("evenements").select("id,titre,date_event,description,statut").order("date_event",{ascending:true});
+      var res=await sb.from("evenements").select("id,titre,date_event,description,statut").order("date_event",{ascending:false});
       var container=document.getElementById("listeEvenements");
       var evs=res.data||[];
       if(evs.length===0){container.innerHTML='<div class="prog-pub-empty">Aucun &eacute;v&eacute;nement pour l\'instant.</div>';return;}
@@ -364,7 +370,14 @@
         programmeHtml+="</div>";
       });
       d.innerHTML=(programme.length>0?programmeHtml:'<div class="prog-pub-empty">Aucune chanson dans ce programme.</div>')
-        +'<div class="prog-detail-actions" style="margin-top:.8rem;"><button class="btn-pdf" onclick="genererPDF(\''+escHtml(ev.titre)+'\',\''+escHtml(formatDate(ev.date_event))+'\',this._prog,\''+escHtml(ev.description||"")+'\',\'evenement\')">&#128196; T&eacute;l&eacute;charger PDF</button></div>';
+      /* PDF disponible seulement si date >= aujourd'hui */
+      var evDate=new Date(ev.date_event);evDate.setHours(0,0,0,0);
+      var aujourdHuiEv=new Date();aujourdHuiEv.setHours(0,0,0,0);
+      var pdfDispoEv=evDate>=aujourdHuiEv;
+      var pdfBtnEv=pdfDispoEv
+        ?'<button class="btn-pdf" onclick="genererPDF(\''+escHtml(ev.titre)+'\',\''+escHtml(formatDate(ev.date_event))+'\',this._prog,\''+escHtml(ev.description||"")+'\',\'evenement\')">&#128196; T&eacute;l&eacute;charger PDF</button>'
+        :'<span style="font-size:.75rem;color:rgba(250,246,237,.35);font-style:italic;padding:.4rem .6rem;border:1px solid rgba(250,246,237,.1);border-radius:6px;">&#128274; PDF non disponible (événement passé)</span>';
+      d.innerHTML+='<div class="prog-detail-actions" style="margin-top:.8rem;">'+pdfBtnEv+'</div>';
       var btnPdf=d.querySelector(".btn-pdf");if(btnPdf)btnPdf._prog=programme;
       d.querySelectorAll(".prog-btn-ecouter").forEach(function(btn){
         btn.addEventListener("click",function(){
