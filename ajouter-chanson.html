@@ -156,6 +156,7 @@
               <option value="Offrande">Offrande</option>
               <option value="Méditation">Méditation</option>
               <option value="Envoi">Envoi</option>
+              <option value="Chant de réflexion">Chant de réflexion</option>
             </select>
             <span class="field-hint" id="rubriqueHint"></span>
           </div>
@@ -164,10 +165,13 @@
             <label class="field-label" for="langue">Langue <span class="req">*</span></label>
             <select id="langue" class="field-select" required>
               <option value="">— Choisir —</option>
-              <option value="fr">Français</option>
-              <option value="en">Anglais</option>
-              <option value="lingala">Lingala</option>
-              <option value="autre">Autre</option>
+              <option value="Français">Français</option>
+              <option value="Anglais">Anglais</option>
+              <option value="Gun">Gun</option>
+              <option value="Fon">Fon</option>
+              <option value="Adja">Adja</option>
+              <option value="Yoruba">Yoruba</option>
+              <option value="Autre">Autre</option>
             </select>
           </div>
 
@@ -301,12 +305,13 @@
   }
 
   var rubriquesInfo = {
-    'Adoration':  'Chants intimes de dévotion',
-    'Louange':    'Chants joyeux et dynamiques',
-    'Prelude':    'Chant ouverture du culte',
-    'Offrande':   'Chant pendant la collecte',
-    'Meditation': 'Chant contemplatif',
-    'Envoi':      'Chant de clôture',
+    'Adoration':         'Chants intimes de dévotion',
+    'Louange':           'Chants joyeux et dynamiques',
+    'Prélude':           'Chant ouverture du culte',
+    'Offrande':          'Chant pendant la collecte',
+    'Méditation':        'Chant contemplatif',
+    'Envoi':             'Chant de clôture',
+    'Chant de réflexion':'Chant méditatif ou de réflexion',
   };
 
   document.getElementById('rubrique').addEventListener('change', function() {
