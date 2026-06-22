@@ -14,13 +14,11 @@
 
 <body class="dashboard-body">
 
-  <!-- LOADING -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-logo">✦ Mélodie's Book</div>
     <div class="loading-spinner"></div>
   </div>
 
-  <!-- CONTENU PRINCIPAL -->
   <main class="main-content hidden" id="mainContent">
 
     <div class="page-header">
@@ -55,6 +53,7 @@
             <option value="Offrande">Offrande</option>
             <option value="Méditation">Méditation</option>
             <option value="Envoi">Envoi</option>
+            <option value="Chant de réflexion">Chant de réflexion</option>
           </select>
         </div>
         <div class="filtre-group">
@@ -63,7 +62,9 @@
             <option value="">Toutes</option>
             <option value="Français">Français</option>
             <option value="Anglais">Anglais</option>
+            <option value="Gun">Gun</option>
             <option value="Fon">Fon</option>
+            <option value="Adja">Adja</option>
             <option value="Yoruba">Yoruba</option>
             <option value="Autre">Autre</option>
           </select>
@@ -107,8 +108,6 @@
 
   <style>
     .rep-liste { display:flex; flex-direction:column; gap:0.55rem; margin-bottom:2rem; }
-
-    /* Carte chanson — bloc non-lien pour permettre les boutons audio */
     .rep-item {
       display:flex; flex-direction:column;
       padding:0.85rem 1.1rem;
@@ -121,12 +120,7 @@
       position:relative;
     }
     .rep-item:hover { border-color:rgba(201,168,76,0.4); box-shadow:0 4px 16px rgba(0,0,0,0.3); }
-
-    /* Ligne principale cliquable */
-    .rep-item-main {
-      display:flex; align-items:center; gap:0.9rem;
-      text-decoration:none; color:#FAF6ED;
-    }
+    .rep-item-main { display:flex; align-items:center; gap:0.9rem; text-decoration:none; color:#FAF6ED; }
     .rep-num { font-family:'Cinzel',serif; font-size:0.72rem; color:rgba(201,168,76,0.7); min-width:32px; flex-shrink:0; font-weight:600; }
     .rep-icon { font-size:1.3rem; flex-shrink:0; line-height:1; }
     .rep-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:0.25rem; }
@@ -137,46 +131,15 @@
     .rep-badges { display:flex; gap:0.3rem; flex-shrink:0; align-items:center; }
     .rep-btn-edit { background:transparent; border:1px solid rgba(201,168,76,0.25); border-radius:6px; padding:3px 7px; font-size:0.8rem; text-decoration:none; transition:background 0.2s,border-color 0.2s; flex-shrink:0; }
     .rep-btn-edit:hover { background:rgba(201,168,76,0.12); border-color:rgba(201,168,76,0.5); }
-
-    /* Zone audio inline */
-    .rep-audio-zone {
-      margin-top:0.65rem;
-      padding:0.7rem 0.8rem;
-      background:rgba(13,27,42,0.5);
-      border:1px solid rgba(201,168,76,0.15);
-      border-radius:8px;
-      display:none;
-      flex-direction:column;
-      gap:0.5rem;
-    }
+    .rep-audio-zone { margin-top:0.65rem; padding:0.7rem 0.8rem; background:rgba(13,27,42,0.5); border:1px solid rgba(201,168,76,0.15); border-radius:8px; display:none; flex-direction:column; gap:0.5rem; }
     .rep-audio-zone.open { display:flex; }
     .rep-audio-player { width:100%; border-radius:6px; display:block; }
     .rep-audio-actions { display:flex; gap:0.5rem; flex-wrap:wrap; }
-    .rep-btn-audio {
-      display:inline-flex; align-items:center; gap:0.35rem;
-      padding:0.3rem 0.75rem;
-      border-radius:7px;
-      font-family:'Lato',sans-serif;
-      font-size:0.75rem;
-      font-weight:700;
-      cursor:pointer;
-      border:none;
-      transition:background 0.2s;
-    }
-    .rep-btn-ecouter {
-      background:rgba(201,168,76,0.15);
-      border:1px solid rgba(201,168,76,0.35);
-      color:#F0D98A;
-    }
+    .rep-btn-audio { display:inline-flex; align-items:center; gap:0.35rem; padding:0.3rem 0.75rem; border-radius:7px; font-family:'Lato',sans-serif; font-size:0.75rem; font-weight:700; cursor:pointer; border:none; transition:background 0.2s; }
+    .rep-btn-ecouter { background:rgba(201,168,76,0.15); border:1px solid rgba(201,168,76,0.35); color:#F0D98A; }
     .rep-btn-ecouter:hover { background:rgba(201,168,76,0.28); }
-    .rep-btn-dl {
-      background:rgba(76,175,130,0.12);
-      border:1px solid rgba(76,175,130,0.3);
-      color:#7ecfaf;
-      text-decoration:none;
-    }
+    .rep-btn-dl { background:rgba(76,175,130,0.12); border:1px solid rgba(76,175,130,0.3); color:#7ecfaf; text-decoration:none; }
     .rep-btn-dl:hover { background:rgba(76,175,130,0.22); }
-
     .filtres-row { display:flex; flex-wrap:wrap; gap:0.8rem; align-items:flex-end; }
     @media (max-width:600px) {
       .filtres-row { flex-direction:column; gap:0.6rem; }
@@ -195,16 +158,17 @@
     window._sb = sb;
 
     var RUBRIQUES_COLORS = {
-      'Adoration':  { bg:'rgba(201,168,76,0.12)',  border:'rgba(201,168,76,0.4)',  text:'#F0D98A' },
-      'Louange':    { bg:'rgba(91,163,201,0.12)',  border:'rgba(91,163,201,0.4)',  text:'#7ECFF0' },
-      'Prélude':    { bg:'rgba(156,126,204,0.12)', border:'rgba(156,126,204,0.4)', text:'#C5B3E8' },
-      'Offrande':   { bg:'rgba(91,170,125,0.12)',  border:'rgba(91,170,125,0.4)',  text:'#6EC99A' },
-      'Méditation': { bg:'rgba(200,120,80,0.12)',  border:'rgba(200,120,80,0.4)',  text:'#F0A882' },
-      'Envoi':      { bg:'rgba(180,180,60,0.12)',  border:'rgba(180,180,60,0.4)',  text:'#E0E070' }
+      'Adoration':          { bg:'rgba(201,168,76,0.12)',  border:'rgba(201,168,76,0.4)',  text:'#F0D98A' },
+      'Louange':            { bg:'rgba(91,163,201,0.12)',  border:'rgba(91,163,201,0.4)',  text:'#7ECFF0' },
+      'Prélude':            { bg:'rgba(156,126,204,0.12)', border:'rgba(156,126,204,0.4)', text:'#C5B3E8' },
+      'Offrande':           { bg:'rgba(91,170,125,0.12)',  border:'rgba(91,170,125,0.4)',  text:'#6EC99A' },
+      'Méditation':         { bg:'rgba(200,120,80,0.12)',  border:'rgba(200,120,80,0.4)',  text:'#F0A882' },
+      'Envoi':               { bg:'rgba(180,180,60,0.12)',  border:'rgba(180,180,60,0.4)',  text:'#E0E070' },
+      'Chant de réflexion': { bg:'rgba(130,180,200,0.12)', border:'rgba(130,180,200,0.4)', text:'#A8D8EA' }
     };
     var RUBRIQUES_ICONS = {
       'Adoration':'🙏','Louange':'🎶','Prélude':'🌅',
-      'Offrande':'🕊️','Méditation':'✨','Envoi':'🚀'
+      'Offrande':'🕊️','Méditation':'✨','Envoi':'🚀','Chant de réflexion':'💭'
     };
 
     var allChansons = [], filteredChansons = [];
@@ -240,14 +204,11 @@
         var div = document.createElement('div');
         div.className = 'rep-item';
 
-        // Badges admin
         var adminBtn = userRole === 'admin'
           ? '<a href="modifier-chanson.html?id=' + c.id + '" class="rep-btn-edit" title="Modifier" onclick="event.stopPropagation()">✏️</a>' : '';
 
-        // Badge audio dans la ligne principale
         var audioBadge = c.audio_url ? '<span title="Audio disponible">🎵</span>' : '';
 
-        // Ligne principale → lien vers fiche
         var mainHtml = '<a href="chanson.html?id=' + c.id + '" class="rep-item-main">'
           + '<div class="rep-num">' + (c.numero ? '#' + escHtml(String(c.numero)) : '—') + '</div>'
           + '<div class="rep-icon">' + icon + '</div>'
@@ -261,7 +222,6 @@
           + '<div class="rep-badges">' + audioBadge + adminBtn + '</div>'
           + '</a>';
 
-        // Boutons audio + zone player (si audio_url)
         var audioZoneHtml = '';
         if (c.audio_url) {
           var zoneId   = 'audio-zone-' + c.id;
@@ -279,7 +239,6 @@
         list.appendChild(div);
       });
 
-      // Écouter : toggle player
       list.querySelectorAll('.rep-btn-ecouter').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
           e.preventDefault();
@@ -291,7 +250,6 @@
           var player   = document.getElementById(playerId);
           if (!zone || !player) return;
           var isOpen = zone.classList.contains('open');
-          // Fermer tous les autres players
           list.querySelectorAll('.rep-audio-zone.open').forEach(function(z) {
             z.classList.remove('open');
             var p = z.querySelector('audio');
