@@ -15,7 +15,6 @@
   <link rel="stylesheet" href="css/chanson.css" />
 
   <style>
-    /* --- Upload audio --- */
     .audio-upload-zone {
       margin-top: 1rem;
       border: 2px dashed #C9A84C55;
@@ -80,6 +79,17 @@
       border-radius: 6px;
       font-size: .78rem;
       cursor: pointer;
+    }
+    /* Badge par defaut renforce pour les valeurs sans mapping specifique (langues, etc.) */
+    .badge-default {
+      background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.3);
+      color: #F0D98A;
+    }
+    .badge-reflexion {
+      background: rgba(130,180,200,0.12);
+      border: 1px solid rgba(130,180,200,0.4);
+      color: #A8D8EA;
     }
   </style>
 </head>
@@ -243,9 +253,9 @@
 
   function getBadgeClass(type, val) {
     var map = {
-      langue:   { fr:'badge-fr', en:'badge-en', lingala:'badge-ling', autre:'badge-autre' },
+      langue:   { 'Français':'badge-fr', 'Anglais':'badge-en', 'Gun':'badge-default', 'Fon':'badge-default', 'Adja':'badge-default', 'Yoruba':'badge-default', 'Autre':'badge-autre' },
       style:    { contemporain:'badge-contemp', classique:'badge-class', gospel:'badge-gospel', cantique:'badge-cant' },
-      rubrique: { Adoration:'badge-adora', Louange:'badge-louange', 'Prélude':'badge-prelude', Offrande:'badge-offrand', 'Méditation':'badge-medit', Envoi:'badge-envoi' }
+      rubrique: { Adoration:'badge-adora', Louange:'badge-louange', 'Prélude':'badge-prelude', Offrande:'badge-offrand', 'Méditation':'badge-medit', Envoi:'badge-envoi', 'Chant de réflexion':'badge-reflexion' }
     };
     return (map[type] && map[type][val]) ? map[type][val] : 'badge-default';
   }
