@@ -138,7 +138,6 @@
     .pp-paroles-titre { font-family:'Cinzel',serif; font-size:0.75rem; color:#C9A84C; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.7rem; }
     .pp-paroles-texte { font-family:'Playfair Display',serif; font-size:0.88rem; color:rgba(250,246,237,0.85); line-height:1.9; white-space:pre-wrap; max-height:220px; overflow-y:auto; }
 
-    /* Audio section */
     .pp-detail-audio { background:rgba(13,27,42,0.3); border:1px solid rgba(201,168,76,0.2); border-radius:10px; padding:1rem; }
     .pp-audio-titre { font-family:'Cinzel',serif; font-size:0.75rem; color:#C9A84C; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.7rem; display:flex; align-items:center; gap:0.5rem; }
     .pp-audio-player { width:100%; border-radius:8px; display:block; margin-bottom:0.5rem; }
@@ -301,17 +300,14 @@
       var auteur = (p.profils && (p.profils.nom || p.profils.email)) || 'Membre inconnu';
       var date   = new Date(p.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
 
-      // Paroles
       var parolesHtml = p.paroles
         ? '<div class="pp-detail-paroles"><div class="pp-paroles-titre">🎵 Paroles</div>'
           + '<div class="pp-paroles-texte">' + escHtml(p.paroles) + '</div></div>' : '';
 
-      // Commentaire
       var commentaireHtml = p.commentaire
         ? '<div class="pp-detail-commentaire"><div class="pp-detail-label">Commentaire</div>'
           + '<p class="pp-blockquote">' + escHtml(p.commentaire) + '</p></div>' : '';
 
-      // Audio
       var audioHtml = '';
       if (p.audio_url) {
         audioHtml = '<div class="pp-detail-audio">'
@@ -325,7 +321,6 @@
           + '</div>';
       }
 
-      // Actions
       var actionsHtml = '';
       if (p.statut === 'en_attente') {
         actionsHtml = '<div class="pp-detail-actions">'
@@ -368,7 +363,6 @@
         btn.disabled = true;
         btn.textContent = 'Traitement…';
 
-        // Marquer la proposition comme acceptée
         var r1 = await sb.from('propositions').update({ statut:'accepte' }).eq('id', p.id);
         if (r1.error) {
           showToast('Erreur mise à jour.', 'error');
@@ -377,7 +371,6 @@
           return;
         }
 
-        // Ajouter la chanson au répertoire — audio_url transféré depuis la proposition
         await sb.from('chansons').insert({
           titre:     p.titre,
           langue:    p.langue,
