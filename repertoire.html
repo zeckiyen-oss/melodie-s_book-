@@ -107,6 +107,8 @@
   </main>
 
   <style>
+    html, body { background: #0D1B2A !important; color: #FAF6ED !important; }
+
     .rep-liste { display:flex; flex-direction:column; gap:0.55rem; margin-bottom:2rem; }
     .rep-item {
       display:flex; flex-direction:column;
@@ -312,7 +314,7 @@
       if (!p.data || !p.data.actif) { window.location.href = 'index.html'; return; }
 
       userRole = p.data.role || 'membre';
-      buildSharedNavbar(p.data, 'repertoire');
+      await buildSharedNavbar(p.data, 'repertoire');
       if (userRole === 'admin') document.getElementById('adminActions').style.display = 'flex';
 
       var res = await sb.from('chansons').select('*').order('numero', {ascending:true});
