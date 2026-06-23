@@ -13,6 +13,8 @@
   <link rel="stylesheet" href="css/ajouter-chanson.css" />
 
   <style>
+    html, body { background: #0D1B2A !important; color: #FAF6ED !important; }
+
     .audio-actuel-wrap { background: rgba(13,27,42,0.4); border: 1px solid rgba(201,168,76,0.2); border-radius: 10px; padding: 0.9rem 1rem; margin-bottom: 0.8rem; }
     .audio-actuel-label { font-size: 0.72rem; font-weight: 700; color: #C9A84C; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
     .audio-actuel-player { width:100%; border-radius:8px; display:block; margin-bottom:0.5rem; }
@@ -258,7 +260,7 @@
     if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
     if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
 
-    buildSharedNavbar(profil, 'modifier-chanson');
+    await buildSharedNavbar(profil, 'modifier-chanson');
 
     var params = new URLSearchParams(window.location.search);
     chansonId = params.get('id');
