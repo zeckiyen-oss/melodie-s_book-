@@ -93,6 +93,8 @@
   </div>
 
   <style>
+    html, body { background: #0D1B2A !important; color: #FAF6ED !important; }
+
     .pp-main { max-width:860px; margin:0 auto; padding:1.5rem 1rem 4rem; }
     .pp-filters { display:flex; flex-direction:column; gap:0.8rem; margin-bottom:1.2rem; }
     .pp-filter-tabs { display:flex; gap:0.4rem; flex-wrap:wrap; }
@@ -198,7 +200,7 @@
       if (!p.data || !p.data.actif) { window.location.href = 'index.html'; return; }
       if (p.data.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
 
-      buildSharedNavbar(p.data, 'propositions');
+      await buildSharedNavbar(p.data, 'propositions');
       await chargerPropositions();
       hideLoader();
     }
