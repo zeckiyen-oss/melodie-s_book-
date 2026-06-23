@@ -12,6 +12,8 @@
   <script src="navbar.js"></script>
 
   <style>
+    html, body { background: #0D1B2A !important; color: #FAF6ED !important; }
+
     :root {
       --bleu-nuit:    #0D1B2A;
       --bleu-profond: #1A2E45;
@@ -502,14 +504,14 @@
       if (!profil.actif) {
         document.getElementById('loadingOverlay').classList.add('hidden');
         document.getElementById('waitingScreen').classList.remove('hidden');
-        buildSharedNavbar(profil, 'dashboard');
+        await buildSharedNavbar(profil, 'dashboard');
         return;
       }
 
       var role = profil.role || 'membre';
       var nom  = profil.nom || sessionData.data.session.user.email.split('@')[0];
 
-      buildSharedNavbar(profil, 'dashboard');
+      await buildSharedNavbar(profil, 'dashboard');
 
       var heure = new Date().getHours();
       var salut = heure < 12 ? 'Bon matin' : heure < 18 ? 'Bon apres-midi' : 'Bonsoir';
