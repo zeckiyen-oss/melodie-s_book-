@@ -12,6 +12,8 @@
   <script src="navbar.js"></script>
 
   <style>
+    html, body { background: #0D1B2A !important; color: #FAF6ED !important; }
+
     .prop-paroles-input { font-family:'Playfair Display',serif; font-size:0.92rem; line-height:1.8; min-height:200px; resize:vertical; }
     .prop-paroles-input::placeholder { font-family:'Lato',sans-serif; font-size:0.85rem; color:rgba(250,246,237,0.25); }
 
@@ -268,7 +270,7 @@
     var p = await sb.from('profils').select('*').eq('id', currentUser.id).single();
     if (!p.data || !p.data.actif) { window.location.href = 'index.html'; return; }
 
-    buildSharedNavbar(p.data, 'proposer');
+    await buildSharedNavbar(p.data, 'proposer');
     hideLoader();
     chargerMesPropositions();
   }
