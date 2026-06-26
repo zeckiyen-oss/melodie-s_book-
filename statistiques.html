@@ -9,20 +9,100 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
   <link rel="stylesheet" href="css/style.css" />
+
+  <style>
+    html, body { background: #0D1B2A !important; color: #FAF6ED !important; }
+
+    .stats-page { background:#0D1B2A; min-height:100vh; font-family:'Lato',sans-serif; }
+    .page-loader { position:fixed; inset:0; z-index:9999; background:#0D1B2A; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1rem; }
+    .loader-cross { font-size:2.5rem; color:#C9A84C; animation:spin 1.5s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .page-loader p { font-size:.85rem; color:rgba(250,246,237,.4); }
+
+    .stats-main { max-width:1000px; margin:0 auto; padding:1.5rem 1rem 4rem; }
+
+    .stats-header { display:flex; align-items:center; gap:1rem; margin-bottom:1.8rem; padding-bottom:1.2rem; border-bottom:1px solid rgba(201,168,76,.2); }
+    .stats-header-icon { font-size:2.2rem; }
+    .stats-title { font-family:'Cinzel',serif; font-size:1.4rem; font-weight:700; color:#F0D98A; margin:0 0 .2rem; }
+    .stats-subtitle { font-size:.85rem; color:rgba(250,246,237,.5); margin:0; }
+
+    .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:.8rem; margin-bottom:1.8rem; }
+    .kpi-card { background:linear-gradient(145deg,#1A2E45,#152438); border:1px solid rgba(201,168,76,.18); border-radius:14px; padding:1.1rem 1rem; text-align:center; opacity:0; }
+    .kpi-animate { animation:kpiIn .4s ease forwards; }
+    @keyframes kpiIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .kpi-icon { font-size:1.4rem; margin-bottom:.4rem; }
+    .kpi-label { font-size:.68rem; color:rgba(250,246,237,.45); text-transform:uppercase; letter-spacing:.05em; margin-bottom:.3rem; }
+    .kpi-value { font-family:'Cinzel',serif; font-size:1.7rem; font-weight:700; color:#F0D98A; }
+
+    .stats-grid-2col { display:grid; grid-template-columns:1fr; gap:1rem; margin-bottom:1rem; }
+    @media (min-width:680px) { .stats-grid-2col { grid-template-columns:1fr 1fr; } }
+
+    .stat-card { background:linear-gradient(145deg,#1A2E45,#152438); border:1px solid rgba(201,168,76,.18); border-radius:16px; padding:1.2rem 1.3rem; }
+    .stat-card-full { margin-bottom:1rem; }
+    .stat-card-title { font-family:'Cinzel',serif; font-size:.9rem; font-weight:700; color:#FAF6ED; margin:0 0 1rem; }
+    .stat-empty { text-align:center; color:rgba(250,246,237,.3); font-style:italic; font-size:.85rem; padding:1.5rem 0; }
+
+    /* Bar chart */
+    .bar-chart { display:flex; flex-direction:column; gap:.7rem; }
+    .bar-row { display:grid; grid-template-columns:90px 1fr 36px; align-items:center; gap:.6rem; }
+    .bar-label { font-size:.78rem; color:rgba(250,246,237,.65); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .bar-track { background:rgba(13,27,42,.5); border-radius:6px; height:10px; overflow:hidden; }
+    .bar-fill { height:100%; border-radius:6px; transition:width .4s ease; }
+    .bar-count { font-family:'Cinzel',serif; font-size:.78rem; color:#F0D98A; text-align:right; }
+
+    /* Donut */
+    .donut-wrapper { display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap; justify-content:center; }
+    .donut-chart svg { display:block; }
+    .donut-center-text { font-family:'Cinzel',serif; font-size:1.4rem; font-weight:700; fill:#F0D98A; }
+    .donut-legend { display:flex; flex-direction:column; gap:.5rem; flex:1; min-width:140px; }
+    .donut-legend-item { display:flex; align-items:center; gap:.5rem; font-size:.78rem; }
+    .donut-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .donut-legend-label { color:rgba(250,246,237,.7); flex:1; }
+    .donut-legend-val { color:#F0D98A; font-weight:700; white-space:nowrap; }
+
+    /* Top chansons */
+    .top-list { display:flex; flex-direction:column; gap:.55rem; }
+    .top-item { display:grid; grid-template-columns:32px 1fr 44px; align-items:center; gap:.7rem; }
+    .top-rank { font-size:1.1rem; text-align:center; color:#C9A84C; font-family:'Cinzel',serif; font-weight:700; }
+    .top-info { display:flex; flex-direction:column; gap:.3rem; }
+    .top-name { font-size:.82rem; color:#FAF6ED; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .top-bar-track { background:rgba(13,27,42,.5); border-radius:6px; height:7px; overflow:hidden; }
+    .top-bar-fill { height:100%; background:linear-gradient(90deg,#C9A84C,#F0D98A); border-radius:6px; }
+    .top-count { font-family:'Cinzel',serif; font-size:.78rem; color:#F0D98A; text-align:right; }
+
+    /* Médias — audio uniquement */
+    .media-stats { display:flex; flex-direction:column; gap:.9rem; }
+    .media-row { display:grid; grid-template-columns:110px 1fr 100px; align-items:center; gap:.7rem; }
+    .media-label { font-size:.82rem; color:rgba(250,246,237,.65); }
+    .media-progress { background:rgba(13,27,42,.5); border-radius:8px; height:12px; overflow:hidden; }
+    .media-bar { height:100%; border-radius:8px; background:linear-gradient(90deg,#C9A84C,#F0D98A); transition:width .4s ease; }
+    .media-pct { font-size:.76rem; color:#F0D98A; text-align:right; }
+
+    /* Thèmes bulles */
+    .theme-bubbles { display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; justify-content:center; padding:.5rem; }
+    .theme-bubble { font-family:'Cinzel',serif; color:#F0D98A; background:rgba(201,168,76,.1); border:1px solid rgba(201,168,76,.25); border-radius:20px; padding:.3rem .8rem; white-space:nowrap; }
+    .theme-bubble sup { color:#C9A84C; font-size:.65em; }
+
+    /* Toast */
+    .toast-container { position:fixed; bottom:1.2rem; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; align-items:center; gap:.4rem; }
+    .toast { background:#1A2E45; border:1px solid rgba(201,168,76,.35); color:#FAF6ED; padding:.55rem 1.1rem; border-radius:8px; font-size:.82rem; opacity:0; transform:translateY(10px); transition:all .25s; white-space:nowrap; }
+    .toast.toast-show { opacity:1; transform:translateY(0); }
+    .toast-error { border-color:#e07070; }
+  </style>
 </head>
 <body class="stats-page">
 
   <!-- NAVBAR injectée par navbar.js -->
 
   <div class="page-loader" id="pageLoader">
-    <div class="loader-cross">✦</div>
+    <div class="loader-cross">&#10022;</div>
     <p>Chargement…</p>
   </div>
 
   <main class="stats-main" id="statsMain" style="display:none;">
 
     <header class="stats-header">
-      <div class="stats-header-icon">📊</div>
+      <div class="stats-header-icon">&#128202;</div>
       <div>
         <h1 class="stats-title">Statistiques &amp; Tableaux de bord</h1>
         <p class="stats-subtitle">Vue d'ensemble du répertoire et de l'activité de la chorale</p>
@@ -30,36 +110,41 @@
     </header>
 
     <section class="kpi-grid" id="kpiGrid">
-      <div class="kpi-card"><div class="kpi-icon">🎵</div><div class="kpi-label">Chansons au répertoire</div><div class="kpi-value" id="valChansons">—</div></div>
-      <div class="kpi-card"><div class="kpi-icon">🏷️</div><div class="kpi-label">Thèmes distincts</div><div class="kpi-value" id="valThemes">—</div></div>
-      <div class="kpi-card"><div class="kpi-icon">⛪</div><div class="kpi-label">Cultes organisés</div><div class="kpi-value" id="valCultes">—</div></div>
-      <div class="kpi-card"><div class="kpi-icon">👥</div><div class="kpi-label">Membres actifs</div><div class="kpi-value" id="valMembres">—</div></div>
-      <div class="kpi-card"><div class="kpi-icon">💡</div><div class="kpi-label">Propositions en attente</div><div class="kpi-value" id="valPropositions">—</div></div>
-      <div class="kpi-card"><div class="kpi-icon">📅</div><div class="kpi-label">Événements à venir</div><div class="kpi-value" id="valEvenements">—</div></div>
+      <div class="kpi-card"><div class="kpi-icon">&#127925;</div><div class="kpi-label">Chansons au répertoire</div><div class="kpi-value" id="valChansons">—</div></div>
+      <div class="kpi-card"><div class="kpi-icon">&#127991;&#65039;</div><div class="kpi-label">Thèmes distincts</div><div class="kpi-value" id="valThemes">—</div></div>
+      <div class="kpi-card"><div class="kpi-icon">&#9962;</div><div class="kpi-label">Cultes organisés</div><div class="kpi-value" id="valCultes">—</div></div>
+      <div class="kpi-card" id="kpiMembresCard" style="display:none;"><div class="kpi-icon">&#128101;</div><div class="kpi-label">Membres actifs</div><div class="kpi-value" id="valMembres">—</div></div>
+      <div class="kpi-card" id="kpiPropositionsCard" style="display:none;"><div class="kpi-icon">&#128161;</div><div class="kpi-label">Propositions en attente</div><div class="kpi-value" id="valPropositions">—</div></div>
+      <div class="kpi-card"><div class="kpi-icon">&#128197;</div><div class="kpi-label">Événements à venir</div><div class="kpi-value" id="valEvenements">—</div></div>
     </section>
 
     <div class="stats-grid-2col">
-      <div class="stat-card"><h2 class="stat-card-title">🎼 Chansons par rubrique</h2><div class="bar-chart" id="chartRubrique"></div></div>
-      <div class="stat-card"><h2 class="stat-card-title">🌍 Chansons par langue</h2><div class="donut-wrapper" id="chartLangue"></div></div>
+      <div class="stat-card"><h2 class="stat-card-title">&#127932; Chansons par rubrique</h2><div class="bar-chart" id="chartRubrique"></div></div>
+      <div class="stat-card"><h2 class="stat-card-title">&#127757; Chansons par langue</h2><div class="donut-wrapper" id="chartLangue"></div></div>
     </div>
 
     <div class="stats-grid-2col">
-      <div class="stat-card"><h2 class="stat-card-title">🎸 Chansons par style</h2><div class="bar-chart" id="chartStyle"></div></div>
-      <div class="stat-card"><h2 class="stat-card-title">⛪ Statut des cultes</h2><div class="donut-wrapper" id="chartCultes"></div></div>
+      <div class="stat-card"><h2 class="stat-card-title">&#127928; Chansons par style</h2><div class="bar-chart" id="chartStyle"></div></div>
+      <div class="stat-card"><h2 class="stat-card-title">&#9962; Statut des cultes</h2><div class="donut-wrapper" id="chartCultes"></div></div>
+    </div>
+
+    <div class="stats-grid-2col">
+      <div class="stat-card"><h2 class="stat-card-title">&#128197; Statut des événements</h2><div class="donut-wrapper" id="chartEvenements"></div></div>
+      <div class="stat-card" id="cardPropositionsStatut" style="display:none;"><h2 class="stat-card-title">&#128161; Propositions par statut</h2><div class="donut-wrapper" id="chartPropositions"></div></div>
     </div>
 
     <div class="stat-card stat-card-full">
-      <h2 class="stat-card-title">🏆 Top 10 — Chansons les plus programmées</h2>
+      <h2 class="stat-card-title">&#127942; Top 10 — Chansons les plus programmées</h2>
       <div class="top-list" id="topChansons"><p class="stat-empty">Chargement…</p></div>
     </div>
 
-    <div class="stats-grid-2col">
-      <div class="stat-card"><h2 class="stat-card-title">💡 Propositions par statut</h2><div class="donut-wrapper" id="chartPropositions"></div></div>
-      <div class="stat-card"><h2 class="stat-card-title">📚 Chansons avec médias</h2><div class="media-stats" id="mediaStats"></div></div>
+    <div class="stat-card stat-card-full">
+      <h2 class="stat-card-title">&#127925; Chansons avec audio disponible</h2>
+      <div class="media-stats" id="mediaStats"></div>
     </div>
 
     <div class="stat-card stat-card-full">
-      <h2 class="stat-card-title">🏷️ Thèmes les plus utilisés</h2>
+      <h2 class="stat-card-title">&#127991;&#65039; Thèmes les plus utilisés</h2>
       <div class="theme-bubbles" id="themeBubbles"><p class="stat-empty">Chargement…</p></div>
     </div>
 
@@ -72,6 +157,8 @@
     var SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ";
     var sb = supabase.createClient(SUPA_URL, SUPA_KEY);
     window._sb = sb;
+
+    var userRole = "membre";
 
     function escHtml(str) {
       if (str == null) return "";
@@ -155,26 +242,23 @@
       var max = data[0].count;
       container.innerHTML = data.map(function(d, i) {
         var pct = max > 0 ? Math.round(d.count / max * 100) : 0;
-        var medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i+1) + ".";
+        var medal = i === 0 ? "&#129351;" : i === 1 ? "&#129352;" : i === 2 ? "&#129353;" : (i+1) + ".";
         return "<div class=\"top-item\">"
           + "<div class=\"top-rank\">" + medal + "</div>"
           + "<div class=\"top-info\"><div class=\"top-name\">" + escHtml(d.titre) + "</div>"
           + "<div class=\"top-bar-track\"><div class=\"top-bar-fill\" style=\"width:" + pct + "%\"></div></div></div>"
-          + "<div class=\"top-count\">" + d.count + "×</div>"
+          + "<div class=\"top-count\">" + d.count + "&times;</div>"
           + "</div>";
       }).join("");
     }
 
-    function renderMediaStats(total, avecPartition, avecAudio) {
+    /* Stats média — UNIQUEMENT audio (partition retirée du système) */
+    function renderMediaStats(total, avecAudio) {
       var container = document.getElementById("mediaStats");
-      var pPart  = total > 0 ? Math.round(avecPartition / total * 100) : 0;
       var pAudio = total > 0 ? Math.round(avecAudio / total * 100) : 0;
       container.innerHTML =
-        "<div class=\"media-row\"><div class=\"media-label\">🎼 Partitions</div>"
-        + "<div class=\"media-progress\"><div class=\"media-bar\" style=\"width:" + pPart + "%\"></div></div>"
-        + "<div class=\"media-pct\">" + pPart + "% (" + avecPartition + "/" + total + ")</div></div>"
-        + "<div class=\"media-row\"><div class=\"media-label\">🔊 Audio</div>"
-        + "<div class=\"media-progress\"><div class=\"media-bar media-bar-audio\" style=\"width:" + pAudio + "%\"></div></div>"
+        "<div class=\"media-row\"><div class=\"media-label\">&#127925; Audio disponible</div>"
+        + "<div class=\"media-progress\"><div class=\"media-bar\" style=\"width:" + pAudio + "%\"></div></div>"
         + "<div class=\"media-pct\">" + pAudio + "% (" + avecAudio + "/" + total + ")</div></div>";
     }
 
@@ -191,57 +275,71 @@
 
     async function loadStats() {
       try {
-        var results = await Promise.all([
-          sb.from("chansons").select("id, rubrique, langue, style, partition_url, audio_url"),
+        var queries = [
+          sb.from("chansons").select("id, rubrique, langue, style, audio_url"),
           sb.from("themes").select("id"),
           sb.from("cultes").select("id, statut"),
-          sb.from("profils").select("id").eq("actif", true),
-          sb.from("propositions").select("id, statut"),
-          sb.from("evenements").select("id, date_event")
-        ]);
+          sb.from("evenements").select("id, date_event, statut")
+        ];
+        if (userRole === "admin") {
+          queries.push(sb.from("profils").select("id").eq("actif", true));
+          queries.push(sb.from("propositions").select("id, statut"));
+        }
 
-        var chansons     = results[0].data || [];
-        var themes       = results[1].data || [];
-        var cultes       = results[2].data || [];
-        var membres      = results[3].data || [];
-        var propositions = results[4].data || [];
-        var evenements   = results[5].data || [];
+        var results = await Promise.all(queries);
+
+        var chansons   = results[0].data || [];
+        var themes     = results[1].data || [];
+        var cultes     = results[2].data || [];
+        var evenements = results[3].data || [];
+        var membres      = userRole === "admin" ? (results[4].data || []) : [];
+        var propositions = userRole === "admin" ? (results[5].data || []) : [];
 
         var today = new Date().toISOString().split("T")[0];
         var evFuturs = evenements.filter(function(e) { return e.date_event >= today; });
 
-        document.getElementById("valChansons").textContent    = chansons.length;
-        document.getElementById("valThemes").textContent      = themes.length;
-        document.getElementById("valCultes").textContent      = cultes.length;
-        document.getElementById("valMembres").textContent     = membres.length;
-        document.getElementById("valPropositions").textContent = propositions.filter(function(p) { return p.statut === "en_attente"; }).length;
-        document.getElementById("valEvenements").textContent  = evFuturs.length;
+        document.getElementById("valChansons").textContent   = chansons.length;
+        document.getElementById("valThemes").textContent     = themes.length;
+        document.getElementById("valCultes").textContent     = cultes.length;
+        document.getElementById("valEvenements").textContent = evFuturs.length;
+
+        if (userRole === "admin") {
+          document.getElementById("kpiMembresCard").style.display = "block";
+          document.getElementById("valMembres").textContent = membres.length;
+          document.getElementById("kpiPropositionsCard").style.display = "block";
+          document.getElementById("valPropositions").textContent = propositions.filter(function(p) { return p.statut === "en_attente"; }).length;
+          document.getElementById("cardPropositionsStatut").style.display = "block";
+        }
 
         document.querySelectorAll(".kpi-card").forEach(function(card, i) {
           card.style.animationDelay = (i * 0.08) + "s";
           card.classList.add("kpi-animate");
         });
 
-        // Rubriques
+        /* Rubriques — incluant "Chant de réflexion" */
         var rubriques = {};
         chansons.forEach(function(c) { var r = c.rubrique || "Non définie"; rubriques[r] = (rubriques[r] || 0) + 1; });
         var rubriquesData = Object.keys(rubriques).map(function(k) { return { label:k, count:rubriques[k] }; }).sort(function(a,b){return b.count-a.count;});
-        var colorRubriques = { "Adoration":"#C9A84C","Louange":"#F0D98A","Prélude":"#4A7FA5","Offrande":"#8AB4CC","Méditation":"#3D6A8A","Envoi":"#B8860B" };
+        var colorRubriques = {
+          "Adoration":"#C9A84C", "Louange":"#F0D98A", "Prélude":"#4A7FA5",
+          "Offrande":"#8AB4CC", "Méditation":"#3D6A8A", "Envoi":"#B8860B",
+          "Chant de réflexion":"#82B4C8"
+        };
         renderBarChart("chartRubrique", rubriquesData, colorRubriques);
 
-        // Langues
+        /* Langues — Français, Anglais, Gun, Fon, Adja, Yoruba, Autre */
         var langues = {};
         chansons.forEach(function(c) { var l = c.langue || "Non définie"; langues[l] = (langues[l] || 0) + 1; });
         var languesData = Object.keys(langues).map(function(k) { return { label:k, count:langues[k] }; }).sort(function(a,b){return b.count-a.count;});
         renderDonut("chartLangue", languesData);
 
-        // Styles
+        /* Styles */
         var styles = {};
         chansons.forEach(function(c) { var s = c.style || "Non défini"; styles[s] = (styles[s] || 0) + 1; });
         var stylesData = Object.keys(styles).map(function(k) { return { label:k, count:styles[k] }; }).sort(function(a,b){return b.count-a.count;});
         renderBarChart("chartStyle", stylesData, null);
 
-        // Cultes par statut
+        /* Cultes par statut */
         var sc = { "en_preparation":0, "valide":0, "archive":0 };
         cultes.forEach(function(c) { if (sc[c.statut] !== undefined) sc[c.statut]++; });
         var cultesData = [
@@ -251,24 +349,35 @@
         ].filter(function(d) { return d.count > 0; });
         renderDonut("chartCultes", cultesData);
 
-        // Propositions
-        var sp = { "en_attente":0, "accepte":0, "refuse":0 };
-        propositions.forEach(function(p) { if (sp[p.statut] !== undefined) sp[p.statut]++; });
-        var propData = [
-          { label:"En attente", count:sp["en_attente"] },
-          { label:"Accepté",    count:sp["accepte"] },
-          { label:"Refusé",     count:sp["refuse"] }
+        /* Événements par statut */
+        var se = { "en_preparation":0, "valide":0, "archive":0 };
+        evenements.forEach(function(e) { if (se[e.statut] !== undefined) se[e.statut]++; });
+        var evData = [
+          { label:"En préparation", count:se["en_preparation"] },
+          { label:"Validé",         count:se["valide"] },
+          { label:"Archivé",        count:se["archive"] }
         ].filter(function(d) { return d.count > 0; });
-        renderDonut("chartPropositions", propData);
+        renderDonut("chartEvenements", evData);
 
-        // Médias
+        /* Propositions — admin uniquement */
+        if (userRole === "admin") {
+          var sp = { "en_attente":0, "accepte":0, "refuse":0 };
+          propositions.forEach(function(p) { if (sp[p.statut] !== undefined) sp[p.statut]++; });
+          var propData = [
+            { label:"En attente", count:sp["en_attente"] },
+            { label:"Accepté",    count:sp["accepte"] },
+            { label:"Refusé",     count:sp["refuse"] }
+          ].filter(function(d) { return d.count > 0; });
+          renderDonut("chartPropositions", propData);
+        }
+
+        /* Médias — uniquement audio, plus de partition */
         renderMediaStats(
           chansons.length,
-          chansons.filter(function(c) { return c.partition_url; }).length,
           chansons.filter(function(c) { return c.audio_url; }).length
         );
 
-        // Top chansons
+        /* Top chansons */
         var resProg = await sb.from("programme_culte").select("chanson_id, chansons(titre)");
         if (resProg.data && resProg.data.length > 0) {
           var counts = {}; var titres = {};
@@ -281,7 +390,7 @@
           renderTopChansons(topData.slice(0,10));
         } else { renderTopChansons([]); }
 
-        // Thèmes
+        /* Thèmes */
         var resChThemes = await sb.from("chansons_themes").select("theme_id, themes(nom)");
         if (resChThemes.data && resChThemes.data.length > 0) {
           var tc = {}; var tn = {};
@@ -305,12 +414,11 @@
       if (!r.data.session) { window.location.href = "index.html"; return; }
       var p = await sb.from("profils").select("*").eq("id", r.data.session.user.id).single();
       if (!p.data || !p.data.actif) { window.location.href = "index.html"; return; }
-      if (p.data.role !== "admin") {
-        showToast("Accès réservé aux administrateurs.", "error");
-        setTimeout(function() { window.location.href = "dashboard.html"; }, 2000);
-        return;
-      }
-      buildSharedNavbar(p.data, "statistiques");
+
+      /* Visible aux membres, préparateurs ET admins */
+      userRole = p.data.role || "membre";
+
+      await buildSharedNavbar(p.data, "statistiques");
       await loadStats();
       hideLoader();
     })();
