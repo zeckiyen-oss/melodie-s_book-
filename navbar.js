@@ -3,12 +3,35 @@
    Inclure dans chaque page : <script src="navbar.js"></script>
    Appeler après auth : buildSharedNavbar(profil, pageActive)
    pageActive = nom du fichier sans .html ex: "repertoire"
+
+   IMPORTANT : buildSharedNavbar est maintenant ASYNC.
+   Si du code doit s'exécuter après l'injection de la navbar,
+   utiliser : await buildSharedNavbar(profil, pageActive)
    ============================================================ */
 
-function buildSharedNavbar(profil, pageActive) {
+async function buildSharedNavbar(profil, pageActive) {
   var role = profil.role || "membre";
   var nom  = profil.nom || profil.email || "";
   var isDashboard = (pageActive === "dashboard");
+
+  /* ── Vérifier si le préparateur a un événement assigné en préparation ── */
+  var aEvenementAssigne = false;
+  if (role === "preparateur") {
+    try {
+      var sbClient = window._sb || window.sb;
+      if (sbClient) {
+        var res = await sbClient
+          .from("evenements")
+          .select("id")
+          .eq("preparateur_id", profil.id)
+          .eq("statut", "en_preparation")
+          .limit(1);
+        aEvenementAssigne = !!(res.data && res.data.length > 0);
+      }
+    } catch (e) {
+      aEvenementAssigne = false;
+    }
+  }
 
   /* ── Liens selon le rôle ── */
   var liens = [
@@ -20,18 +43,22 @@ function buildSharedNavbar(profil, pageActive) {
     { href: "proposer.html",              label: "💡 Proposer",          id: "proposer",              roles: ["membre","preparateur","admin"] },
     { href: "programme.html",             label: "🕊️ Programme",         id: "programme",             roles: ["membre","preparateur","admin"] },
     { href: "preparation-culte.html",     label: "⛪ Prépa. culte",      id: "preparation-culte",     roles: ["preparateur","admin"] },
-    { href: "preparation-evenement.html", label: "📅 Prépa. événement",  id: "preparation-evenement", roles: ["preparateur","admin"] },
+    { href: "preparation-evenement.html", label: "📅 Prépa. événement",  id: "preparation-evenement", roles: ["admin"], rolesExtra: ["preparateur"], requiresEvenement: true },
     { href: "propositions.html",          label: "📋 Propositions",      id: "propositions",          roles: ["admin"] },
     { href: "validation-programme.html",  label: "✅ Validation",        id: "validation-programme",  roles: ["admin"] },
     { href: "designateur.html",           label: "🎯 Désignateur",       id: "designateur",           roles: ["admin"] },
     { href: "gestion-themes.html",        label: "🏷️ Gestion thèmes",   id: "gestion-themes",        roles: ["admin"] },
     { href: "evenements.html",            label: "📅 Événements",        id: "evenements",            roles: ["admin"] },
-    { href: "statistiques.html",          label: "📊 Statistiques",      id: "statistiques",          roles: ["admin"] },
+    { href: "statistiques.html",          label: "📊 Statistiques",      id: "statistiques",          roles: ["membre","preparateur","admin"] },
     { href: "comptes.html",               label: "👥 Comptes",           id: "comptes",               roles: ["admin"] }
   ];
 
   var liensFiltres = liens.filter(function(l) {
-    return l.roles.indexOf(role) !== -1;
+    var roleOk = l.roles.indexOf(role) !== -1 || (l.rolesExtra && l.rolesExtra.indexOf(role) !== -1);
+    if (!roleOk) return false;
+    /* Lien "Prépa. événement" : pour un préparateur, n'apparaît que s'il a un événement assigné */
+    if (l.requiresEvenement && role === "preparateur" && !aEvenementAssigne) return false;
+    return true;
   });
 
   /* ── Badge rôle ── */
