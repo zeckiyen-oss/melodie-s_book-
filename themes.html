@@ -9,8 +9,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="pwa-init.js"></script>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0D1B2A" />
+  <script src="offline-data.js"></script>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/themes.css" />
+
+  <style>
+    html, body { background: #0D1B2A !important; color: #FAF6ED !important; }
+  </style>
 </head>
 <body class="page-themes">
 
@@ -125,7 +133,7 @@
     if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
 
     isAdmin = profil.role === 'admin';
-    buildSharedNavbar(profil, 'themes');
+    await buildSharedNavbar(profil, 'themes');
 
     if (isAdmin) {
       document.getElementById('btnGerer').style.display = 'inline-flex';
@@ -135,33 +143,50 @@
     var params = new URLSearchParams(window.location.search);
     var themeIdUrl = params.get('id');
     await chargerThemes(themeIdUrl);
-
-    document.getElementById('loader').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'block';
   }
 
+  // CHARGEMENT — cache offline en stale-while-revalidate
   async function chargerThemes(ouvrirId) {
-    var res = await sb.from('themes').select('*').order('nom');
-    if (res.error) { showToast('Erreur de chargement', 'error'); return; }
+    var premierAffichage = true;
 
-    var liensRes = await sb.from('chansons_themes').select('theme_id');
-    var comptages = {};
-    if (liensRes.data) {
-      liensRes.data.forEach(function(l) {
-        comptages[l.theme_id] = (comptages[l.theme_id] || 0) + 1;
+    await melodieFetch('themes-avec-comptage', async function() {
+      var res = await sb.from('themes').select('*').order('nom');
+      if (res.error) return null;
+
+      var liensRes = await sb.from('chansons_themes').select('theme_id');
+      var comptages = {};
+      if (liensRes.data) {
+        liensRes.data.forEach(function(l) {
+          comptages[l.theme_id] = (comptages[l.theme_id] || 0) + 1;
+        });
+      }
+
+      return (res.data || []).map(function(t) {
+        return Object.assign({}, t, { nb_chansons: comptages[t.id] || 0 });
       });
-    }
+    }, function(data, fromCache) {
+      if (data === null) {
+        if (premierAffichage) {
+          showToast('Indisponible hors ligne pour l\'instant.', 'error');
+        }
+      } else {
+        tousLesThemes = data.map(function(t, i) {
+          return Object.assign({}, t, { couleur: PALETTE[i % PALETTE.length] });
+        });
+        afficherThemes(tousLesThemes);
 
-    tousLesThemes = (res.data || []).map(function(t, i) {
-      return Object.assign({}, t, { nb_chansons: comptages[t.id] || 0, couleur: PALETTE[i % PALETTE.length] });
+        if (ouvrirId && premierAffichage) {
+          var theme = tousLesThemes.find(function(t) { return t.id === ouvrirId; });
+          if (theme) setTimeout(function() { ouvrirDetail(theme); }, 300);
+        }
+      }
+
+      if (premierAffichage) {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        premierAffichage = false;
+      }
     });
-
-    afficherThemes(tousLesThemes);
-
-    if (ouvrirId) {
-      var theme = tousLesThemes.find(function(t) { return t.id === ouvrirId; });
-      if (theme) setTimeout(function() { ouvrirDetail(theme); }, 300);
-    }
   }
 
   function afficherThemes(liste) {
@@ -223,16 +248,29 @@
     document.getElementById('themeDetailOverlay').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
-    var res = await sb.from('chansons_themes').select('chansons(id, numero, titre, rubrique, langue)').eq('theme_id', theme.id);
+    await melodieFetch('theme-chansons-' + theme.id, async function() {
+      var res = await sb.from('chansons_themes').select('chansons(id, numero, titre, rubrique, langue)').eq('theme_id', theme.id);
+      if (res.error) return null;
+      return res.data || [];
+    }, function(data, fromCache) {
+      renderDetailChansons(data);
+    });
+  }
+
+  function renderDetailChansons(data) {
     var div = document.getElementById('detailChansons');
 
-    if (res.error || !res.data || res.data.length === 0) {
+    if (data === null) {
+      div.innerHTML = '<p class="no-chansons">Indisponible hors ligne pour l\'instant.</p>';
+      return;
+    }
+    if (data.length === 0) {
       div.innerHTML = '<p class="no-chansons">Aucune chanson associée à ce thème.</p>';
       return;
     }
 
     var parRubrique = {};
-    res.data.forEach(function(d) {
+    data.forEach(function(d) {
       var ch = d.chansons;
       if (!ch) return;
       var r = ch.rubrique || 'Autre';
@@ -240,7 +278,7 @@
       parRubrique[r].push(ch);
     });
 
-    var ordreRubriques = ['Prélude','Adoration','Louange','Méditation','Offrande','Envoi','Autre'];
+    var ordreRubriques = ['Prélude','Adoration','Louange','Méditation','Offrande','Envoi','Chant de réflexion','Autre'];
     div.innerHTML = '';
 
     ordreRubriques.filter(function(r) { return parRubrique[r]; }).forEach(function(r) {
@@ -260,7 +298,6 @@
       div.appendChild(bloc);
     });
 
-    // Fermer le détail au clic sur un lien
     div.querySelectorAll('.chanson-ligne').forEach(function(a) {
       a.addEventListener('click', fermerDetail);
     });
