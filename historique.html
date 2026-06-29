@@ -9,8 +9,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="pwa-init.js"></script>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0D1B2A" />
+  <script src="offline-data.js"></script>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/historique.css" />
+
+  <style>
+    html, body { background: #0D1B2A !important; color: #FAF6ED !important; }
+  </style>
 </head>
 <body class="page-historique">
 
@@ -115,7 +123,7 @@
   var isAdmin = false;
   var culteOuvert = null;
 
-  var ORDRE_RUBRIQUES = ['Prélude','Adoration','Louange','Méditation','Offrande','Envoi'];
+  var ORDRE_RUBRIQUES = ['Prélude','Adoration','Louange','Méditation','Offrande','Envoi','Chant de réflexion'];
   var STATUT_CONFIG = {
     valide:         { label:'Validé',          cls:'badge-valide',  icon:'✓' },
     en_preparation: { label:'En préparation',  cls:'badge-prep',    icon:'⏳' },
@@ -154,20 +162,41 @@
     if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
 
     isAdmin = profil.role === 'admin';
-    buildSharedNavbar(profil, 'historique');
+    await buildSharedNavbar(profil, 'historique');
 
     if (isAdmin) document.getElementById('btnNouveauCulte').style.display = 'inline-flex';
 
     await chargerCultes();
-    document.getElementById('loader').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'block';
   }
 
+  // CHARGEMENT — cache offline en stale-while-revalidate
   async function chargerCultes() {
-    var res = await sb.from('cultes').select('*, profils(nom, photo_url)').order('date_culte', { ascending: false });
-    if (res.error) { showToast('Erreur de chargement', 'error'); return; }
-    tousCultes = res.data || [];
+    var premierAffichage = true;
 
+    await melodieFetch('historique-cultes', async function() {
+      var res = await sb.from('cultes').select('*, profils(nom, photo_url)').order('date_culte', { ascending: false });
+      if (res.error) return null;
+      return res.data || [];
+    }, function(data, fromCache) {
+      if (data === null) {
+        if (premierAffichage) {
+          showToast('Indisponible hors ligne pour l\'instant.', 'error');
+        }
+      } else {
+        tousCultes = data;
+        renderStatsEtFiltres();
+        filtrer();
+      }
+
+      if (premierAffichage) {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        premierAffichage = false;
+      }
+    });
+  }
+
+  function renderStatsEtFiltres() {
     document.getElementById('statTotal').textContent   = tousCultes.length;
     document.getElementById('statValides').textContent  = tousCultes.filter(function(c) { return c.statut === 'valide'; }).length;
     document.getElementById('statPrep').textContent     = tousCultes.filter(function(c) { return c.statut === 'en_preparation'; }).length;
@@ -180,16 +209,16 @@
     });
     annees.sort().reverse();
     var sel = document.getElementById('filtreAnnee');
+    var valeurActuelle = sel.value;
+    sel.innerHTML = '<option value="">Toutes années</option>';
     annees.forEach(function(a) {
       var opt = document.createElement('option');
       opt.value = a; opt.textContent = a;
       sel.appendChild(opt);
     });
-
-    filtrer();
+    sel.value = valeurActuelle;
   }
 
-  // Filtres tabs
   document.getElementById('filtreTabs').addEventListener('click', function(e) {
     var btn = e.target.closest('.ftab');
     if (!btn) return;
@@ -294,19 +323,32 @@
     document.getElementById('culteOverlay').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
-    var res = await sb.from('programme_culte')
-      .select('ordre, rubrique, chansons(id, numero, titre, langue)')
-      .eq('culte_id', id)
-      .order('ordre');
+    await melodieFetch('historique-programme-' + id, async function() {
+      var res = await sb.from('programme_culte')
+        .select('ordre, rubrique, chansons(id, numero, titre, langue)')
+        .eq('culte_id', id)
+        .order('ordre');
+      if (res.error) return null;
+      return res.data || [];
+    }, function(data, fromCache) {
+      renderProgrammeCulte(data);
+    });
+  }
 
+  function renderProgrammeCulte(data) {
     var div = document.getElementById('cpanelProgramme');
-    if (!res.data || res.data.length === 0) {
+
+    if (data === null) {
+      div.innerHTML = '<p class="no-chansons">Indisponible hors ligne pour l\'instant.</p>';
+      return;
+    }
+    if (data.length === 0) {
       div.innerHTML = '<p class="no-chansons">Aucune chanson dans ce programme.</p>';
       return;
     }
 
     var parRubrique = {};
-    res.data.forEach(function(p) {
+    data.forEach(function(p) {
       var r = p.rubrique || 'Autre';
       if (!parRubrique[r]) parRubrique[r] = [];
       parRubrique[r].push(p);
@@ -329,7 +371,6 @@
     });
     div.innerHTML = html;
 
-    // Fermer le panel quand on clique un lien chanson
     div.querySelectorAll('.prog-chanson').forEach(function(a) {
       a.addEventListener('click', fermerCulte);
     });
@@ -337,6 +378,10 @@
 
   async function archiverCulte() {
     if (!culteOuvert) return;
+    if (!navigator.onLine) {
+      showToast('Action impossible hors ligne. Connectez-vous à internet.', 'error');
+      return;
+    }
     var res = await sb.from('cultes').update({ statut: 'archive' }).eq('id', culteOuvert.id);
     if (res.error) { showToast('Erreur lors de l\'archivage', 'error'); return; }
     showToast('Culte archivé ✓', 'success');
