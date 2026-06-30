@@ -10,6 +10,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400;1,600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="pwa-init.js"></script>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0D1B2A" />
 
   <style>
     html, body { background: #0D1B2A !important; color: #FAF6ED !important; }
@@ -79,11 +82,38 @@
     .main-content { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 2.5rem 2rem 4rem; }
 
     /* HEADER */
-    .dashboard-header { margin-bottom: 2.5rem; animation: fadeSlideDown 0.5s ease both; }
+    .dashboard-header {
+      margin-bottom: 2.5rem; animation: fadeSlideDown 0.5s ease both;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
     @keyframes fadeSlideDown { from{opacity:0;transform:translateY(-18px)} to{opacity:1;transform:translateY(0)} }
+    .dashboard-header-text { flex: 1; min-width: 200px; }
     .dashboard-greeting { font-size: 0.9rem; color: var(--texte-muted); font-weight: 300; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.3rem; }
     .dashboard-title { font-family: 'Cinzel', serif; font-size: 2.2rem; font-weight: 700; color: var(--or-clair); letter-spacing: 0.03em; line-height: 1.15; }
     .dashboard-verset { margin-top: 0.8rem; font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.9rem; color: rgba(201,168,76,0.55); max-width: 500px; line-height: 1.6; }
+
+    /* BOUTON INSTALLER PWA */
+    .btn-install-pwa {
+      display: none;
+      align-items: center; gap: 0.5rem;
+      background: linear-gradient(135deg, var(--or), #A8852E);
+      color: var(--bleu-nuit);
+      border: none; border-radius: 10px;
+      padding: 0.7rem 1.2rem;
+      font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: 700;
+      letter-spacing: 0.03em; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(201,168,76,0.3);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      flex-shrink: 0; white-space: nowrap;
+      animation: installPulse 2.5s ease-in-out infinite;
+    }
+    .btn-install-pwa:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(201,168,76,0.45); }
+    .btn-install-pwa:active { transform: translateY(0); }
+    .btn-install-pwa .install-icon { font-size: 1.05rem; }
+    @keyframes installPulse {
+      0%, 100% { box-shadow: 0 4px 16px rgba(201,168,76,0.3); }
+      50%      { box-shadow: 0 4px 24px rgba(201,168,76,0.55); }
+    }
 
     /* DIVIDER */
     .divider-or { display: flex; align-items: center; gap: 1rem; margin: 2rem 0 1.5rem; }
@@ -200,6 +230,7 @@
       .dashboard-grid { grid-template-columns: 1fr; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .quick-access-grid { grid-template-columns: repeat(3, 1fr); }
+      .btn-install-pwa { width: 100%; justify-content: center; }
     }
     @media (max-width: 480px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -237,9 +268,17 @@
     </div>
 
     <div class="dashboard-header">
-      <div class="dashboard-greeting">Bienvenue,</div>
-      <h1 class="dashboard-title" id="dashboardTitle">Chargement…</h1>
-      <p class="dashboard-verset" id="dashboardSub"></p>
+      <div class="dashboard-header-text">
+        <div class="dashboard-greeting">Bienvenue,</div>
+        <h1 class="dashboard-title" id="dashboardTitle">Chargement…</h1>
+        <p class="dashboard-verset" id="dashboardSub"></p>
+      </div>
+
+      <!-- BOUTON INSTALLER L'APPLICATION — visible uniquement si non installée -->
+      <button class="btn-install-pwa" id="melodieInstallBtn" type="button">
+        <span class="install-icon">&#11015;&#65039;</span>
+        Installer l'application
+      </button>
     </div>
 
     <div class="divider-or"><span class="divider-or-label">&#10022; Vue d'ensemble</span></div>
@@ -426,10 +465,7 @@
       var card = document.getElementById('prochainEvCard');
       var lien = document.getElementById('lienEvenements');
 
-      // Membres : masquer la carte événements
       if (role === 'membre') { card.style.display = 'none'; return; }
-
-      // Préparateur : afficher sans lien "Gérer"
       if (role === 'preparateur') { lien.style.display = 'none'; }
 
       if (!ev) { body.innerHTML = '<div class="no-culte">Aucun événement a venir.</div>'; return; }
@@ -519,7 +555,6 @@
       var subtitles = { admin:'Que l\'Eternel benisse votre service.', preparateur:'La preparation vous a ete confiee.', membre:'Louez l\'Eternel avec tout votre etre.' };
       document.getElementById('dashboardSub').textContent = subtitles[role] || subtitles.membre;
 
-      // Stats count
       var countRes = await Promise.all([
         sb.from('chansons').select('*', { count:'exact', head:true }),
         sb.from('themes').select('*', { count:'exact', head:true }),
@@ -541,7 +576,6 @@
         document.getElementById('statMembres').textContent = countRes[4].data.length;
       }
 
-      // Données récentes
       var dataRes = await Promise.all([
         sb.from('chansons').select('id, titre, created_at').order('created_at',{ascending:false}).limit(3),
         sb.from('cultes').select('id, theme, date_culte, statut, created_at').order('date_culte',{ascending:true}),
@@ -552,26 +586,20 @@
       var cultesAll = dataRes[1].data || [];
       var evsAll    = dataRes[2].data || [];
 
-      // Prochain culte
       var auj = new Date(); auj.setHours(0,0,0,0);
       var futurCultes = cultesAll.filter(function(c) { return new Date(c.date_culte) >= auj; });
       displayProchainCulte(futurCultes[0] || cultesAll[0] || null);
 
-      // Prochain événement
       var futurEvs = evsAll.filter(function(e) { return new Date(e.date_event) >= auj; });
-      // Pour préparateur : seulement ses événements assignés
       if (role === 'preparateur') {
         futurEvs = futurEvs.filter(function(e) { return e.preparateur_id === sessionData.data.session.user.id; });
       }
       displayProchainEvenement(futurEvs[0] || null, role);
 
-      // Activité
       displayActivity(chansons, cultesAll.slice().reverse().slice(0,3));
 
-      // Propositions
       var nbPropositions = await loadPropositions(role);
 
-      // Accès rapides
       buildQuickAccess(role, nbPropositions);
 
       document.getElementById('loadingOverlay').classList.add('hidden');
