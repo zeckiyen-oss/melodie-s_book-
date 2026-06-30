@@ -11,6 +11,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="pwa-init.js"></script>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0D1B2A" />
+  <script src="offline-data.js"></script>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/chanson.css" />
 
@@ -82,17 +86,8 @@
       font-size: .78rem;
       cursor: pointer;
     }
-    /* Badge par defaut renforce pour les valeurs sans mapping specifique (langues, etc.) */
-    .badge-default {
-      background: rgba(201,168,76,0.1);
-      border: 1px solid rgba(201,168,76,0.3);
-      color: #F0D98A;
-    }
-    .badge-reflexion {
-      background: rgba(130,180,200,0.12);
-      border: 1px solid rgba(130,180,200,0.4);
-      color: #A8D8EA;
-    }
+    .badge-default { background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3); color: #F0D98A; }
+    .badge-reflexion { background: rgba(130,180,200,0.12); border: 1px solid rgba(130,180,200,0.4); color: #A8D8EA; }
   </style>
 </head>
 <body class="page-chanson">
@@ -141,22 +136,18 @@
             <h2 class="card-title">Écouter</h2>
           </div>
 
-          <!-- Player (visible si audio_url existe) -->
           <div class="audio-player-custom" id="audioPlayerWrap" style="display:none">
             <audio id="audioPlayer" controls preload="metadata" style="width:100%;border-radius:8px;">
               Votre navigateur ne supporte pas l'audio.
             </audio>
             <p class="audio-hint">Utilisez les contrôles pour lire la chanson</p>
-            <!-- Bouton supprimer audio — admin uniquement -->
             <button class="btn-suppr-audio" id="btnSupprimerAudio" style="display:none">🗑️ Supprimer l'audio</button>
           </div>
 
-          <!-- Message si pas d'audio -->
           <div id="audioVide" style="display:none">
             <p class="audio-hint" style="text-align:center;padding:.8rem 0;">Aucun audio disponible pour cette chanson.</p>
           </div>
 
-          <!-- Zone upload — admin uniquement -->
           <div class="audio-upload-zone" id="audioUploadZone" style="display:none">
             <button class="btn-choisir-audio" id="btnChoisirAudio">📂 Choisir un fichier audio</button>
             <input type="file" id="audioFileInput" accept="audio/*" />
@@ -234,7 +225,6 @@
   var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
   window._sb = sb;
 
-  // Cloudinary
   var CLD_CLOUD  = 'dqs0okwy2';
   var CLD_PRESET = 'melodie_audio';
 
@@ -262,12 +252,11 @@
     return (map[type] && map[type][val]) ? map[type][val] : 'badge-default';
   }
 
-  // ---- UPLOAD CLOUDINARY ----
   function uploadAudioCloudinary(file) {
     var formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', CLD_PRESET);
-    formData.append('resource_type', 'video'); // Cloudinary utilise 'video' pour l'audio
+    formData.append('resource_type', 'video');
 
     var xhr = new XMLHttpRequest();
     var progressWrap = document.getElementById('audioProgress');
@@ -293,14 +282,12 @@
         var data = JSON.parse(xhr.responseText);
         var url = data.secure_url;
 
-        // Sauvegarder dans Supabase
         var res = await sb.from('chansons').update({ audio_url: url }).eq('id', chansonId);
         if (res.error) {
           showToast('Upload OK mais erreur sauvegarde : ' + res.error.message, 'error');
           return;
         }
 
-        // Mettre à jour le player
         document.getElementById('audioPlayer').src = url;
         document.getElementById('audioPlayerWrap').style.display = 'block';
         document.getElementById('audioVide').style.display = 'none';
@@ -323,7 +310,6 @@
     xhr.send(formData);
   }
 
-  // INIT
   async function initPage() {
     var sessionData = await sb.auth.getSession();
     var session = sessionData.data.session;
@@ -341,23 +327,37 @@
     if (!chansonId) { window.location.href = 'repertoire.html'; return; }
 
     await loadChanson();
-
-    document.getElementById('loader').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'block';
   }
 
-  // CHARGEMENT
+  // CHARGEMENT — cache offline en stale-while-revalidate
   async function loadChanson() {
-    var res = await sb.from('chansons').select('*').eq('id', chansonId).single();
+    var premierAffichage = true;
 
-    if (res.error || !res.data) {
-      showToast('Chanson introuvable.', 'error');
-      setTimeout(function() { window.location.href = 'repertoire.html'; }, 2000);
-      return;
-    }
+    await melodieFetch('chanson-' + chansonId, async function() {
+      var res = await sb.from('chansons').select('*').eq('id', chansonId).single();
+      if (res.error || !res.data) return null;
+      return res.data;
+    }, function(ch, fromCache) {
+      if (!ch) {
+        if (premierAffichage) {
+          showToast('Chanson introuvable ou indisponible hors ligne.', 'error');
+          setTimeout(function() { window.location.href = 'repertoire.html'; }, 2000);
+        }
+        return;
+      }
+      renderChansonData(ch);
+      if (premierAffichage) {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        premierAffichage = false;
+        loadThemes();
+        loadCultes();
+      }
+    });
+  }
 
-    var ch = res.data;
-
+  // RENDU PUR
+  function renderChansonData(ch) {
     document.title = escHtml(ch.titre) + ' — Melodie\'s Book';
     document.getElementById('chTitre').textContent  = ch.titre;
     document.getElementById('bcTitre').textContent  = ch.titre;
@@ -370,7 +370,6 @@
     ].join('');
     document.getElementById('chTags').innerHTML = tags;
 
-    // Paroles
     if (ch.paroles) {
       var blocs = ch.paroles.split(/\n{2,}/);
       document.getElementById('parolesContent').innerHTML = blocs.map(function(bloc) {
@@ -379,26 +378,22 @@
       }).join('');
     }
 
-    // Audio
     if (ch.audio_url) {
       document.getElementById('audioPlayerWrap').style.display = 'block';
       document.getElementById('audioPlayer').src = ch.audio_url;
       if (currentProfil.role === 'admin') {
         document.getElementById('btnSupprimerAudio').style.display = 'inline-block';
       }
+      melodieCacheAudio(ch.audio_url);
     } else {
       document.getElementById('audioVide').style.display = 'block';
     }
 
-    // Zone upload admin
     if (currentProfil.role === 'admin') {
       document.getElementById('audioUploadZone').style.display = 'block';
       document.getElementById('chActions').style.display = 'flex';
       document.getElementById('btnModifier').href = 'modifier-chanson.html?id=' + chansonId;
     }
-
-    await loadThemes();
-    await loadCultes();
   }
 
   async function loadThemes() {
@@ -438,7 +433,6 @@
     }
   }
 
-  // COPIER PAROLES
   document.getElementById('btnCopierParoles').addEventListener('click', function() {
     var texte = document.getElementById('parolesContent').innerText;
     navigator.clipboard.writeText(texte)
@@ -446,7 +440,6 @@
       .catch(function() { showToast('Impossible de copier.', 'error'); });
   });
 
-  // UPLOAD AUDIO — clic bouton → déclenche input file
   document.getElementById('btnChoisirAudio').addEventListener('click', function() {
     document.getElementById('audioFileInput').click();
   });
@@ -462,7 +455,6 @@
     uploadAudioCloudinary(file);
   });
 
-  // SUPPRIMER AUDIO
   document.getElementById('btnSupprimerAudio').addEventListener('click', async function() {
     if (!confirm('Supprimer l\'audio de cette chanson ?')) return;
     var res = await sb.from('chansons').update({ audio_url: null }).eq('id', chansonId);
@@ -474,7 +466,6 @@
     showToast('Audio supprimé.', 'success');
   });
 
-  // SUPPRESSION CHANSON
   document.getElementById('btnSupprimer').addEventListener('click', function() {
     document.getElementById('modalSuppression').style.display = 'flex';
   });
