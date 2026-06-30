@@ -10,6 +10,56 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400;1,600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="pwa-init.js"></script>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0D1B2A" />
+  <script src="offline-data.js"></script>
+
+  <style>
+    html, body { background: #0D1B2A !important; color: #FAF6ED !important; }
+    .rep-liste { display:flex; flex-direction:column; gap:0.55rem; margin-bottom:2rem; }
+    .rep-item {
+      display:flex; flex-direction:column;
+      padding:0.85rem 1.1rem;
+      background:linear-gradient(145deg,rgba(26,46,69,0.85),rgba(13,27,42,0.95));
+      border:1px solid rgba(201,168,76,0.15);
+      border-radius:12px;
+      color:#FAF6ED;
+      box-sizing:border-box;
+      transition:border-color 0.2s, box-shadow 0.2s;
+      position:relative;
+    }
+    .rep-item:hover { border-color:rgba(201,168,76,0.4); box-shadow:0 4px 16px rgba(0,0,0,0.3); }
+    .rep-item-main { display:flex; align-items:center; gap:0.9rem; text-decoration:none; color:#FAF6ED; }
+    .rep-num { font-family:'Cinzel',serif; font-size:0.72rem; color:rgba(201,168,76,0.7); min-width:32px; flex-shrink:0; font-weight:600; }
+    .rep-icon { font-size:1.3rem; flex-shrink:0; line-height:1; }
+    .rep-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:0.25rem; }
+    .rep-titre { font-family:'Lato',sans-serif; font-size:0.92rem; font-weight:700; color:#FAF6ED; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rep-meta { display:flex; flex-wrap:wrap; align-items:center; gap:0.4rem; }
+    .rep-rubrique { font-size:0.65rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; padding:2px 8px; border-radius:10px; border:1px solid; white-space:nowrap; }
+    .rep-langue { font-size:0.72rem; color:rgba(250,246,237,0.45); }
+    .rep-badges { display:flex; gap:0.3rem; flex-shrink:0; align-items:center; }
+    .rep-btn-edit { background:transparent; border:1px solid rgba(201,168,76,0.25); border-radius:6px; padding:3px 7px; font-size:0.8rem; text-decoration:none; transition:background 0.2s,border-color 0.2s; flex-shrink:0; }
+    .rep-btn-edit:hover { background:rgba(201,168,76,0.12); border-color:rgba(201,168,76,0.5); }
+    .rep-audio-zone { margin-top:0.65rem; padding:0.7rem 0.8rem; background:rgba(13,27,42,0.5); border:1px solid rgba(201,168,76,0.15); border-radius:8px; display:none; flex-direction:column; gap:0.5rem; }
+    .rep-audio-zone.open { display:flex; }
+    .rep-audio-player { width:100%; border-radius:6px; display:block; }
+    .rep-audio-actions { display:flex; gap:0.5rem; flex-wrap:wrap; }
+    .rep-btn-audio { display:inline-flex; align-items:center; gap:0.35rem; padding:0.3rem 0.75rem; border-radius:7px; font-family:'Lato',sans-serif; font-size:0.75rem; font-weight:700; cursor:pointer; border:none; transition:background 0.2s; }
+    .rep-btn-ecouter { background:rgba(201,168,76,0.15); border:1px solid rgba(201,168,76,0.35); color:#F0D98A; }
+    .rep-btn-ecouter:hover { background:rgba(201,168,76,0.28); }
+    .rep-btn-dl { background:rgba(76,175,130,0.12); border:1px solid rgba(76,175,130,0.3); color:#7ecfaf; text-decoration:none; }
+    .rep-btn-dl:hover { background:rgba(76,175,130,0.22); }
+    .filtres-row { display:flex; flex-wrap:wrap; gap:0.8rem; align-items:flex-end; }
+    @media (max-width:600px) {
+      .filtres-row { flex-direction:column; gap:0.6rem; }
+      .filtre-group { width:100%; }
+      .filtre-select { width:100%; }
+      .page-header { flex-direction:column; align-items:flex-start; gap:0.8rem; }
+      .rep-item { padding:0.75rem 0.9rem; }
+      .rep-titre { font-size:0.86rem; }
+    }
+  </style>
 </head>
 
 <body class="dashboard-body">
@@ -106,53 +156,6 @@
 
   </main>
 
-  <style>
-    html, body { background: #0D1B2A !important; color: #FAF6ED !important; }
-
-    .rep-liste { display:flex; flex-direction:column; gap:0.55rem; margin-bottom:2rem; }
-    .rep-item {
-      display:flex; flex-direction:column;
-      padding:0.85rem 1.1rem;
-      background:linear-gradient(145deg,rgba(26,46,69,0.85),rgba(13,27,42,0.95));
-      border:1px solid rgba(201,168,76,0.15);
-      border-radius:12px;
-      color:#FAF6ED;
-      box-sizing:border-box;
-      transition:border-color 0.2s, box-shadow 0.2s;
-      position:relative;
-    }
-    .rep-item:hover { border-color:rgba(201,168,76,0.4); box-shadow:0 4px 16px rgba(0,0,0,0.3); }
-    .rep-item-main { display:flex; align-items:center; gap:0.9rem; text-decoration:none; color:#FAF6ED; }
-    .rep-num { font-family:'Cinzel',serif; font-size:0.72rem; color:rgba(201,168,76,0.7); min-width:32px; flex-shrink:0; font-weight:600; }
-    .rep-icon { font-size:1.3rem; flex-shrink:0; line-height:1; }
-    .rep-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:0.25rem; }
-    .rep-titre { font-family:'Lato',sans-serif; font-size:0.92rem; font-weight:700; color:#FAF6ED; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .rep-meta { display:flex; flex-wrap:wrap; align-items:center; gap:0.4rem; }
-    .rep-rubrique { font-size:0.65rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; padding:2px 8px; border-radius:10px; border:1px solid; white-space:nowrap; }
-    .rep-langue { font-size:0.72rem; color:rgba(250,246,237,0.45); }
-    .rep-badges { display:flex; gap:0.3rem; flex-shrink:0; align-items:center; }
-    .rep-btn-edit { background:transparent; border:1px solid rgba(201,168,76,0.25); border-radius:6px; padding:3px 7px; font-size:0.8rem; text-decoration:none; transition:background 0.2s,border-color 0.2s; flex-shrink:0; }
-    .rep-btn-edit:hover { background:rgba(201,168,76,0.12); border-color:rgba(201,168,76,0.5); }
-    .rep-audio-zone { margin-top:0.65rem; padding:0.7rem 0.8rem; background:rgba(13,27,42,0.5); border:1px solid rgba(201,168,76,0.15); border-radius:8px; display:none; flex-direction:column; gap:0.5rem; }
-    .rep-audio-zone.open { display:flex; }
-    .rep-audio-player { width:100%; border-radius:6px; display:block; }
-    .rep-audio-actions { display:flex; gap:0.5rem; flex-wrap:wrap; }
-    .rep-btn-audio { display:inline-flex; align-items:center; gap:0.35rem; padding:0.3rem 0.75rem; border-radius:7px; font-family:'Lato',sans-serif; font-size:0.75rem; font-weight:700; cursor:pointer; border:none; transition:background 0.2s; }
-    .rep-btn-ecouter { background:rgba(201,168,76,0.15); border:1px solid rgba(201,168,76,0.35); color:#F0D98A; }
-    .rep-btn-ecouter:hover { background:rgba(201,168,76,0.28); }
-    .rep-btn-dl { background:rgba(76,175,130,0.12); border:1px solid rgba(76,175,130,0.3); color:#7ecfaf; text-decoration:none; }
-    .rep-btn-dl:hover { background:rgba(76,175,130,0.22); }
-    .filtres-row { display:flex; flex-wrap:wrap; gap:0.8rem; align-items:flex-end; }
-    @media (max-width:600px) {
-      .filtres-row { flex-direction:column; gap:0.6rem; }
-      .filtre-group { width:100%; }
-      .filtre-select { width:100%; }
-      .page-header { flex-direction:column; align-items:flex-start; gap:0.8rem; }
-      .rep-item { padding:0.75rem 0.9rem; }
-      .rep-titre { font-size:0.86rem; }
-    }
-  </style>
-
   <script>
     var SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
     var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
@@ -165,7 +168,7 @@
       'Prélude':            { bg:'rgba(156,126,204,0.12)', border:'rgba(156,126,204,0.4)', text:'#C5B3E8' },
       'Offrande':           { bg:'rgba(91,170,125,0.12)',  border:'rgba(91,170,125,0.4)',  text:'#6EC99A' },
       'Méditation':         { bg:'rgba(200,120,80,0.12)',  border:'rgba(200,120,80,0.4)',  text:'#F0A882' },
-      'Envoi':               { bg:'rgba(180,180,60,0.12)',  border:'rgba(180,180,60,0.4)',  text:'#E0E070' },
+      'Envoi':              { bg:'rgba(180,180,60,0.12)',  border:'rgba(180,180,60,0.4)',  text:'#E0E070' },
       'Chant de réflexion': { bg:'rgba(130,180,200,0.12)', border:'rgba(130,180,200,0.4)', text:'#A8D8EA' }
     };
     var RUBRIQUES_ICONS = {
@@ -263,6 +266,7 @@
             player.src = url;
             player.play();
             btn.textContent = '⏹ Fermer';
+            melodieCacheAudio(url);
           }
         });
       });
@@ -317,13 +321,29 @@
       await buildSharedNavbar(p.data, 'repertoire');
       if (userRole === 'admin') document.getElementById('adminActions').style.display = 'flex';
 
-      var res = await sb.from('chansons').select('*').order('numero', {ascending:true});
-      allChansons = res.data || [];
-      filteredChansons = allChansons.slice();
-      applyFiltres();
+      var premierAffichage = true;
 
-      document.getElementById('loadingOverlay').classList.add('hidden');
-      document.getElementById('mainContent').classList.remove('hidden');
+      await melodieFetch('repertoire-chansons-all', async function() {
+        var res = await sb.from('chansons').select('*').order('numero', { ascending: true });
+        return res.data || [];
+      }, function(data, fromCache) {
+        if (data === null) {
+          document.getElementById('repertoireCount').textContent = 'Indisponible hors ligne';
+          document.getElementById('chansonsList').innerHTML = '';
+          document.getElementById('emptyState').classList.remove('hidden');
+          document.querySelector('.empty-title').textContent = 'Aucune donnée hors ligne';
+          document.querySelector('.empty-text').textContent = 'Connectez-vous à internet une première fois pour charger le répertoire.';
+        } else {
+          allChansons = data;
+          applyFiltres();
+        }
+
+        if (premierAffichage) {
+          document.getElementById('loadingOverlay').classList.add('hidden');
+          document.getElementById('mainContent').classList.remove('hidden');
+          premierAffichage = false;
+        }
+      });
     }
 
     document.getElementById('searchInput').addEventListener('input', applyFiltres);
