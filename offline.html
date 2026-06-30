@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hors ligne — Mélodie's Book</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    html, body {
+      background: #0D1B2A; color: #FAF6ED; margin: 0; padding: 0;
+      font-family: 'Lato', sans-serif; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .offline-box { text-align: center; padding: 2rem 1.5rem; max-width: 380px; }
+    .offline-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.6; }
+    .offline-title {
+      font-family: 'Cinzel', serif; font-size: 1.3rem; font-weight: 700;
+      color: #F0D98A; margin: 0 0 0.6rem;
+    }
+    .offline-text {
+      font-size: 0.9rem; color: rgba(250,246,237,0.6); line-height: 1.6; margin: 0 0 1.5rem;
+    }
+    .offline-btn {
+      display: inline-block; padding: 0.7rem 1.6rem;
+      background: linear-gradient(135deg,#C9A84C,#F0D98A); color: #0D1B2A;
+      border: none; border-radius: 8px; font-family: 'Cinzel', serif;
+      font-size: 0.85rem; font-weight: 700; cursor: pointer; text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-box">
+    <div class="offline-icon">📡</div>
+    <h1 class="offline-title">Vous êtes hors ligne</h1>
+    <p class="offline-text">
+      Cette page n'a pas encore été consultée avec une connexion internet,
+      elle n'est donc pas disponible hors ligne pour l'instant.
+      Réessayez quand vous serez connecté.
+    </p>
+    <a class="offline-btn" href="dashboard.html">Retour à l'accueil</a>
+  </div>
+</body>
+</html>
