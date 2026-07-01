@@ -30,6 +30,9 @@
 <h2>Vérification des pages critiques</h2>
 <pre id="criticalCheck">...</pre>
 
+<h2>📋 Journal des tentatives de navigation (y compris hors ligne)</h2>
+<pre id="navLog">...</pre>
+
 <h2>Actions</h2>
 <button onclick="location.reload()">Rafraîchir ce diagnostic</button>
 <button onclick="forceUpdateSW()">Forcer mise à jour du SW</button>
@@ -101,6 +104,28 @@ async function runDiagnostic() {
     checkLines.push((found ? "✅" : "❌") + " " + toCheck[j] + " → clé normalisée: " + key + (found ? "  [trouvé dans " + foundIn + "]" : "  [ABSENT DU CACHE]"));
   }
   checkEl.textContent = checkLines.join("\n");
+
+  var logEl = document.getElementById("navLog");
+  try {
+    var dataCache = await caches.open("melodie-v3-data");
+    var logRes = await dataCache.match("/__sw_debug_log__");
+    if (!logRes) {
+      logEl.innerHTML = '<span class="warn">Aucun journal pour le moment (normal si tu n\'as pas encore testé de navigation hors ligne depuis la mise à jour du SW).</span>';
+    } else {
+      var log = await logRes.json();
+      if (log.length === 0) {
+        logEl.innerHTML = '<span class="warn">Journal vide.</span>';
+      } else {
+        logEl.textContent = log.slice().reverse().map(function(e) {
+          return "[" + e.time + "] " + (e.step || e.outcome) + "\n   url: " + e.url +
+            (e.key ? "\n   clé: " + e.key : "") +
+            (e.error ? "\n   erreur: " + e.error : "");
+        }).join("\n\n");
+      }
+    }
+  } catch (e) {
+    logEl.innerHTML = '<span class="bad">Erreur de lecture du journal: ' + e.message + '</span>';
+  }
 }
 
 function log(msg) {
