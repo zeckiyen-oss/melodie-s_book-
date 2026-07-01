@@ -15,7 +15,7 @@
          ".html") aussi bien à l'écriture qu'à la lecture.
    ============================================================ */
 
-var SW_VERSION = "melodie-v4";
+var SW_VERSION = "melodie-v5";
 var STATIC_CACHE = SW_VERSION + "-static";
 var DATA_CACHE   = SW_VERSION + "-data";
 var AUDIO_CACHE  = SW_VERSION + "-audio";
@@ -46,21 +46,15 @@ var CLOUDINARY_HOST = "res.cloudinary.com";
    Enregistre chaque tentative de navigation (réussie ou non) dans le
    cache, pour pouvoir la relire depuis diagnostic-pwa.html une fois
    reconnecté. Ne bloque jamais la réponse (utilisé via waitUntil). */
-var DEBUG_LOG_KEY = "/__sw_debug_log__";
-var DEBUG_LOG_MAX = 40;
+var DEBUG_LOG_PREFIX = "/__sw_debug_log__/";
 
 function swLog(entry) {
   entry.time = new Date().toISOString();
+  var key = DEBUG_LOG_PREFIX + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
   return caches.open(DATA_CACHE).then(function(cache) {
-    return cache.match(DEBUG_LOG_KEY).then(function(res) {
-      return res ? res.json() : [];
-    }).catch(function() { return []; }).then(function(list) {
-      list.push(entry);
-      if (list.length > DEBUG_LOG_MAX) list = list.slice(list.length - DEBUG_LOG_MAX);
-      return cache.put(DEBUG_LOG_KEY, new Response(JSON.stringify(list), {
-        headers: { "Content-Type": "application/json" }
-      }));
-    });
+    return cache.put(key, new Response(JSON.stringify(entry), {
+      headers: { "Content-Type": "application/json" }
+    }));
   }).catch(function() {});
 }
 
@@ -167,7 +161,7 @@ self.addEventListener("fetch", function(event) {
       Promise.race([
         fetch(req),
         new Promise(function(_, reject) {
-          setTimeout(function() { reject(new Error("timeout-reseau-2s")); }, 2000);
+          setTimeout(function() { reject(new Error("timeout-reseau-800ms")); }, 800);
         })
       ]).then(function(response) {
         if (response && response.ok) {
