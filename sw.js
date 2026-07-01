@@ -15,7 +15,7 @@
          ".html") aussi bien à l'écriture qu'à la lecture.
    ============================================================ */
 
-var SW_VERSION = "melodie-v5";
+var SW_VERSION = "melodie-v6";
 var STATIC_CACHE = SW_VERSION + "-static";
 var DATA_CACHE   = SW_VERSION + "-data";
 var AUDIO_CACHE  = SW_VERSION + "-audio";
@@ -121,12 +121,13 @@ self.addEventListener("activate", function(event) {
 });
 
 /* ── Stratégie stale-while-revalidate pour les assets non-HTML ── */
-function staleWhileRevalidate(request, cacheName) {
+function staleWhileRevalidate(request, cacheName, event) {
   return caches.open(cacheName).then(function(cache) {
     return cache.match(request).then(function(cached) {
       var networkFetch = fetch(request).then(function(response) {
         if (response && response.status === 200) {
-          cache.put(request, response.clone()).catch(function() {});
+          var putPromise = cache.put(request, response.clone()).catch(function() {});
+          if (event) event.waitUntil(putPromise);
         }
         return response;
       }).catch(function() {
@@ -166,9 +167,11 @@ self.addEventListener("fetch", function(event) {
       ]).then(function(response) {
         if (response && response.ok) {
           var key = normalizeCacheKey(req.url);
-          caches.open(STATIC_CACHE).then(function(cache) {
-            cache.put(key, response.clone()).catch(function() {});
-          });
+          event.waitUntil(
+            caches.open(STATIC_CACHE).then(function(cache) {
+              return cache.put(key, response.clone());
+            }).catch(function() {})
+          );
         }
         event.waitUntil(swLog({
           url: req.url,
@@ -204,12 +207,12 @@ self.addEventListener("fetch", function(event) {
   }
 
   if (url.origin === self.location.origin) {
-    event.respondWith(staleWhileRevalidate(req, STATIC_CACHE));
+    event.respondWith(staleWhileRevalidate(req, STATIC_CACHE, event));
     return;
   }
 
   if (url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com") {
-    event.respondWith(staleWhileRevalidate(req, STATIC_CACHE));
+    event.respondWith(staleWhileRevalidate(req, STATIC_CACHE, event));
     return;
   }
 
@@ -217,7 +220,7 @@ self.addEventListener("fetch", function(event) {
     if (url.pathname.indexOf("/auth/") !== -1) {
       return;
     }
-    event.respondWith(staleWhileRevalidate(req, DATA_CACHE));
+    event.respondWith(staleWhileRevalidate(req, DATA_CACHE, event));
     return;
   }
 
@@ -228,7 +231,7 @@ self.addEventListener("fetch", function(event) {
           if (cached) return cached;
           return fetch(req).then(function(response) {
             if (response && response.status === 200) {
-              cache.put(req, response.clone()).catch(function() {});
+              event.waitUntil(cache.put(req, response.clone()).catch(function() {}));
             }
             return response;
           });
