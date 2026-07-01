@@ -1,19 +1,37 @@
 /* ============================================================
    SERVICE WORKER — Mélodie's Book
-   Version durcie : ne bloque JAMAIS la navigation, même si
-   l'installation rencontre un souci (fichier manquant, etc.)
+   v3 : corrige 2 bugs qui cassaient le mode hors ligne
+   1) cache.add() échouait silencieusement sur dashboard.html et
+      offline.html car Cloudflare Pages redirige (308) toute URL
+      .html vers sa version sans extension, et cache.add()/addAll()
+      rejettent une réponse issue d'une redirection.
+      => on précharge maintenant via fetch(redirect:"follow") + put()
+         manuel, qui n'a pas cette restriction.
+   2) Les pages étaient mises en cache sous la clé de la requête
+      d'origine (ex: /repertoire.html) mais relues sous l'URL affichée
+      après redirection (/repertoire) => cache miss malgré une visite
+      déjà faite.
+      => on normalise systématiquement la clé de cache (on retire
+         ".html") aussi bien à l'écriture qu'à la lecture.
    ============================================================ */
 
-var SW_VERSION = "melodie-v2";
+var SW_VERSION = "melodie-v3";
 var STATIC_CACHE = SW_VERSION + "-static";
 var DATA_CACHE   = SW_VERSION + "-data";
 var AUDIO_CACHE  = SW_VERSION + "-audio";
 
-/* Liste réduite au strict nécessaire et garanti présent.
-   On NE précharge PAS les CSS optionnels : ils seront mis en
-   cache à la volée lors de leur première vraie requête. */
+/* Pages et fichiers à précharger dès l'installation.
+   On inclut maintenant toutes les pages de LECTURE déjà migrées
+   vers melodieFetch, + le shell PWA + le fallback offline. */
 var STATIC_ASSETS = [
   "./dashboard.html",
+  "./repertoire.html",
+  "./chanson.html",
+  "./bibliotheque.html",
+  "./programme.html",
+  "./themes.html",
+  "./historique.html",
+  "./statistiques.html",
   "./navbar.js",
   "./pwa-init.js",
   "./offline-data.js",
@@ -24,19 +42,47 @@ var STATIC_ASSETS = [
 var SUPABASE_HOST = "tjqicfxkxhlciebmswqu.supabase.co";
 var CLOUDINARY_HOST = "res.cloudinary.com";
 
-/* ── INSTALL : précharger, mais ne jamais faire échouer l'installation ── */
+/* ── Normalisation des clés de cache ──
+   Retire l'extension .html afin qu'une page soit retrouvée en cache
+   qu'elle ait été demandée avec ou sans extension (Cloudflare Pages
+   redirige silencieusement l'une vers l'autre). */
+function normalizeCacheKey(rawUrl) {
+  try {
+    var u = new URL(rawUrl, self.location.href);
+    if (/\.html$/.test(u.pathname)) {
+      u.pathname = u.pathname.replace(/\.html$/, "");
+      if (u.pathname === "") u.pathname = "/";
+    }
+    return u.href;
+  } catch (e) {
+    return rawUrl;
+  }
+}
+
+/* ── Précharge un asset en suivant les redirections, puis le stocke
+   sous sa clé normalisée. Ne fait jamais échouer l'installation. ── */
+function precacheAsset(cache, relUrl) {
+  var absUrl = new URL(relUrl, self.location.href).href;
+  return fetch(absUrl, { redirect: "follow", cache: "reload" })
+    .then(function(response) {
+      if (response && response.ok) {
+        return cache.put(normalizeCacheKey(absUrl), response.clone());
+      }
+    })
+    .catch(function() { /* asset indisponible au moment de l'install, tant pis */ });
+}
+
 self.addEventListener("install", function(event) {
   event.waitUntil(
     caches.open(STATIC_CACHE).then(function(cache) {
       return Promise.allSettled(
         STATIC_ASSETS.map(function(url) {
-          return cache.add(url);
+          return precacheAsset(cache, url);
         })
       );
     }).then(function() {
       return self.skipWaiting();
     }).catch(function() {
-      /* Même en cas d'erreur globale inattendue, on ne bloque pas l'install */
       return self.skipWaiting();
     })
   );
@@ -58,7 +104,7 @@ self.addEventListener("activate", function(event) {
   );
 });
 
-/* ── Stratégie stale-while-revalidate, robuste face aux erreurs ── */
+/* ── Stratégie stale-while-revalidate pour les assets non-HTML ── */
 function staleWhileRevalidate(request, cacheName) {
   return caches.open(cacheName).then(function(cache) {
     return cache.match(request).then(function(cached) {
@@ -74,7 +120,6 @@ function staleWhileRevalidate(request, cacheName) {
       return cached || networkFetch;
     });
   }).catch(function() {
-    /* Si même l'ouverture du cache échoue, on retombe sur le réseau pur */
     return fetch(request);
   });
 }
@@ -85,28 +130,33 @@ self.addEventListener("fetch", function(event) {
   try {
     url = new URL(req.url);
   } catch (e) {
-    return; /* requête malformée, laisser passer normalement */
+    return;
   }
 
   if (req.method !== "GET") {
     return;
   }
 
-  /* Navigation HTML : réseau en priorité, cache en secours, offline.html en dernier recours.
-     IMPORTANT : on essaie le réseau D'ABORD pour la navigation, afin de ne jamais
-     bloquer un chargement normal à cause d'un cache éventuellement cassé. */
+  /* Navigation HTML : réseau d'abord, puis cache normalisé,
+     puis offline.html en dernier recours. */
   if (req.mode === "navigate") {
     event.respondWith(
       fetch(req).then(function(response) {
-        if (response && response.status === 200) {
+        if (response && response.ok) {
+          var key = normalizeCacheKey(req.url);
           caches.open(STATIC_CACHE).then(function(cache) {
-            cache.put(req, response.clone()).catch(function() {});
+            cache.put(key, response.clone()).catch(function() {});
           });
         }
         return response;
       }).catch(function() {
-        return caches.match(req).then(function(cached) {
-          return cached || caches.match("./offline.html");
+        var key = normalizeCacheKey(req.url);
+        return caches.open(STATIC_CACHE).then(function(cache) {
+          return cache.match(key).then(function(cached) {
+            if (cached) return cached;
+            var offlineKey = normalizeCacheKey(new URL("./offline.html", self.location.href).href);
+            return cache.match(offlineKey);
+          });
         });
       })
     );
