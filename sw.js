@@ -42,6 +42,28 @@ var STATIC_ASSETS = [
 var SUPABASE_HOST = "tjqicfxkxhlciebmswqu.supabase.co";
 var CLOUDINARY_HOST = "res.cloudinary.com";
 
+/* ── Journal de bord de diagnostic ──
+   Enregistre chaque tentative de navigation (réussie ou non) dans le
+   cache, pour pouvoir la relire depuis diagnostic-pwa.html une fois
+   reconnecté. Ne bloque jamais la réponse (utilisé via waitUntil). */
+var DEBUG_LOG_KEY = "/__sw_debug_log__";
+var DEBUG_LOG_MAX = 40;
+
+function swLog(entry) {
+  entry.time = new Date().toISOString();
+  return caches.open(DATA_CACHE).then(function(cache) {
+    return cache.match(DEBUG_LOG_KEY).then(function(res) {
+      return res ? res.json() : [];
+    }).catch(function() { return []; }).then(function(list) {
+      list.push(entry);
+      if (list.length > DEBUG_LOG_MAX) list = list.slice(list.length - DEBUG_LOG_MAX);
+      return cache.put(DEBUG_LOG_KEY, new Response(JSON.stringify(list), {
+        headers: { "Content-Type": "application/json" }
+      }));
+    });
+  }).catch(function() {});
+}
+
 /* ── Normalisation des clés de cache ──
    Retire l'extension .html afin qu'une page soit retrouvée en cache
    qu'elle ait été demandée avec ou sans extension (Cloudflare Pages
@@ -140,6 +162,7 @@ self.addEventListener("fetch", function(event) {
   /* Navigation HTML : réseau d'abord, puis cache normalisé,
      puis offline.html en dernier recours. */
   if (req.mode === "navigate") {
+    event.waitUntil(swLog({ url: req.url, step: "fetch-event-recu" }));
     event.respondWith(
       fetch(req).then(function(response) {
         if (response && response.ok) {
@@ -148,14 +171,32 @@ self.addEventListener("fetch", function(event) {
             cache.put(key, response.clone()).catch(function() {});
           });
         }
+        event.waitUntil(swLog({
+          url: req.url,
+          outcome: "reseau-ok",
+          status: response ? response.status : null
+        }));
         return response;
-      }).catch(function() {
+      }).catch(function(err) {
         var key = normalizeCacheKey(req.url);
         return caches.open(STATIC_CACHE).then(function(cache) {
           return cache.match(key).then(function(cached) {
-            if (cached) return cached;
+            if (cached) {
+              event.waitUntil(swLog({
+                url: req.url, outcome: "reseau-echec_cache-trouve",
+                key: key, error: String(err)
+              }));
+              return cached;
+            }
             var offlineKey = normalizeCacheKey(new URL("./offline.html", self.location.href).href);
-            return cache.match(offlineKey);
+            return cache.match(offlineKey).then(function(off) {
+              event.waitUntil(swLog({
+                url: req.url,
+                outcome: off ? "reseau-echec_cache-absent_offline-affiche" : "reseau-echec_cache-absent_OFFLINE-HTML-MANQUANT",
+                key: key, offlineKey: offlineKey, error: String(err)
+              }));
+              return off;
+            });
           });
         });
       })
