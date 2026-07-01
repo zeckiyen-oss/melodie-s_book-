@@ -37,6 +37,7 @@
 <button onclick="location.reload()">Rafraîchir ce diagnostic</button>
 <button onclick="forceUpdateSW()">Forcer mise à jour du SW</button>
 <button onclick="clearAllCaches()">Vider tous les caches</button>
+<button onclick="clearNavLog()">Vider le journal de navigation</button>
 <pre id="actionLog"></pre>
 
 <script>
@@ -107,21 +108,23 @@ async function runDiagnostic() {
 
   var logEl = document.getElementById("navLog");
   try {
-    var dataCache = await caches.open("melodie-v4-data");
-    var logRes = await dataCache.match("/__sw_debug_log__");
-    if (!logRes) {
+    var dataCache = await caches.open("melodie-v5-data");
+    var allReqs = await dataCache.keys();
+    var logReqs = allReqs.filter(function(r) { return r.url.indexOf("/__sw_debug_log__/") !== -1; });
+    if (logReqs.length === 0) {
       logEl.innerHTML = '<span class="warn">Aucun journal pour le moment (normal si tu n\'as pas encore testé de navigation hors ligne depuis la mise à jour du SW).</span>';
     } else {
-      var log = await logRes.json();
-      if (log.length === 0) {
-        logEl.innerHTML = '<span class="warn">Journal vide.</span>';
-      } else {
-        logEl.textContent = log.slice().reverse().map(function(e) {
-          return "[" + e.time + "] " + (e.step || e.outcome) + "\n   url: " + e.url +
-            (e.key ? "\n   clé: " + e.key : "") +
-            (e.error ? "\n   erreur: " + e.error : "");
-        }).join("\n\n");
+      var entries = [];
+      for (var e = 0; e < logReqs.length; e++) {
+        var r = await dataCache.match(logReqs[e]);
+        entries.push(await r.json());
       }
+      entries.sort(function(a, b) { return a.time < b.time ? 1 : -1; });
+      logEl.textContent = entries.map(function(e) {
+        return "[" + e.time + "] " + (e.step || e.outcome) + "\n   url: " + e.url +
+          (e.key ? "\n   clé: " + e.key : "") +
+          (e.error ? "\n   erreur: " + e.error : "");
+      }).join("\n\n");
     }
   } catch (e) {
     logEl.innerHTML = '<span class="bad">Erreur de lecture du journal: ' + e.message + '</span>';
@@ -148,6 +151,16 @@ async function clearAllCaches() {
     await caches.delete(keys[i]);
   }
   log("Tous les caches ont été vidés (" + keys.length + "). Recharge la page en ligne pour les reconstituer.");
+}
+
+async function clearNavLog() {
+  var dataCache = await caches.open("melodie-v5-data");
+  var allReqs = await dataCache.keys();
+  var logReqs = allReqs.filter(function(r) { return r.url.indexOf("/__sw_debug_log__/") !== -1; });
+  for (var i = 0; i < logReqs.length; i++) {
+    await dataCache.delete(logReqs[i]);
+  }
+  log("Journal vidé (" + logReqs.length + " entrées supprimées).");
 }
 
 runDiagnostic();
