@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnostic PWA — Mélodie's Book</title>
+<style>
+  body{background:#0D1B2A;color:#FAF6ED;font-family:monospace;font-size:0.8rem;padding:1rem;line-height:1.5;}
+  h1{font-family:sans-serif;color:#F0D98A;font-size:1.2rem;}
+  h2{color:#C9A84C;font-size:0.95rem;margin-top:1.5rem;border-bottom:1px solid rgba(201,168,76,0.3);padding-bottom:0.3rem;}
+  .ok{color:#8BC34A;}
+  .bad{color:#E57373;}
+  .warn{color:#F0D98A;}
+  pre{white-space:pre-wrap;word-break:break-all;background:rgba(255,255,255,0.05);padding:0.6rem;border-radius:6px;}
+  button{background:#C9A84C;color:#0D1B2A;border:none;padding:0.6rem 1rem;border-radius:6px;font-weight:bold;margin:0.3rem 0.3rem 0.3rem 0;}
+</style>
+</head>
+<body>
+<h1>🔍 Diagnostic PWA</h1>
+
+<h2>État réseau</h2>
+<pre id="netStatus">...</pre>
+
+<h2>Service Worker</h2>
+<pre id="swStatus">...</pre>
+
+<h2>Caches présents</h2>
+<pre id="cacheList">...</pre>
+
+<h2>Vérification des pages critiques</h2>
+<pre id="criticalCheck">...</pre>
+
+<h2>Actions</h2>
+<button onclick="location.reload()">Rafraîchir ce diagnostic</button>
+<button onclick="forceUpdateSW()">Forcer mise à jour du SW</button>
+<button onclick="clearAllCaches()">Vider tous les caches</button>
+<pre id="actionLog"></pre>
+
+<script>
+function normalizeCacheKey(rawUrl) {
+  var u = new URL(rawUrl, self.location.href);
+  if (/\.html$/.test(u.pathname)) {
+    u.pathname = u.pathname.replace(/\.html$/, "");
+    if (u.pathname === "") u.pathname = "/";
+  }
+  return u.href;
+}
+
+async function runDiagnostic() {
+  document.getElementById("netStatus").textContent =
+    navigator.onLine ? "✅ EN LIGNE" : "📡 HORS LIGNE (mode avion actif)";
+
+  var swEl = document.getElementById("swStatus");
+  if (!("serviceWorker" in navigator)) {
+    swEl.innerHTML = '<span class="bad">Service Worker non supporté par ce navigateur</span>';
+  } else {
+    var reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) {
+      swEl.innerHTML = '<span class="bad">❌ Aucun service worker enregistré sur cette origine</span>';
+    } else {
+      var lines = [];
+      lines.push("Scope: " + reg.scope);
+      lines.push("Active: " + (reg.active ? reg.active.scriptURL + " (state: " + reg.active.state + ")" : "AUCUN"));
+      lines.push("Waiting: " + (reg.waiting ? reg.waiting.scriptURL : "aucun"));
+      lines.push("Installing: " + (reg.installing ? reg.installing.scriptURL : "aucun"));
+      lines.push("Controller (page actuelle contrôlée par): " + (navigator.serviceWorker.controller ? navigator.serviceWorker.controller.scriptURL : "❌ AUCUN — cette page n'est PAS contrôlée par le SW"));
+      swEl.textContent = lines.join("\n");
+    }
+  }
+
+  var cacheEl = document.getElementById("cacheList");
+  var keys = await caches.keys();
+  if (keys.length === 0) {
+    cacheEl.innerHTML = '<span class="bad">❌ Aucun cache trouvé du tout</span>';
+  } else {
+    var out = [];
+    for (var i = 0; i < keys.length; i++) {
+      var cache = await caches.open(keys[i]);
+      var reqs = await cache.keys();
+      out.push("📦 " + keys[i] + "  (" + reqs.length + " entrées)");
+      reqs.forEach(function(r) {
+        out.push("   - " + r.url);
+      });
+    }
+    cacheEl.textContent = out.join("\n");
+  }
+
+  var checkEl = document.getElementById("criticalCheck");
+  var toCheck = ["./dashboard.html", "./offline.html", "./repertoire.html"];
+  var checkLines = [];
+  for (var j = 0; j < toCheck.length; j++) {
+    var absUrl = new URL(toCheck[j], self.location.href).href;
+    var key = normalizeCacheKey(absUrl);
+    var found = false;
+    var foundIn = "";
+    for (var k = 0; k < keys.length; k++) {
+      var c = await caches.open(keys[k]);
+      var match = await c.match(key);
+      if (match) { found = true; foundIn = keys[k]; break; }
+    }
+    checkLines.push((found ? "✅" : "❌") + " " + toCheck[j] + " → clé normalisée: " + key + (found ? "  [trouvé dans " + foundIn + "]" : "  [ABSENT DU CACHE]"));
+  }
+  checkEl.textContent = checkLines.join("\n");
+}
+
+function log(msg) {
+  document.getElementById("actionLog").textContent += msg + "\n";
+}
+
+async function forceUpdateSW() {
+  var reg = await navigator.serviceWorker.getRegistration();
+  if (reg) {
+    await reg.update();
+    log("Mise à jour du SW demandée. Rafraîchis la page dans quelques secondes.");
+  } else {
+    log("Aucun SW à mettre à jour.");
+  }
+}
+
+async function clearAllCaches() {
+  var keys = await caches.keys();
+  for (var i = 0; i < keys.length; i++) {
+    await caches.delete(keys[i]);
+  }
+  log("Tous les caches ont été vidés (" + keys.length + "). Recharge la page en ligne pour les reconstituer.");
+}
+
+runDiagnostic();
+</script>
+</body>
+</html>
