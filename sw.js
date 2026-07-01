@@ -15,7 +15,7 @@
          ".html") aussi bien à l'écriture qu'à la lecture.
    ============================================================ */
 
-var SW_VERSION = "melodie-v3";
+var SW_VERSION = "melodie-v4";
 var STATIC_CACHE = SW_VERSION + "-static";
 var DATA_CACHE   = SW_VERSION + "-data";
 var AUDIO_CACHE  = SW_VERSION + "-audio";
@@ -164,7 +164,12 @@ self.addEventListener("fetch", function(event) {
   if (req.mode === "navigate") {
     event.waitUntil(swLog({ url: req.url, step: "fetch-event-recu" }));
     event.respondWith(
-      fetch(req).then(function(response) {
+      Promise.race([
+        fetch(req),
+        new Promise(function(_, reject) {
+          setTimeout(function() { reject(new Error("timeout-reseau-2s")); }, 2000);
+        })
+      ]).then(function(response) {
         if (response && response.ok) {
           var key = normalizeCacheKey(req.url);
           caches.open(STATIC_CACHE).then(function(cache) {
