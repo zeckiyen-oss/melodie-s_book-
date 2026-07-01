@@ -107,7 +107,7 @@ async function runDiagnostic() {
 
   var logEl = document.getElementById("navLog");
   try {
-    var dataCache = await caches.open("melodie-v3-data");
+    var dataCache = await caches.open("melodie-v4-data");
     var logRes = await dataCache.match("/__sw_debug_log__");
     if (!logRes) {
       logEl.innerHTML = '<span class="warn">Aucun journal pour le moment (normal si tu n\'as pas encore testé de navigation hors ligne depuis la mise à jour du SW).</span>';
