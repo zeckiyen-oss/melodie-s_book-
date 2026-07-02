@@ -15,7 +15,7 @@
          ".html") aussi bien à l'écriture qu'à la lecture.
    ============================================================ */
 
-var SW_VERSION = "melodie-v6";
+var SW_VERSION = "melodie-v7";
 var STATIC_CACHE = SW_VERSION + "-static";
 var DATA_CACHE   = SW_VERSION + "-data";
 var AUDIO_CACHE  = SW_VERSION + "-audio";
@@ -88,15 +88,19 @@ function precacheAsset(cache, relUrl) {
     .catch(function() { /* asset indisponible au moment de l'install, tant pis */ });
 }
 
+function precacheAll() {
+  return caches.open(STATIC_CACHE).then(function(cache) {
+    return Promise.allSettled(
+      STATIC_ASSETS.map(function(url) {
+        return precacheAsset(cache, url);
+      })
+    );
+  });
+}
+
 self.addEventListener("install", function(event) {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then(function(cache) {
-      return Promise.allSettled(
-        STATIC_ASSETS.map(function(url) {
-          return precacheAsset(cache, url);
-        })
-      );
-    }).then(function() {
+    precacheAll().then(function() {
       return self.skipWaiting();
     }).catch(function() {
       return self.skipWaiting();
@@ -114,6 +118,11 @@ self.addEventListener("activate", function(event) {
           }
         })
       );
+    }).then(function() {
+      /* Re-précharge au cas où le cache aurait été vidé manuellement
+         (ex: bouton "Vider tous les caches" du diagnostic) — permet
+         une auto-réparation sans attendre une nouvelle version du SW. */
+      return precacheAll();
     }).then(function() {
       return self.clients.claim();
     })
@@ -264,5 +273,9 @@ self.addEventListener("message", function(event) {
 
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
+  }
+
+  if (event.data && event.data.type === "REPRECACHE") {
+    event.waitUntil(precacheAll());
   }
 });
