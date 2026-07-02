@@ -15,7 +15,7 @@
          ".html") aussi bien à l'écriture qu'à la lecture.
    ============================================================ */
 
-var SW_VERSION = "melodie-v7";
+var SW_VERSION = "melodie-v8";
 var STATIC_CACHE = SW_VERSION + "-static";
 var DATA_CACHE   = SW_VERSION + "-data";
 var AUDIO_CACHE  = SW_VERSION + "-audio";
@@ -35,6 +35,7 @@ var STATIC_ASSETS = [
   "./navbar.js",
   "./pwa-init.js",
   "./offline-data.js",
+  "./eruda.js",
   "./manifest.json",
   "./offline.html"
 ];
