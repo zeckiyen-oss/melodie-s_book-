@@ -108,7 +108,7 @@ async function runDiagnostic() {
 
   var logEl = document.getElementById("navLog");
   try {
-    var dataCache = await caches.open("melodie-v6-data");
+    var dataCache = await caches.open("melodie-v7-data");
     var allReqs = await dataCache.keys();
     var logReqs = allReqs.filter(function(r) { return r.url.indexOf("/__sw_debug_log__/") !== -1; });
     if (logReqs.length === 0) {
@@ -150,7 +150,12 @@ async function clearAllCaches() {
   for (var i = 0; i < keys.length; i++) {
     await caches.delete(keys[i]);
   }
-  log("Tous les caches ont été vidés (" + keys.length + "). Recharge la page en ligne pour les reconstituer.");
+  if (navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: "REPRECACHE" });
+    log("Tous les caches ont été vidés (" + keys.length + "). Re-préchargement demandé au service worker — attends 3-4 secondes puis clique \"Rafraîchir ce diagnostic\".");
+  } else {
+    log("Tous les caches ont été vidés (" + keys.length + "). Recharge la page en ligne pour les reconstituer.");
+  }
 }
 
 async function clearNavLog() {
