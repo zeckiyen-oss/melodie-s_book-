@@ -108,7 +108,7 @@ async function runDiagnostic() {
 
   var logEl = document.getElementById("navLog");
   try {
-    var dataCache = await caches.open("melodie-v7-data");
+    var dataCache = await caches.open("melodie-v8-data");
     var allReqs = await dataCache.keys();
     var logReqs = allReqs.filter(function(r) { return r.url.indexOf("/__sw_debug_log__/") !== -1; });
     if (logReqs.length === 0) {
