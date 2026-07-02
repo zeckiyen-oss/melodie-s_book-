@@ -15,6 +15,27 @@
   <meta name="theme-color" content="#0D1B2A" />
   <script src="offline-data.js"></script>
 
+
+
+<script>
+window.debugLog = [];
+window.addEventListener('error', function(e) {
+  window.debugLog.push('ERROR: ' + e.message);
+});
+window.addEventListener('unhandledrejection', function(e) {
+  window.debugLog.push('REJECTION: ' + e.reason);
+});
+</script>
+<style>
+#debug-panel {
+  position: fixed; bottom: 0; left: 0; right: 0; 
+  background: #000; color: #0f0; font-size: 10px; 
+  padding: 5px; max-height: 150px; overflow-y: auto;
+  z-index: 99999; font-family: monospace;
+}
+</style>
+  
+  
   <style>
     html, body { background: #0D1B2A !important; color: #FAF6ED !important; }
     .rep-liste { display:flex; flex-direction:column; gap:0.55rem; margin-bottom:2rem; }
@@ -359,5 +380,14 @@
   </script>
 <script src="eruda.js"></script>
 <script>eruda.init();</script>
+
+<div id="debug-panel"></div>
+<script>
+setInterval(function() {
+  var panel = document.getElementById('debug-panel');
+  if (panel) panel.textContent = window.debugLog.slice(-20).join('\n');
+}, 100);
+</script>
+  
 </body>
 </html>
