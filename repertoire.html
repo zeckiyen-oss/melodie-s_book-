@@ -360,16 +360,7 @@
 
     init();
   </script>
-<script src="eruda.js"></script>
-<script>eruda.init();</script>
 
-<div id="debug-panel"></div>
-<script>
-setInterval(function() {
-  var panel = document.getElementById('debug-panel');
-  if (panel) panel.textContent = window.debugLog.slice(-20).join('\n');
-}, 100);
-</script>
   <script src="pwa-register.js"></script>
 </body>
 </html>
