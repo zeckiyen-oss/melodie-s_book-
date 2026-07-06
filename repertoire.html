@@ -269,7 +269,6 @@
             player.src = url;
             player.play();
             btn.textContent = '⏹ Fermer';
-            melodieCacheAudio(url);
           }
         });
       });
@@ -324,29 +323,12 @@
       await buildSharedNavbar(p.data, 'repertoire');
       if (userRole === 'admin') document.getElementById('adminActions').style.display = 'flex';
 
-      var premierAffichage = true;
+      var res = await sb.from('chansons').select('*').order('numero', { ascending: true });
+      allChansons = res.data || [];
+      applyFiltres();
 
-      await melodieFetch('repertoire-chansons-all', async function() {
-        var res = await sb.from('chansons').select('*').order('numero', { ascending: true });
-        return res.data || [];
-      }, function(data, fromCache) {
-        if (data === null) {
-          document.getElementById('repertoireCount').textContent = 'Indisponible hors ligne';
-          document.getElementById('chansonsList').innerHTML = '';
-          document.getElementById('emptyState').classList.remove('hidden');
-          document.querySelector('.empty-title').textContent = 'Aucune donnée hors ligne';
-          document.querySelector('.empty-text').textContent = 'Connectez-vous à internet une première fois pour charger le répertoire.';
-        } else {
-          allChansons = data;
-          applyFiltres();
-        }
-
-        if (premierAffichage) {
-          document.getElementById('loadingOverlay').classList.add('hidden');
-          document.getElementById('mainContent').classList.remove('hidden');
-          premierAffichage = false;
-        }
-      });
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      document.getElementById('mainContent').classList.remove('hidden');
     }
 
     document.getElementById('searchInput').addEventListener('input', applyFiltres);
