@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400;1,600&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="melodie-cache.js"></script>
   
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0D1B2A" />
@@ -466,6 +467,7 @@
       var lien = document.getElementById('lienEvenements');
 
       if (role === 'membre') { card.style.display = 'none'; return; }
+      card.style.display = '';
       if (role === 'preparateur') { lien.style.display = 'none'; }
 
       if (!ev) { body.innerHTML = '<div class="no-culte">Aucun événement a venir.</div>'; return; }
@@ -509,19 +511,20 @@
       }).join('');
     }
 
-    async function loadPropositions(role) {
-      if (role !== 'admin') return 0;
+    function displayPropositions(propositions, role) {
+      if (role !== 'admin') return;
       document.getElementById('propositionsSection').style.display = 'block';
-      var res = await sb.from('propositions').select('*').eq('statut','en_attente').order('created_at',{ascending:false}).limit(5);
       var body = document.getElementById('propositionsBody');
-      if (!res.data || res.data.length === 0) { body.innerHTML = '<div class="no-culte">Aucune proposition en attente. &#10003;</div>'; return 0; }
-      body.innerHTML = res.data.map(function(p) {
+      if (!propositions || propositions.length === 0) {
+        body.innerHTML = '<div class="no-culte">Aucune proposition en attente. &#10003;</div>';
+        return;
+      }
+      body.innerHTML = propositions.map(function(p) {
         return '<div class="proposition-item"><div>'
           + '<div class="proposition-titre">' + escHtml(p.titre) + '</div>'
           + '<div class="proposition-artiste">' + escHtml(p.artiste || '') + ' · ' + escHtml(p.langue || '') + '</div>'
           + '</div><a href="propositions.html" class="btn-voir">Voir</a></div>';
       }).join('');
-      return res.data.length;
     }
 
     async function init() {
@@ -555,55 +558,85 @@
       var subtitles = { admin:'Que l\'Eternel benisse votre service.', preparateur:'La preparation vous a ete confiee.', membre:'Louez l\'Eternel avec tout votre etre.' };
       document.getElementById('dashboardSub').textContent = subtitles[role] || subtitles.membre;
 
-      var countRes = await Promise.all([
-        sb.from('chansons').select('*', { count:'exact', head:true }),
-        sb.from('themes').select('*', { count:'exact', head:true }),
-        sb.from('cultes').select('*', { count:'exact', head:true }),
-        sb.from('evenements').select('*', { count:'exact', head:true }),
-        role === 'admin' ? sb.from('profils').select('id').eq('actif', true) : Promise.resolve({ data: null })
-      ]);
+      var premierAffichage = true;
 
-      document.getElementById('statChansons').textContent = countRes[0].count != null ? countRes[0].count : '—';
-      document.getElementById('statThemes').textContent   = countRes[1].count != null ? countRes[1].count : '—';
-      document.getElementById('statCultes').textContent   = countRes[2].count != null ? countRes[2].count : '—';
+      await melodieCache('dashboard-data-' + role, async function() {
+        var countRes = await Promise.all([
+          sb.from('chansons').select('*', { count:'exact', head:true }),
+          sb.from('themes').select('*', { count:'exact', head:true }),
+          sb.from('cultes').select('*', { count:'exact', head:true }),
+          sb.from('evenements').select('*', { count:'exact', head:true }),
+          role === 'admin' ? sb.from('profils').select('id').eq('actif', true) : Promise.resolve({ data: null })
+        ]);
 
-      if (role === 'admin' || role === 'preparateur') {
-        document.getElementById('statEvenementsCard').style.display = 'flex';
-        document.getElementById('statEvenements').textContent = countRes[3].count != null ? countRes[3].count : '—';
-      }
-      if (role === 'admin' && countRes[4].data) {
-        document.getElementById('statMembresCard').style.display = 'flex';
-        document.getElementById('statMembres').textContent = countRes[4].data.length;
-      }
+        var dataRes = await Promise.all([
+          sb.from('chansons').select('id, titre, created_at').order('created_at',{ascending:false}).limit(3),
+          sb.from('cultes').select('id, theme, date_culte, statut, created_at').order('date_culte',{ascending:true}),
+          sb.from('evenements').select('id, titre, date_event, description, preparateur_id, statut').order('date_event',{ascending:true})
+        ]);
 
-      var dataRes = await Promise.all([
-        sb.from('chansons').select('id, titre, created_at').order('created_at',{ascending:false}).limit(3),
-        sb.from('cultes').select('id, theme, date_culte, statut, created_at').order('date_culte',{ascending:true}),
-        sb.from('evenements').select('id, titre, date_event, description, preparateur_id, statut').order('date_event',{ascending:true})
-      ]);
+        var propositions = [];
+        if (role === 'admin') {
+          var propRes = await sb.from('propositions').select('*').eq('statut','en_attente').order('created_at',{ascending:false}).limit(5);
+          propositions = propRes.data || [];
+        }
 
-      var chansons = dataRes[0].data || [];
-      var cultesAll = dataRes[1].data || [];
-      var evsAll    = dataRes[2].data || [];
+        return {
+          counts: {
+            chansons:  countRes[0].count,
+            themes:    countRes[1].count,
+            cultes:    countRes[2].count,
+            evenements: countRes[3].count,
+            membres:   countRes[4].data ? countRes[4].data.length : null
+          },
+          chansonsRecentes: dataRes[0].data || [],
+          cultesAll:        dataRes[1].data || [],
+          evsAll:           dataRes[2].data || [],
+          propositions:     propositions
+        };
+      }, function(payload, fromCache) {
+        if (payload === null) {
+          document.getElementById('prochainCulteBody').innerHTML = '<div class="no-culte">Indisponible hors ligne.</div>';
+          document.getElementById('prochainEvBody').innerHTML = '<div class="no-culte">Indisponible hors ligne.</div>';
+          document.getElementById('activityList').innerHTML = '<div class="no-culte">Indisponible hors ligne.</div>';
+          buildQuickAccess(role, 0);
+        } else {
+          document.getElementById('statChansons').textContent = payload.counts.chansons != null ? payload.counts.chansons : '—';
+          document.getElementById('statThemes').textContent   = payload.counts.themes != null ? payload.counts.themes : '—';
+          document.getElementById('statCultes').textContent   = payload.counts.cultes != null ? payload.counts.cultes : '—';
 
-      var auj = new Date(); auj.setHours(0,0,0,0);
-      var futurCultes = cultesAll.filter(function(c) { return new Date(c.date_culte) >= auj; });
-      displayProchainCulte(futurCultes[0] || cultesAll[0] || null);
+          if (role === 'admin' || role === 'preparateur') {
+            document.getElementById('statEvenementsCard').style.display = 'flex';
+            document.getElementById('statEvenements').textContent = payload.counts.evenements != null ? payload.counts.evenements : '—';
+          }
+          if (role === 'admin' && payload.counts.membres != null) {
+            document.getElementById('statMembresCard').style.display = 'flex';
+            document.getElementById('statMembres').textContent = payload.counts.membres;
+          }
 
-      var futurEvs = evsAll.filter(function(e) { return new Date(e.date_event) >= auj; });
-      if (role === 'preparateur') {
-        futurEvs = futurEvs.filter(function(e) { return e.preparateur_id === sessionData.data.session.user.id; });
-      }
-      displayProchainEvenement(futurEvs[0] || null, role);
+          var auj = new Date(); auj.setHours(0,0,0,0);
+          var futurCultes = payload.cultesAll.filter(function(c) { return new Date(c.date_culte) >= auj; });
+          displayProchainCulte(futurCultes[0] || payload.cultesAll[0] || null);
 
-      displayActivity(chansons, cultesAll.slice().reverse().slice(0,3));
+          var futurEvs = payload.evsAll.filter(function(e) { return new Date(e.date_event) >= auj; });
+          if (role === 'preparateur') {
+            futurEvs = futurEvs.filter(function(e) { return e.preparateur_id === sessionData.data.session.user.id; });
+          }
+          displayProchainEvenement(futurEvs[0] || null, role);
 
-      var nbPropositions = await loadPropositions(role);
+          displayActivity(payload.chansonsRecentes, payload.cultesAll.slice().reverse().slice(0,3));
 
-      buildQuickAccess(role, nbPropositions);
+          displayPropositions(payload.propositions, role);
 
-      document.getElementById('loadingOverlay').classList.add('hidden');
-      document.getElementById('mainContent').classList.remove('hidden');
+          buildQuickAccess(role, payload.propositions ? payload.propositions.length : 0);
+        }
+
+        if (premierAffichage) {
+          document.getElementById('loadingOverlay').classList.add('hidden');
+          document.getElementById('mainContent').classList.remove('hidden');
+          premierAffichage = false;
+        }
+      });
     }
 
     init();
