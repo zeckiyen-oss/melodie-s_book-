@@ -3,7 +3,7 @@
 // Service Worker minimaliste
 // ============================================
 
-const CACHE_NAME = 'melodie-cache-v1';
+const CACHE_NAME = 'melodie-cache-v2';
 const STATIC_ASSETS = [
   './',
   './dashboard.html',
@@ -58,10 +58,13 @@ self.addEventListener('fetch', event => {
   // Navigation HTML
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
+      // IMPORTANT : redirect 'follow' explicite pour éviter les réponses
+      // "opaque redirect" causées par les redirections 308 de Cloudflare
+      // sur les URLs .html (le mode par défaut d'une requête navigate
+      // est 'manual', ce qui bloque le SW sur la redirection).
+      fetch(request.url, { redirect: 'follow', cache: 'no-store' })
         .then(response => {
-          // Mettre à jour le cache avec le contenu frais
-          if (response && response.status === 200) {
+          if (response && response.ok) {
             const clonedResponse = response.clone();
             caches.open(CACHE_NAME).then(cache => {
               cache.put(request, clonedResponse);
@@ -86,7 +89,7 @@ self.addEventListener('fetch', event => {
     caches.match(request).then(cached => {
       if (cached) return cached;
 
-      return fetch(request).then(response => {
+      return fetch(request, { redirect: 'follow' }).then(response => {
         // Mettre à jour le cache
         if (response && response.status === 200) {
           const clonedResponse = response.clone();
