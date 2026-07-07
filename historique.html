@@ -9,10 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
-  <script src="pwa-init.js"></script>
+  <script src="melodie-cache.js"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0D1B2A" />
-  <script src="offline-data.js"></script>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/historique.css" />
 
@@ -173,9 +172,9 @@
   async function chargerCultes() {
     var premierAffichage = true;
 
-    await melodieFetch('historique-cultes', async function() {
+    await melodieCache('historique-cultes', async function() {
       var res = await sb.from('cultes').select('*, profils(nom, photo_url)').order('date_culte', { ascending: false });
-      if (res.error) return null;
+      if (res.error) throw res.error;
       return res.data || [];
     }, function(data, fromCache) {
       if (data === null) {
@@ -323,12 +322,12 @@
     document.getElementById('culteOverlay').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
-    await melodieFetch('historique-programme-' + id, async function() {
+    await melodieCache('historique-programme-' + id, async function() {
       var res = await sb.from('programme_culte')
         .select('ordre, rubrique, chansons(id, numero, titre, langue)')
         .eq('culte_id', id)
         .order('ordre');
-      if (res.error) return null;
+      if (res.error) throw res.error;
       return res.data || [];
     }, function(data, fromCache) {
       renderProgrammeCulte(data);
@@ -402,5 +401,6 @@
   initPage();
   </script>
 
+  <script src="pwa-register.js"></script>
 </body>
 </html>
