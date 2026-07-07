@@ -9,10 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
-  <script src="pwa-init.js"></script>
+  <script src="melodie-cache.js"></script>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0D1B2A" />
-  <script src="offline-data.js"></script>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/themes.css" />
 
@@ -149,9 +148,9 @@
   async function chargerThemes(ouvrirId) {
     var premierAffichage = true;
 
-    await melodieFetch('themes-avec-comptage', async function() {
+    await melodieCache('themes-avec-comptage', async function() {
       var res = await sb.from('themes').select('*').order('nom');
-      if (res.error) return null;
+      if (res.error) throw res.error;
 
       var liensRes = await sb.from('chansons_themes').select('theme_id');
       var comptages = {};
@@ -248,9 +247,9 @@
     document.getElementById('themeDetailOverlay').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
-    await melodieFetch('theme-chansons-' + theme.id, async function() {
+    await melodieCache('theme-chansons-' + theme.id, async function() {
       var res = await sb.from('chansons_themes').select('chansons(id, numero, titre, rubrique, langue)').eq('theme_id', theme.id);
-      if (res.error) return null;
+      if (res.error) throw res.error;
       return res.data || [];
     }, function(data, fromCache) {
       renderDetailChansons(data);
@@ -314,5 +313,6 @@
   initPage();
   </script>
 
+  <script src="pwa-register.js"></script>
 </body>
 </html>
