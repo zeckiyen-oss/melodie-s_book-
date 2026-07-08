@@ -65,6 +65,17 @@ async function melodieCache(key, fetchFn, renderFn) {
     displayedFromCache = true;
   }
 
+  // Comme SmartLearn : si l'appareil est hors ligne, on ne tente même pas
+  // l'appel réseau — on évite un délai inutile et des erreurs imprévisibles
+  // selon les navigateurs.
+  if (!navigator.onLine) {
+    console.warn('[melodieCache] Hors ligne, pas de tentative réseau pour', key);
+    if (!displayedFromCache) {
+      renderFn(null, false);
+    }
+    return;
+  }
+
   try {
     var fresh = await melodieTimeout(fetchFn(), MELODIE_CACHE_TIMEOUT);
     melodieCacheWrite(key, fresh);
