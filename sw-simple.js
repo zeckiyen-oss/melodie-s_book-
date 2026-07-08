@@ -3,7 +3,7 @@
 // Service Worker minimaliste
 // ============================================
 
-const CACHE_NAME = 'melodie-cache-v2';
+const CACHE_NAME = 'melodie-cache-v3';
 const STATIC_ASSETS = [
   './',
   './dashboard.html',
@@ -17,6 +17,7 @@ const STATIC_ASSETS = [
   './offline.html',
   './manifest.json',
   './pwa-register.js',
+  './melodie-cache.js',
   './css/style.css',
   './navbar.js',
 ];
