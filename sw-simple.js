@@ -3,7 +3,7 @@
 // Service Worker minimaliste
 // ============================================
 
-const CACHE_NAME = 'melodie-cache-v3';
+const CACHE_NAME = 'melodie-cache-v4';
 const STATIC_ASSETS = [
   './',
   './dashboard.html',
@@ -22,14 +22,30 @@ const STATIC_ASSETS = [
   './navbar.js',
 ];
 
-// Installation : précharger les assets critiques
+// Installation : précharger les assets critiques.
+// IMPORTANT : on utilise Promise.allSettled (et non cache.addAll) car
+// cache.addAll() est "tout ou rien" — si UN SEUL fichier échoue à se
+// charger (redirection 308 de Cloudflare, fichier renommé, etc.), AUCUN
+// fichier n'est mis en cache, pas même offline.html. Avec allSettled,
+// chaque fichier est mis en cache indépendamment : un échec isolé
+// n'empêche pas les autres d'être précachés.
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(STATIC_ASSETS).catch(err => {
-        console.warn('[SW] Erreur préchargement :', err);
-        // Continue même si un asset échoue
-      });
+      return Promise.allSettled(
+        STATIC_ASSETS.map(url =>
+          fetch(url, { redirect: 'follow', cache: 'no-store' })
+            .then(response => {
+              if (response && response.ok) {
+                return cache.put(url, response);
+              }
+              console.warn('[SW] Préchargement ignoré (statut non-ok) :', url);
+            })
+            .catch(err => {
+              console.warn('[SW] Préchargement échoué :', url, err);
+            })
+        )
+      );
     }).then(() => self.skipWaiting())
   );
 });
@@ -55,6 +71,19 @@ self.addEventListener('fetch', event => {
 
   // Ignorer les requêtes non-GET
   if (request.method !== 'GET') return;
+
+  // IMPORTANT : ignorer les domaines externes (CDN Supabase, Google Fonts,
+  // API Supabase, etc.). Ces requêtes cross-origin renvoient des réponses
+  // "opaques" (statut 0) que notre logique de cache ne sait pas gérer
+  // correctement (le test response.status === 200 échoue toujours pour
+  // elles), donc elles ne sont jamais mises en cache par notre code — et
+  // pire, notre fallback "réponse vide 503" en cas d'échec réseau CASSE
+  // ces ressources critiques (ex: la librairie Supabase) au lieu de
+  // laisser le navigateur gérer l'échec normalement. On laisse ces
+  // requêtes suivre leur cours natif, sans intervention du SW.
+  if (new URL(request.url).origin !== self.location.origin) {
+    return;
+  }
 
   // Navigation HTML
   if (request.mode === 'navigate') {
@@ -85,7 +114,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Autres ressources (JS, CSS, images) : cache d'abord, puis réseau
+  // Autres ressources same-origin (JS, CSS, images) : cache d'abord, puis réseau
   event.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached;
