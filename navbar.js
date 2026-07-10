@@ -7,6 +7,10 @@
    IMPORTANT : buildSharedNavbar est maintenant ASYNC.
    Si du code doit s'exécuter après l'injection de la navbar,
    utiliser : await buildSharedNavbar(profil, pageActive)
+
+   NOTE : tous les liens utilisent des URLs SANS .html
+   (Cloudflare Pages échoue sur les URLs .html directes —
+   voir diagnostic du 2026-07-09).
    ============================================================ */
 
 async function buildSharedNavbar(profil, pageActive) {
@@ -35,22 +39,22 @@ async function buildSharedNavbar(profil, pageActive) {
 
   /* ── Liens selon le rôle ── */
   var liens = [
-    { href: "dashboard.html",             label: "🏠 Accueil",           id: "dashboard",             roles: ["membre","preparateur","admin"] },
-    { href: "repertoire.html",            label: "🎵 Répertoire",        id: "repertoire",            roles: ["membre","preparateur","admin"] },
-    { href: "themes.html",                label: "📖 Thèmes",            id: "themes",                roles: ["membre","preparateur","admin"] },
-    { href: "historique.html",            label: "📜 Historique",        id: "historique",            roles: ["membre","preparateur","admin"] },
-    { href: "bibliotheque.html",          label: "📚 Bibliothèque",      id: "bibliotheque",          roles: ["membre","preparateur","admin"] },
-    { href: "proposer.html",              label: "💡 Proposer",          id: "proposer",              roles: ["membre","preparateur","admin"] },
-    { href: "programme.html",             label: "🕊️ Programme",         id: "programme",             roles: ["membre","preparateur","admin"] },
-    { href: "preparation-culte.html",     label: "⛪ Prépa. culte",      id: "preparation-culte",     roles: ["preparateur","admin"] },
-    { href: "preparation-evenement.html", label: "📅 Prépa. événement",  id: "preparation-evenement", roles: ["admin"], rolesExtra: ["preparateur"], requiresEvenement: true },
-    { href: "propositions.html",          label: "📋 Propositions",      id: "propositions",          roles: ["admin"] },
-    { href: "validation-programme.html",  label: "✅ Validation",        id: "validation-programme",  roles: ["admin"] },
-    { href: "designateur.html",           label: "🎯 Désignateur",       id: "designateur",           roles: ["admin"] },
-    { href: "gestion-themes.html",        label: "🏷️ Gestion thèmes",   id: "gestion-themes",        roles: ["admin"] },
-    { href: "evenements.html",            label: "📅 Événements",        id: "evenements",            roles: ["admin"] },
-    { href: "statistiques.html",          label: "📊 Statistiques",      id: "statistiques",          roles: ["membre","preparateur","admin"] },
-    { href: "comptes.html",               label: "👥 Comptes",           id: "comptes",               roles: ["admin"] }
+    { href: "dashboard",             label: "🏠 Accueil",           id: "dashboard",             roles: ["membre","preparateur","admin"] },
+    { href: "repertoire",            label: "🎵 Répertoire",        id: "repertoire",            roles: ["membre","preparateur","admin"] },
+    { href: "themes",                label: "📖 Thèmes",            id: "themes",                roles: ["membre","preparateur","admin"] },
+    { href: "historique",            label: "📜 Historique",        id: "historique",            roles: ["membre","preparateur","admin"] },
+    { href: "bibliotheque",          label: "📚 Bibliothèque",      id: "bibliotheque",          roles: ["membre","preparateur","admin"] },
+    { href: "proposer",              label: "💡 Proposer",          id: "proposer",              roles: ["membre","preparateur","admin"] },
+    { href: "programme",             label: "🕊️ Programme",         id: "programme",             roles: ["membre","preparateur","admin"] },
+    { href: "preparation-culte",     label: "⛪ Prépa. culte",      id: "preparation-culte",     roles: ["preparateur","admin"] },
+    { href: "preparation-evenement", label: "📅 Prépa. événement",  id: "preparation-evenement", roles: ["admin"], rolesExtra: ["preparateur"], requiresEvenement: true },
+    { href: "propositions",          label: "📋 Propositions",      id: "propositions",          roles: ["admin"] },
+    { href: "validation-programme",  label: "✅ Validation",        id: "validation-programme",  roles: ["admin"] },
+    { href: "designateur",           label: "🎯 Désignateur",       id: "designateur",           roles: ["admin"] },
+    { href: "gestion-themes",        label: "🏷️ Gestion thèmes",   id: "gestion-themes",        roles: ["admin"] },
+    { href: "evenements",            label: "📅 Événements",        id: "evenements",            roles: ["admin"] },
+    { href: "statistiques",          label: "📊 Statistiques",      id: "statistiques",          roles: ["membre","preparateur","admin"] },
+    { href: "comptes",               label: "👥 Comptes",           id: "comptes",               roles: ["admin"] }
   ];
 
   var liensFiltres = liens.filter(function(l) {
@@ -73,7 +77,7 @@ async function buildSharedNavbar(profil, pageActive) {
   /* ── HTML Navbar ── */
   var navHtml = '<nav class="snav">'
     + '<div class="snav-top">'
-    + '<a href="dashboard.html" class="snav-brand">'
+    + '<a href="dashboard" class="snav-brand">'
     + '<span class="snav-logo">&#9834;</span>'
     + '<span class="snav-title">Mélodie\'s Book</span>'
     + '</a>'
@@ -144,7 +148,7 @@ async function buildSharedNavbar(profil, pageActive) {
 async function snavLogout() {
   var sb = window._sb || window.sb;
   if (sb) await sb.auth.signOut();
-  window.location.href = "index.html";
+  window.location.href = "/";
 }
 
 /* ── Escape HTML ── */
