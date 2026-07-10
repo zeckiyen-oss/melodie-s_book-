@@ -84,7 +84,7 @@
         </div>
       </div>
       <div class="page-header-actions" id="adminActions" style="display:none;">
-        <a href="ajouter-chanson.html" class="btn-primary">
+        <a href="ajouter-chanson" class="btn-primary">
           <span>➕</span> Ajouter une chanson
         </a>
       </div>
@@ -214,11 +214,11 @@
         div.className = 'rep-item';
 
         var adminBtn = userRole === 'admin'
-          ? '<a href="modifier-chanson.html?id=' + c.id + '" class="rep-btn-edit" title="Modifier" onclick="event.stopPropagation()">✏️</a>' : '';
+          ? '<a href="modifier-chanson?id=' + c.id + '" class="rep-btn-edit" title="Modifier" onclick="event.stopPropagation()">✏️</a>' : '';
 
         var audioBadge = c.audio_url ? '<span title="Audio disponible">🎵</span>' : '';
 
-        var mainHtml = '<a href="chanson.html?id=' + c.id + '" class="rep-item-main">'
+        var mainHtml = '<a href="chanson?id=' + c.id + '" class="rep-item-main">'
           + '<div class="rep-num">' + (c.numero ? '#' + escHtml(String(c.numero)) : '—') + '</div>'
           + '<div class="rep-icon">' + icon + '</div>'
           + '<div class="rep-info">'
@@ -316,9 +316,9 @@
 
     async function init() {
       var r = await sb.auth.getSession();
-      if (!r.data.session) { window.location.href = 'index.html'; return; }
+      if (!r.data.session) { window.location.href = '/'; return; }
       var p = await sb.from('profils').select('*').eq('id', r.data.session.user.id).single();
-      if (!p.data || !p.data.actif) { window.location.href = 'index.html'; return; }
+      if (!p.data || !p.data.actif) { window.location.href = '/'; return; }
 
       userRole = p.data.role || 'membre';
       await buildSharedNavbar(p.data, 'repertoire');
