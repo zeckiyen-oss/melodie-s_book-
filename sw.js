@@ -1,20 +1,40 @@
 // ============================================
 // Mélodie's Book — sw.js
-// Service Worker minimaliste
+// Service Worker minimaliste — v5
+// Corrections : précache complet (22 pages) +
+// neutralisation des réponses redirigées
 // ============================================
 
-const CACHE_NAME = 'melodie-cache-v4';
+const CACHE_NAME = 'melodie-cache-v5';
+
+// URLs SANS extension .html : Cloudflare Pages redirige
+// automatiquement .html vers sa version sans extension (308),
+// donc précacher directement en .html redéclencherait le bug
+// qu'on corrige plus bas. Ce sont aussi ces URLs que les vraies
+// navigations demanderont une fois tous les liens nettoyés.
 const STATIC_ASSETS = [
   './',
-  './dashboard.html',
-  './repertoire.html',
-  './chanson.html',
-  './bibliotheque.html',
-  './programme.html',
-  './themes.html',
-  './historique.html',
-  './statistiques.html',
-  './offline.html',
+  './dashboard',
+  './repertoire',
+  './chanson',
+  './bibliotheque',
+  './programme',
+  './themes',
+  './historique',
+  './statistiques',
+  './comptes',
+  './proposer',
+  './propositions',
+  './preparation-culte',
+  './preparation-evenement',
+  './validation-programme',
+  './designateur',
+  './gestion-themes',
+  './evenements',
+  './ajouter-chanson',
+  './modifier-chanson',
+  './diagnostic-pwa',
+  './offline',
   './manifest.json',
   './pwa-register.js',
   './melodie-cache.js',
@@ -22,13 +42,25 @@ const STATIC_ASSETS = [
   './navbar.js',
 ];
 
+// IMPORTANT : neutralise le flag "redirected" d'une réponse.
+// Une requête de navigation a nativement un redirect mode
+// "manual" — le navigateur REFUSE de servir une réponse
+// "redirected" pour ce type de requête (erreur réseau bloquante,
+// probablement la cause du ERR_FAILED déjà observé sur les liens
+// .html). En reconstruisant un Response neuf à partir du body,
+// on retire cette contamination avant utilisation ou mise en cache.
+function cleanRedirectedResponse(response) {
+  if (!response.redirected) return response;
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+}
+
 // Installation : précharger les assets critiques.
-// IMPORTANT : on utilise Promise.allSettled (et non cache.addAll) car
-// cache.addAll() est "tout ou rien" — si UN SEUL fichier échoue à se
-// charger (redirection 308 de Cloudflare, fichier renommé, etc.), AUCUN
-// fichier n'est mis en cache, pas même offline.html. Avec allSettled,
-// chaque fichier est mis en cache indépendamment : un échec isolé
-// n'empêche pas les autres d'être précachés.
+// Promise.allSettled (pas cache.addAll) : un échec isolé
+// n'empêche pas les autres fichiers d'être précachés.
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
@@ -37,7 +69,7 @@ self.addEventListener('install', event => {
           fetch(url, { redirect: 'follow', cache: 'no-store' })
             .then(response => {
               if (response && response.ok) {
-                return cache.put(url, response);
+                return cache.put(url, cleanRedirectedResponse(response));
               }
               console.warn('[SW] Préchargement ignoré (statut non-ok) :', url);
             })
@@ -50,7 +82,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activation : nettoyer les anciens caches
+// Activation : purge les anciens caches (v4 et antérieurs)
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => {
@@ -65,22 +97,14 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch : stratégie réseau d'abord, puis cache, puis offline
+// Fetch : réseau d'abord, puis cache, puis offline
 self.addEventListener('fetch', event => {
   const { request } = event;
 
-  // Ignorer les requêtes non-GET
   if (request.method !== 'GET') return;
 
-  // IMPORTANT : ignorer les domaines externes (CDN Supabase, Google Fonts,
-  // API Supabase, etc.). Ces requêtes cross-origin renvoient des réponses
-  // "opaques" (statut 0) que notre logique de cache ne sait pas gérer
-  // correctement (le test response.status === 200 échoue toujours pour
-  // elles), donc elles ne sont jamais mises en cache par notre code — et
-  // pire, notre fallback "réponse vide 503" en cas d'échec réseau CASSE
-  // ces ressources critiques (ex: la librairie Supabase) au lieu de
-  // laisser le navigateur gérer l'échec normalement. On laisse ces
-  // requêtes suivre leur cours natif, sans intervention du SW.
+  // Domaines externes (Supabase, Cloudinary, Google Fonts...) :
+  // on laisse le navigateur gérer nativement, sans intervention du SW.
   if (new URL(request.url).origin !== self.location.origin) {
     return;
   }
@@ -88,26 +112,22 @@ self.addEventListener('fetch', event => {
   // Navigation HTML
   if (request.mode === 'navigate') {
     event.respondWith(
-      // IMPORTANT : redirect 'follow' explicite pour éviter les réponses
-      // "opaque redirect" causées par les redirections 308 de Cloudflare
-      // sur les URLs .html (le mode par défaut d'une requête navigate
-      // est 'manual', ce qui bloque le SW sur la redirection).
       fetch(request.url, { redirect: 'follow', cache: 'no-store' })
         .then(response => {
           if (response && response.ok) {
-            const clonedResponse = response.clone();
+            const cleanedResponse = cleanRedirectedResponse(response);
+            const forCache = cleanedResponse.clone();
             caches.open(CACHE_NAME).then(cache => {
-              cache.put(request, clonedResponse);
+              cache.put(request, forCache);
             });
+            return cleanedResponse;
           }
           return response;
         })
         .catch(() => {
-          // Réseau échoue → chercher en cache
           return caches.match(request).then(cached => {
             if (cached) return cached;
-            // Dernier recours : page offline
-            return caches.match('./offline.html');
+            return caches.match('./offline');
           });
         })
     );
@@ -120,7 +140,6 @@ self.addEventListener('fetch', event => {
       if (cached) return cached;
 
       return fetch(request, { redirect: 'follow' }).then(response => {
-        // Mettre à jour le cache
         if (response && response.status === 200) {
           const clonedResponse = response.clone();
           caches.open(CACHE_NAME).then(cache => {
@@ -129,7 +148,6 @@ self.addEventListener('fetch', event => {
         }
         return response;
       }).catch(() => {
-        // Offline : retourner une réponse vide
         return new Response('', { status: 503 });
       });
     })
