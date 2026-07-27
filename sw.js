@@ -1,17 +1,13 @@
 // ============================================
 // Mélodie's Book — sw.js
-// Service Worker minimaliste — v5
-// Corrections : précache complet (22 pages) +
-// neutralisation des réponses redirigées
+// Service Worker minimaliste — v7
+// v7 : ajout du cache audio Cloudinary (cache-first,
+// cache séparé du cache de pages)
 // ============================================
 
-const CACHE_NAME = 'melodie-cache-v5';
+const CACHE_NAME = 'melodie-cache-v7';
+const AUDIO_CACHE_NAME = 'melodie-audio-cache-v1';
 
-// URLs SANS extension .html : Cloudflare Pages redirige
-// automatiquement .html vers sa version sans extension (308),
-// donc précacher directement en .html redéclencherait le bug
-// qu'on corrige plus bas. Ce sont aussi ces URLs que les vraies
-// navigations demanderont une fois tous les liens nettoyés.
 const STATIC_ASSETS = [
   './',
   './dashboard',
@@ -42,25 +38,6 @@ const STATIC_ASSETS = [
   './navbar.js',
 ];
 
-// IMPORTANT : neutralise le flag "redirected" d'une réponse.
-// Une requête de navigation a nativement un redirect mode
-// "manual" — le navigateur REFUSE de servir une réponse
-// "redirected" pour ce type de requête (erreur réseau bloquante,
-// probablement la cause du ERR_FAILED déjà observé sur les liens
-// .html). En reconstruisant un Response neuf à partir du body,
-// on retire cette contamination avant utilisation ou mise en cache.
-function cleanRedirectedResponse(response) {
-  if (!response.redirected) return response;
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers: response.headers,
-  });
-}
-
-// Installation : précharger les assets critiques.
-// Promise.allSettled (pas cache.addAll) : un échec isolé
-// n'empêche pas les autres fichiers d'être précachés.
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
@@ -68,10 +45,20 @@ self.addEventListener('install', event => {
         STATIC_ASSETS.map(url =>
           fetch(url, { redirect: 'follow', cache: 'no-store' })
             .then(response => {
-              if (response && response.ok) {
-                return cache.put(url, cleanRedirectedResponse(response));
+              if (!response || !response.ok) {
+                console.warn('[SW] Préchargement ignoré (statut non-ok) :', url);
+                return;
               }
-              console.warn('[SW] Préchargement ignoré (statut non-ok) :', url);
+              if (response.redirected) {
+                return response.text().then(bodyText => {
+                  return cache.put(url, new Response(bodyText, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: response.headers,
+                  }));
+                });
+              }
+              return cache.put(url, response);
             })
             .catch(err => {
               console.warn('[SW] Préchargement échoué :', url, err);
@@ -82,13 +69,14 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activation : purge les anciens caches (v4 et antérieurs)
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => {
       return Promise.all(
         keys.map(key => {
-          if (key !== CACHE_NAME) {
+          // On garde le cache de pages ET le cache audio — seuls les
+          // caches d'anciennes versions (v4, v5, v6...) sont purgés.
+          if (key !== CACHE_NAME && key !== AUDIO_CACHE_NAME) {
             return caches.delete(key);
           }
         })
@@ -97,31 +85,63 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch : réseau d'abord, puis cache, puis offline
 self.addEventListener('fetch', event => {
   const { request } = event;
 
   if (request.method !== 'GET') return;
 
-  // Domaines externes (Supabase, Cloudinary, Google Fonts...) :
-  // on laisse le navigateur gérer nativement, sans intervention du SW.
-  if (new URL(request.url).origin !== self.location.origin) {
+  const requestURL = new URL(request.url);
+
+  // Audio Cloudinary : cache-first, cache dédié. Nécessite
+  // crossorigin="anonymous" sur les balises <audio> pour obtenir une
+  // réponse exploitable (response.ok) plutôt qu'opaque.
+  if (requestURL.hostname.endsWith('cloudinary.com')) {
+    event.respondWith(
+      caches.open(AUDIO_CACHE_NAME).then(cache =>
+        cache.match(request).then(cached => {
+          if (cached) return cached;
+          return fetch(request)
+            .then(response => {
+              if (response && response.ok) {
+                cache.put(request, response.clone());
+              }
+              return response;
+            })
+            .catch(() => new Response('', { status: 503 }));
+        })
+      )
+    );
     return;
   }
 
-  // Navigation HTML
+  // Tout autre domaine externe (Supabase, Google Fonts...) : navigateur natif.
+  if (requestURL.origin !== self.location.origin) {
+    return;
+  }
+
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request.url, { redirect: 'follow', cache: 'no-store' })
-        .then(response => {
-          if (response && response.ok) {
-            const cleanedResponse = cleanRedirectedResponse(response);
-            const forCache = cleanedResponse.clone();
+        .then(async response => {
+          if (!response || !response.ok) return response;
+
+          if (response.redirected) {
+            const bodyText = await response.text();
+            const init = {
+              status: response.status,
+              statusText: response.statusText,
+              headers: response.headers,
+            };
             caches.open(CACHE_NAME).then(cache => {
-              cache.put(request, forCache);
+              cache.put(request, new Response(bodyText, init));
             });
-            return cleanedResponse;
+            return new Response(bodyText, init);
           }
+
+          const clonedResponse = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(request, clonedResponse);
+          });
           return response;
         })
         .catch(() => {
@@ -134,7 +154,6 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Autres ressources same-origin (JS, CSS, images) : cache d'abord, puis réseau
   event.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached;
