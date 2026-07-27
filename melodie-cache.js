@@ -1,89 +1,174 @@
 // ============================================
-// Mélodie's Book — melodie-cache.js
-// Pattern "cache d'abord + mise à jour silencieuse"
-// (stale-while-revalidate) pour les données Supabase
-// À inclure dans le <head> ou juste avant le script
-// principal de chaque page, AVANT son utilisation :
-// <script src="melodie-cache.js"></script>
+// Mélodie's Book — sw.js
+// Service Worker minimaliste — v7
+// v7 : ajout du cache audio Cloudinary (cache-first,
+// cache séparé du cache de pages)
 // ============================================
 
-var MELODIE_CACHE_PREFIX = 'mcache:';
-var MELODIE_CACHE_TIMEOUT = 6000; // ms — délai max d'attente réseau
+const CACHE_NAME = 'melodie-cache-v7';
+const AUDIO_CACHE_NAME = 'melodie-audio-cache-v1';
 
-function melodieCacheRead(key) {
-  try {
-    var raw = localStorage.getItem(MELODIE_CACHE_PREFIX + key);
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    console.warn('[melodieCache] Lecture cache impossible pour', key, e);
-    return null;
-  }
-}
+const STATIC_ASSETS = [
+  './',
+  './dashboard',
+  './repertoire',
+  './chanson',
+  './bibliotheque',
+  './programme',
+  './themes',
+  './historique',
+  './statistiques',
+  './comptes',
+  './proposer',
+  './propositions',
+  './preparation-culte',
+  './preparation-evenement',
+  './validation-programme',
+  './designateur',
+  './gestion-themes',
+  './evenements',
+  './ajouter-chanson',
+  './modifier-chanson',
+  './diagnostic-pwa',
+  './offline',
+  './manifest.json',
+  './pwa-register.js',
+  './melodie-cache.js',
+  './css/style.css',
+  './navbar.js',
+];
 
-function melodieCacheWrite(key, data) {
-  try {
-    localStorage.setItem(MELODIE_CACHE_PREFIX + key, JSON.stringify(data));
-  } catch (e) {
-    console.warn('[melodieCache] Écriture cache impossible pour', key, e);
-  }
-}
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      return Promise.allSettled(
+        STATIC_ASSETS.map(url =>
+          fetch(url, { redirect: 'follow', cache: 'no-store' })
+            .then(response => {
+              if (!response || !response.ok) {
+                console.warn('[SW] Préchargement ignoré (statut non-ok) :', url);
+                return;
+              }
+              if (response.redirected) {
+                return response.text().then(bodyText => {
+                  return cache.put(url, new Response(bodyText, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: response.headers,
+                  }));
+                });
+              }
+              return cache.put(url, response);
+            })
+            .catch(err => {
+              console.warn('[SW] Préchargement échoué :', url, err);
+            })
+        )
+      );
+    }).then(() => self.skipWaiting())
+  );
+});
 
-function melodieTimeout(promise, ms) {
-  return Promise.race([
-    promise,
-    new Promise(function(_, reject) {
-      setTimeout(function() { reject(new Error('timeout réseau')); }, ms);
-    })
-  ]);
-}
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys.map(key => {
+          // On garde le cache de pages ET le cache audio — seuls les
+          // caches d'anciennes versions (v4, v5, v6...) sont purgés.
+          if (key !== CACHE_NAME && key !== AUDIO_CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
 
-/**
- * melodieCache(key, fetchFn, renderFn)
- *
- * - key      : identifiant unique pour cette donnée (ex: 'repertoire-chansons-all')
- * - fetchFn  : async function() -> doit renvoyer les données fraîches et
- *              LANCER une erreur (throw) en cas d'échec Supabase, pour que
- *              le mécanisme de cache/fallback fonctionne correctement.
- * - renderFn : function(data, fromCache) -> appelée pour afficher les données.
- *
- * Déroulement :
- *   1. Si un cache existe → renderFn(cache, true) IMMÉDIATEMENT (affichage instantané)
- *   2. La vraie requête réseau est lancée en parallèle
- *   3. Si elle réussit → cache mis à jour + renderFn(fresh, false) (mise à jour silencieuse)
- *   4. Si elle échoue :
- *        - et qu'un cache avait déjà été affiché → on ne fait RIEN de plus
- *          (l'utilisateur garde les données déjà visibles, pas d'erreur affichée)
- *        - et qu'aucun cache n'existait → renderFn(null, false) pour que la page
- *          affiche un message "indisponible hors ligne"
- */
-async function melodieCache(key, fetchFn, renderFn) {
-  var cached = melodieCacheRead(key);
-  var displayedFromCache = false;
+self.addEventListener('fetch', event => {
+  const { request } = event;
 
-  if (cached !== null) {
-    renderFn(cached, true);
-    displayedFromCache = true;
-  }
+  if (request.method !== 'GET') return;
 
-  // Comme SmartLearn : si l'appareil est hors ligne, on ne tente même pas
-  // l'appel réseau — on évite un délai inutile et des erreurs imprévisibles
-  // selon les navigateurs.
-  if (!navigator.onLine) {
-    console.warn('[melodieCache] Hors ligne, pas de tentative réseau pour', key);
-    if (!displayedFromCache) {
-      renderFn(null, false);
-    }
+  const requestURL = new URL(request.url);
+
+  // Audio Cloudinary : cache-first, cache dédié. Nécessite
+  // crossorigin="anonymous" sur les balises <audio> pour obtenir une
+  // réponse exploitable (response.ok) plutôt qu'opaque.
+  if (requestURL.hostname.endsWith('cloudinary.com')) {
+    event.respondWith(
+      caches.open(AUDIO_CACHE_NAME).then(cache =>
+        cache.match(request).then(cached => {
+          if (cached) return cached;
+          return fetch(request)
+            .then(response => {
+              if (response && response.ok) {
+                cache.put(request, response.clone());
+              }
+              return response;
+            })
+            .catch(() => new Response('', { status: 503 }));
+        })
+      )
+    );
     return;
   }
 
-  try {
-    var fresh = await melodieTimeout(fetchFn(), MELODIE_CACHE_TIMEOUT);
-    melodieCacheWrite(key, fresh);
-    renderFn(fresh, false);
-  } catch (err) {
-    console.warn('[melodieCache] Réseau indisponible pour "' + key + '":', err.message || err);
-    if (!displayedFromCache) {
-      renderFn(null, false);
-    }
+  // Tout autre domaine externe (Supabase, Google Fonts...) : navigateur natif.
+  if (requestURL.origin !== self.location.origin) {
+    return;
   }
-}
+
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request.url, { redirect: 'follow', cache: 'no-store' })
+        .then(async response => {
+          if (!response || !response.ok) return response;
+
+          if (response.redirected) {
+            const bodyText = await response.text();
+            const init = {
+              status: response.status,
+              statusText: response.statusText,
+              headers: response.headers,
+            };
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, new Response(bodyText, init));
+            });
+            return new Response(bodyText, init);
+          }
+
+          const clonedResponse = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(request, clonedResponse);
+          });
+          return response;
+        })
+        .catch(() => {
+          return caches.match(request).then(cached => {
+            if (cached) return cached;
+            return caches.match('./offline');
+          });
+        })
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(request).then(cached => {
+      if (cached) return cached;
+
+      return fetch(request, { redirect: 'follow' }).then(response => {
+        if (response && response.status === 200) {
+          const clonedResponse = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(request, clonedResponse);
+          });
+        }
+        return response;
+      }).catch(() => {
+        return new Response('', { status: 503 });
+      });
+    })
+  );
+});
