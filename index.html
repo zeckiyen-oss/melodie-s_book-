@@ -16,37 +16,27 @@
 </head>
 <body class="page-login">
 
-  <!-- ═══════════════════════════════════════
-       FOND DÉCORATIF
-  ═══════════════════════════════════════ -->
   <div class="login-bg">
     <div class="login-bg-glow login-bg-glow--top"></div>
     <div class="login-bg-glow login-bg-glow--bottom"></div>
     <div class="login-bg-cross">✝</div>
   </div>
 
-  <!-- ═══════════════════════════════════════
-       CARTE DE CONNEXION
-  ═══════════════════════════════════════ -->
   <main class="login-wrapper">
     <div class="login-card" id="loginCard">
 
-      <!-- Logo -->
       <div class="login-logo">
         <div class="login-logo__circle">♪</div>
       </div>
 
-      <!-- Titre -->
       <div class="login-heading">
         <h1 class="login-heading__title">Mélodie's Book</h1>
         <p class="login-heading__subtitle">Répertoire de la Chorale</p>
         <div class="login-heading__divider"></div>
       </div>
 
-      <!-- Message d'état (chargement, erreur…) -->
       <div class="login-status" id="loginStatus" style="display:none;"></div>
 
-      <!-- Bouton Google -->
       <button class="btn-google" id="btnGoogle" onclick="signInWithGoogle()">
         <svg class="btn-google__icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -57,24 +47,19 @@
         <span class="btn-google__text">Continuer avec Google</span>
       </button>
 
-      <!-- Séparateur -->
       <div class="login-sep">
         <span>— Accès réservé aux membres de la chorale —</span>
       </div>
 
-      <!-- Verset -->
       <blockquote class="login-verse">
         « Chantez à l'Éternel un cantique nouveau,<br>
         chantez à l'Éternel, vous tous de la terre. »
-        <cite>— Psaume 96 : 1</cite>
+        — Psaume 96 : 1
       </blockquote>
 
-    </div><!-- /.login-card -->
+    </div>
   </main>
 
-  <!-- ═══════════════════════════════════════
-       JAVASCRIPT
-  ═══════════════════════════════════════ -->
   <script>
     /* ─── 1. CONFIG SUPABASE ─────────────────────────────────── */
     const SUPABASE_URL  = 'https://tjqicfxkxhlciebmswqu.supabase.co';
@@ -84,10 +69,30 @@
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
     /* ─── 2. VÉRIFIER SI DÉJÀ CONNECTÉ ──────────────────────── */
+    function hasStoredSupabaseSession() {
+      return Object.keys(localStorage).some(function(k) {
+        return k.indexOf('sb-') === 0 && k.indexOf('-auth-token') !== -1;
+      });
+    }
+
     async function checkSession() {
-      const { data: { session } } = await sb.auth.getSession();
-      if (session) {
-        window.location.href = 'dashboard.html';
+      // Hors ligne, getSession() tente de rafraîchir le token et
+      // EFFACE la session locale si ça échoue (comportement du SDK
+      // Supabase). On l'évite en ne l'appelant jamais hors ligne.
+      if (!navigator.onLine) {
+        if (hasStoredSupabaseSession()) {
+          window.location.href = 'dashboard';
+        }
+        return;
+      }
+
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (session) {
+          window.location.href = 'dashboard';
+        }
+      } catch (e) {
+        console.warn('[checkSession] Vérification impossible :', e);
       }
     }
     checkSession();
@@ -104,7 +109,7 @@
       const { error } = await sb.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/dashboard.html'
+          redirectTo: window.location.origin + '/dashboard'
         }
       });
 
@@ -120,7 +125,7 @@
     /* ─── 4. ÉCOUTER LE RETOUR OAUTH ─────────────────────────── */
     sb.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        window.location.href = 'dashboard.html';
+        window.location.href = 'dashboard';
       }
     });
   </script>
