@@ -275,7 +275,6 @@
         <p class="dashboard-verset" id="dashboardSub"></p>
       </div>
 
-      <!-- BOUTON INSTALLER L'APPLICATION — visible uniquement si non installée -->
       <button class="btn-install-pwa" id="melodieInstallBtn" type="button">
         <span class="install-icon">&#11015;&#65039;</span>
         Installer l'application
@@ -314,7 +313,6 @@
 
     <div class="dashboard-grid">
 
-      <!-- ACCÈS RAPIDES -->
       <div class="section-card col-full">
         <div class="section-card-header">
           <div class="section-card-title"><span>&#9889;</span> Accès rapides</div>
@@ -324,7 +322,6 @@
         </div>
       </div>
 
-      <!-- PROCHAIN CULTE -->
       <div class="section-card">
         <div class="section-card-header">
           <div class="section-card-title"><span>&#9997;&#65039;</span> Prochain culte</div>
@@ -335,7 +332,6 @@
         </div>
       </div>
 
-      <!-- PROCHAIN ÉVÉNEMENT -->
       <div class="section-card" id="prochainEvCard">
         <div class="section-card-header">
           <div class="section-card-title"><span>&#128197;</span> Prochain événement</div>
@@ -346,7 +342,6 @@
         </div>
       </div>
 
-      <!-- ACTIVITÉ RÉCENTE -->
       <div class="section-card col-full">
         <div class="section-card-header">
           <div class="section-card-title"><span>&#128330;</span> Activité récente</div>
@@ -358,7 +353,6 @@
         </div>
       </div>
 
-      <!-- PROPOSITIONS (admin) -->
       <div class="section-card col-full" id="propositionsSection" style="display:none;">
         <div class="section-card-header">
           <div class="section-card-title"><span>&#128161;</span> Propositions en attente</div>
@@ -533,11 +527,49 @@
       document.getElementById('versetTexte').textContent = v.texte;
       document.getElementById('versetRef').textContent   = v.ref;
 
-      var sessionData = await sb.auth.getSession();
-      if (!sessionData.data.session) { window.location.href = '/'; return; }
+      // Récupérer l'identité utilisateur. Hors ligne, getSession()
+      // tente de rafraîchir le token et EFFACE la session locale si
+      // ça échoue (comportement du SDK Supabase). On ne l'appelle
+      // donc jamais hors ligne, et on retombe sur la dernière
+      // identité connue, stockée nous-mêmes lors d'une connexion
+      // réussie en ligne.
+      var userId = null;
+      var userEmail = null;
 
-      var profilData = await sb.from('profils').select('*').eq('id', sessionData.data.session.user.id).single();
-      var profil = profilData.data;
+      if (navigator.onLine) {
+        try {
+          var sessionData = await melodieTimeout(sb.auth.getSession(), MELODIE_CACHE_TIMEOUT);
+          if (sessionData.data.session) {
+            userId = sessionData.data.session.user.id;
+            userEmail = sessionData.data.session.user.email;
+            localStorage.setItem('melodie-last-user', JSON.stringify({ id: userId, email: userEmail }));
+          }
+        } catch (e) {
+          console.warn('[init] getSession a échoué :', e);
+        }
+      }
+
+      if (!userId) {
+        try {
+          var last = JSON.parse(localStorage.getItem('melodie-last-user') || 'null');
+          if (last && last.id) {
+            userId = last.id;
+            userEmail = last.email;
+          }
+        } catch (e) {}
+      }
+
+      if (!userId) { window.location.href = '/'; return; }
+
+      var profil = null;
+      await melodieCache('profil-' + userId, async function() {
+        var profilData = await sb.from('profils').select('*').eq('id', userId).single();
+        if (!profilData.data) throw new Error('Profil introuvable');
+        return profilData.data;
+      }, function(data) {
+        profil = data;
+      });
+
       if (!profil) { window.location.href = '/'; return; }
 
       if (!profil.actif) {
@@ -548,7 +580,7 @@
       }
 
       var role = profil.role || 'membre';
-      var nom  = profil.nom || sessionData.data.session.user.email.split('@')[0];
+      var nom  = profil.nom || (userEmail ? userEmail.split('@')[0] : 'Membre');
 
       await buildSharedNavbar(profil, 'dashboard');
 
@@ -620,7 +652,7 @@
 
           var futurEvs = payload.evsAll.filter(function(e) { return new Date(e.date_event) >= auj; });
           if (role === 'preparateur') {
-            futurEvs = futurEvs.filter(function(e) { return e.preparateur_id === sessionData.data.session.user.id; });
+            futurEvs = futurEvs.filter(function(e) { return e.preparateur_id === userId; });
           }
           displayProchainEvenement(futurEvs[0] || null, role);
 
