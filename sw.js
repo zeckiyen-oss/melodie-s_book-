@@ -1,11 +1,14 @@
 // ============================================
 // Mélodie's Book — sw.js
-// Service Worker minimaliste — v7
-// v7 : ajout du cache audio Cloudinary (cache-first,
-// cache séparé du cache de pages)
+// Service Worker minimaliste — v8
+// v8 : les cache.put() hors installation n'étaient
+// pas protégés par waitUntil() — le SW pouvait être
+// tué avant la fin de l'écriture en cache, empêchant
+// silencieusement la mise en cache de pages visitées
+// en ligne.
 // ============================================
 
-const CACHE_NAME = 'melodie-cache-v7';
+const CACHE_NAME = 'melodie-cache-v8';
 const AUDIO_CACHE_NAME = 'melodie-audio-cache-v1';
 
 const STATIC_ASSETS = [
@@ -46,7 +49,7 @@ self.addEventListener('install', event => {
           fetch(url, { redirect: 'follow', cache: 'no-store' })
             .then(response => {
               if (!response || !response.ok) {
-                console.warn('[SW] Préchargement ignoré (statut non-ok) :', url);
+                console.warn('[SW] Préchargement ignoré (statut non-ok) :', url, response && response.status);
                 return;
               }
               if (response.redirected) {
@@ -74,8 +77,6 @@ self.addEventListener('activate', event => {
     caches.keys().then(keys => {
       return Promise.all(
         keys.map(key => {
-          // On garde le cache de pages ET le cache audio — seuls les
-          // caches d'anciennes versions (v4, v5, v6...) sont purgés.
           if (key !== CACHE_NAME && key !== AUDIO_CACHE_NAME) {
             return caches.delete(key);
           }
@@ -92,9 +93,6 @@ self.addEventListener('fetch', event => {
 
   const requestURL = new URL(request.url);
 
-  // Audio Cloudinary : cache-first, cache dédié. Nécessite
-  // crossorigin="anonymous" sur les balises <audio> pour obtenir une
-  // réponse exploitable (response.ok) plutôt qu'opaque.
   if (requestURL.hostname.endsWith('cloudinary.com')) {
     event.respondWith(
       caches.open(AUDIO_CACHE_NAME).then(cache =>
@@ -103,7 +101,7 @@ self.addEventListener('fetch', event => {
           return fetch(request)
             .then(response => {
               if (response && response.ok) {
-                cache.put(request, response.clone());
+                event.waitUntil(cache.put(request, response.clone()));
               }
               return response;
             })
@@ -114,7 +112,6 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Tout autre domaine externe (Supabase, Google Fonts...) : navigateur natif.
   if (requestURL.origin !== self.location.origin) {
     return;
   }
@@ -132,16 +129,20 @@ self.addEventListener('fetch', event => {
               statusText: response.statusText,
               headers: response.headers,
             };
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(request, new Response(bodyText, init));
-            });
+            event.waitUntil(
+              caches.open(CACHE_NAME).then(cache =>
+                cache.put(request, new Response(bodyText, init))
+              )
+            );
             return new Response(bodyText, init);
           }
 
           const clonedResponse = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(request, clonedResponse);
-          });
+          event.waitUntil(
+            caches.open(CACHE_NAME).then(cache =>
+              cache.put(request, clonedResponse)
+            )
+          );
           return response;
         })
         .catch(() => {
@@ -161,9 +162,11 @@ self.addEventListener('fetch', event => {
       return fetch(request, { redirect: 'follow' }).then(response => {
         if (response && response.status === 200) {
           const clonedResponse = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(request, clonedResponse);
-          });
+          event.waitUntil(
+            caches.open(CACHE_NAME).then(cache =>
+              cache.put(request, clonedResponse)
+            )
+          );
         }
         return response;
       }).catch(() => {
