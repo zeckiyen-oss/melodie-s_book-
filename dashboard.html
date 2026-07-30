@@ -239,13 +239,6 @@
     }
     .hidden { display: none !important; }
   </style>
-
-
-
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
-
-  
 </head>
 
 <body class="dashboard-body">
@@ -534,50 +527,12 @@
       document.getElementById('versetTexte').textContent = v.texte;
       document.getElementById('versetRef').textContent   = v.ref;
 
-      // Récupérer l'identité utilisateur. Hors ligne, getSession()
-      // tente de rafraîchir le token et EFFACE la session locale si
-      // ça échoue (comportement du SDK Supabase). On ne l'appelle
-      // donc jamais hors ligne, et on retombe sur la dernière
-      // identité connue, stockée nous-mêmes lors d'une connexion
-      // réussie en ligne.
-      var userId = null;
-      var userEmail = null;
+      var identity = await melodieResolveIdentity();
+      if (!identity) return; // déjà redirigé vers la connexion
 
-      if (navigator.onLine) {
-        try {
-          var sessionData = await melodieTimeout(sb.auth.getSession(), MELODIE_CACHE_TIMEOUT);
-          if (sessionData.data.session) {
-            userId = sessionData.data.session.user.id;
-            userEmail = sessionData.data.session.user.email;
-            localStorage.setItem('melodie-last-user', JSON.stringify({ id: userId, email: userEmail }));
-          }
-        } catch (e) {
-          console.warn('[init] getSession a échoué :', e);
-        }
-      }
-
-      if (!userId) {
-        try {
-          var last = JSON.parse(localStorage.getItem('melodie-last-user') || 'null');
-          if (last && last.id) {
-            userId = last.id;
-            userEmail = last.email;
-          }
-        } catch (e) {}
-      }
-
-      if (!userId) { window.location.href = '/'; return; }
-
-      var profil = null;
-      await melodieCache('profil-' + userId, async function() {
-        var profilData = await sb.from('profils').select('*').eq('id', userId).single();
-        if (!profilData.data) throw new Error('Profil introuvable');
-        return profilData.data;
-      }, function(data) {
-        profil = data;
-      });
-
-      if (!profil) { window.location.href = '/'; return; }
+      var profil = identity.profil;
+      var userId = identity.userId;
+      var userEmail = identity.userEmail;
 
       if (!profil.actif) {
         document.getElementById('loadingOverlay').classList.add('hidden');
