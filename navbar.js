@@ -13,12 +13,69 @@
    voir diagnostic du 2026-07-09).
    ============================================================ */
 
+/* ── Résolution d'identité, sûre hors ligne ──────────────────
+   À appeler en tout début de init() sur chaque page protégée,
+   à la place de l'ancien duo getSession() + from('profils').
+   Retourne { userId, userEmail, profil }, ou null si aucune
+   identité exploitable (redirige alors automatiquement vers
+   la connexion — la page appelante n'a qu'à faire "return").
+   ============================================================ */
+async function melodieResolveIdentity() {
+  var userId = null;
+  var userEmail = null;
+
+  if (navigator.onLine) {
+    try {
+      var sb = window._sb || window.sb;
+      var sessionData = await melodieTimeout(sb.auth.getSession(), MELODIE_CACHE_TIMEOUT);
+      if (sessionData.data.session) {
+        userId = sessionData.data.session.user.id;
+        userEmail = sessionData.data.session.user.email;
+        localStorage.setItem('melodie-last-user', JSON.stringify({ id: userId, email: userEmail }));
+      }
+    } catch (e) {
+      console.warn('[melodieResolveIdentity] getSession a échoué :', e);
+    }
+  }
+
+  if (!userId) {
+    try {
+      var last = JSON.parse(localStorage.getItem('melodie-last-user') || 'null');
+      if (last && last.id) {
+        userId = last.id;
+        userEmail = last.email;
+      }
+    } catch (e) {}
+  }
+
+  if (!userId) {
+    window.location.href = '/';
+    return null;
+  }
+
+  var profil = null;
+  await melodieCache('profil-' + userId, async function() {
+    var sb = window._sb || window.sb;
+    var profilData = await sb.from('profils').select('*').eq('id', userId).single();
+    if (!profilData.data) throw new Error('Profil introuvable');
+    return profilData.data;
+  }, function(data) {
+    profil = data;
+  });
+
+  if (!profil) {
+    window.location.href = '/';
+    return null;
+  }
+
+  return { userId: userId, userEmail: userEmail, profil: profil };
+}
+
 async function buildSharedNavbar(profil, pageActive) {
   var role = profil.role || "membre";
   var nom  = profil.nom || profil.email || "";
   var isDashboard = (pageActive === "dashboard");
 
-  /* ── Vérifier si le préparateur a un événement assigné en préparation ── */
   var aEvenementAssigne = false;
   if (role === "preparateur") {
     try {
@@ -37,7 +94,6 @@ async function buildSharedNavbar(profil, pageActive) {
     }
   }
 
-  /* ── Liens selon le rôle ── */
   var liens = [
     { href: "dashboard",             label: "🏠 Accueil",           id: "dashboard",             roles: ["membre","preparateur","admin"] },
     { href: "repertoire",            label: "🎵 Répertoire",        id: "repertoire",            roles: ["membre","preparateur","admin"] },
@@ -60,12 +116,10 @@ async function buildSharedNavbar(profil, pageActive) {
   var liensFiltres = liens.filter(function(l) {
     var roleOk = l.roles.indexOf(role) !== -1 || (l.rolesExtra && l.rolesExtra.indexOf(role) !== -1);
     if (!roleOk) return false;
-    /* Lien "Prépa. événement" : pour un préparateur, n'apparaît que s'il a un événement assigné */
     if (l.requiresEvenement && role === "preparateur" && !aEvenementAssigne) return false;
     return true;
   });
 
-  /* ── Badge rôle ── */
   var roleLabel = role === "admin" ? "Administrateur"
     : role === "preparateur" ? "Préparateur" : "Membre";
   var roleCouleur = role === "admin"
@@ -74,7 +128,6 @@ async function buildSharedNavbar(profil, pageActive) {
     ? "background:rgba(156,126,204,0.18);color:#C5B3E8;border:1px solid rgba(156,126,204,0.4);"
     : "background:rgba(91,163,201,0.15);color:#7ECFF0;border:1px solid rgba(91,163,201,0.35);";
 
-  /* ── HTML Navbar ── */
   var navHtml = '<nav class="snav">'
     + '<div class="snav-top">'
     + '<a href="dashboard" class="snav-brand">'
@@ -100,58 +153,50 @@ async function buildSharedNavbar(profil, pageActive) {
 
   navHtml += '</div></div></nav>';
 
-  /* ── Injecter ── */
   var existing = document.querySelector(".snav");
   if (existing) existing.remove();
   var existingOld = document.querySelector(".navbar");
   if (existingOld) existingOld.remove();
   document.body.insertAdjacentHTML("afterbegin", navHtml);
 
-  /* ── CSS ── */
   if (!document.getElementById("snav-style")) {
     var style = document.createElement("style");
     style.id = "snav-style";
     style.textContent = [
-      /* Navbar container */
       ".snav{position:sticky;top:0;z-index:200;background:rgba(13,27,42,0.97);border-bottom:1px solid rgba(201,168,76,0.2);backdrop-filter:blur(12px);}",
-
-      /* Ligne haute */
       ".snav-top{display:flex;align-items:center;justify-content:space-between;padding:0.6rem 1.2rem;gap:0.8rem;}",
       ".snav-brand{display:flex;align-items:center;gap:0.5rem;text-decoration:none;}",
       ".snav-logo{width:34px;height:34px;background:linear-gradient(135deg,#C9A84C,#F0D98A);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;color:#0D1B2A;font-weight:700;flex-shrink:0;box-shadow:0 0 12px rgba(201,168,76,0.35);}",
       ".snav-title{font-family:'Cinzel',serif;font-size:1rem;font-weight:700;color:#F0D98A;letter-spacing:0.04em;white-space:nowrap;}",
-
-      /* User */
       ".snav-user{display:flex;align-items:center;gap:0.6rem;flex-shrink:0;}",
       ".snav-user-info{display:flex;flex-direction:column;align-items:flex-end;gap:0.15rem;}",
       ".snav-user-nom{font-family:'Lato',sans-serif;font-size:0.8rem;font-weight:700;color:#FAF6ED;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;}",
       ".snav-user-role{font-size:0.62rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;padding:1px 7px;border-radius:20px;white-space:nowrap;}",
       ".snav-quit{background:transparent;border:1px solid rgba(201,168,76,0.3);color:rgba(250,246,237,0.55);font-size:0.72rem;font-family:'Lato',sans-serif;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;padding:0.28rem 0.7rem;border-radius:6px;cursor:pointer;transition:all 0.2s;white-space:nowrap;}",
       ".snav-quit:hover{border-color:rgba(192,57,43,0.5);color:#E57373;background:rgba(192,57,43,0.08);}",
-
-      /* Liens scrollables */
       ".snav-links-wrap{overflow-x:auto;scrollbar-width:none;border-top:1px solid rgba(201,168,76,0.1);}",
       ".snav-links-wrap::-webkit-scrollbar{display:none;}",
       ".snav-links{display:flex;gap:0;padding:0 0.5rem;min-width:max-content;}",
       ".snav-link{display:inline-flex;align-items:center;padding:0.55rem 0.85rem;font-family:'Lato',sans-serif;font-size:0.8rem;font-weight:600;color:rgba(250,246,237,0.6);text-decoration:none;letter-spacing:0.03em;white-space:nowrap;border-bottom:2px solid transparent;transition:color 0.2s,border-color 0.2s;}",
       ".snav-link:hover{color:#FAF6ED;}",
       ".snav-link-active{color:#F0D98A;border-bottom-color:#C9A84C;}",
-
-      /* Corps page */
       "body{padding-top:0!important;}"
     ].join("");
     document.head.appendChild(style);
   }
 }
 
-/* ── Déconnexion ── */
 async function snavLogout() {
   var sb = window._sb || window.sb;
-  if (sb) await sb.auth.signOut();
+  try {
+    if (sb) await sb.auth.signOut();
+  } catch (e) {
+    console.warn('[snavLogout] signOut réseau a échoué :', e);
+  }
+  localStorage.removeItem('melodie-last-user');
   window.location.href = "/";
 }
 
-/* ── Escape HTML ── */
 function _esc(str) {
   if (!str) return "";
   return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
