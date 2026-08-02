@@ -527,7 +527,14 @@
       document.getElementById('versetTexte').textContent = v.texte;
       document.getElementById('versetRef').textContent   = v.ref;
 
-      var identity = await melodieResolveIdentity();
+      var identity;
+      try {
+        identity = await melodieResolveIdentity();
+      } catch (e) {
+        console.warn('[init] melodieResolveIdentity a échoué :', e);
+        window.location.href = '/';
+        return;
+      }
       if (!identity) return; // déjà redirigé vers la connexion
 
       var profil = identity.profil;
