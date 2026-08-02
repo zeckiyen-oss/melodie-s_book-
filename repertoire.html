@@ -315,13 +315,19 @@
     }
 
     async function init() {
-      var r = await sb.auth.getSession();
-      if (!r.data.session) { window.location.href = '/'; return; }
-      var p = await sb.from('profils').select('*').eq('id', r.data.session.user.id).single();
-      if (!p.data || !p.data.actif) { window.location.href = '/'; return; }
+      var identity;
+      try {
+        identity = await melodieResolveIdentity();
+      } catch (e) {
+        console.warn('[init] melodieResolveIdentity a échoué :', e);
+        window.location.href = '/';
+        return;
+      }
+      if (!identity) return; // déjà redirigé vers la connexion
+      if (!identity.profil.actif) { window.location.href = '/'; return; }
 
-      userRole = p.data.role || 'membre';
-      await buildSharedNavbar(p.data, 'repertoire');
+      userRole = identity.profil.role || 'membre';
+      await buildSharedNavbar(identity.profil, 'repertoire');
       if (userRole === 'admin') document.getElementById('adminActions').style.display = 'flex';
 
       var premierAffichage = true;
