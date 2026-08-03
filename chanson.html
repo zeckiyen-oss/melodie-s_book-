@@ -104,9 +104,9 @@
   <main class="chanson-main" id="mainContent" style="display:none">
 
     <div class="breadcrumb">
-      <a href="dashboard.html">Accueil</a>
+      <a href="dashboard">Accueil</a>
       <span class="bc-sep">›</span>
-      <a href="repertoire.html">Répertoire</a>
+      <a href="repertoire">Répertoire</a>
       <span class="bc-sep">›</span>
       <span id="bcTitre" class="bc-current">Chanson</span>
     </div>
@@ -137,7 +137,7 @@
           </div>
 
           <div class="audio-player-custom" id="audioPlayerWrap" style="display:none">
-            <audio id="audioPlayer" controls preload="metadata" style="width:100%;border-radius:8px;">
+            <audio id="audioPlayer" controls preload="metadata" crossorigin="anonymous" style="width:100%;border-radius:8px;">
               Votre navigateur ne supporte pas l'audio.
             </audio>
             <p class="audio-hint">Utilisez les contrôles pour lire la chanson</p>
@@ -311,20 +311,23 @@
   }
 
   async function initPage() {
-    var sessionData = await sb.auth.getSession();
-    var session = sessionData.data.session;
-    if (!session) { window.location.href = 'index.html'; return; }
+    var identity;
+    try {
+      identity = await melodieResolveIdentity();
+    } catch (e) {
+      console.warn('[init] melodieResolveIdentity a échoué :', e);
+      window.location.href = '/';
+      return;
+    }
+    if (!identity) return;
+    if (!identity.profil.actif) { window.location.href = '/'; return; }
+    currentProfil = identity.profil;
 
-    var profilData = await sb.from('profils').select('*').eq('id', session.user.id).single();
-    var profil = profilData.data;
-    if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
-    currentProfil = profil;
-
-    await buildSharedNavbar(profil, 'chanson');
+    await buildSharedNavbar(identity.profil, 'chanson');
 
     var params = new URLSearchParams(window.location.search);
     chansonId = params.get('id');
-    if (!chansonId) { window.location.href = 'repertoire.html'; return; }
+    if (!chansonId) { window.location.href = 'repertoire'; return; }
 
     await loadChanson();
   }
@@ -341,7 +344,7 @@
       if (!ch) {
         if (premierAffichage) {
           showToast('Chanson introuvable ou indisponible hors ligne.', 'error');
-          setTimeout(function() { window.location.href = 'repertoire.html'; }, 2000);
+          setTimeout(function() { window.location.href = 'repertoire'; }, 2000);
         }
         return;
       }
@@ -392,7 +395,7 @@
     if (currentProfil.role === 'admin') {
       document.getElementById('audioUploadZone').style.display = 'block';
       document.getElementById('chActions').style.display = 'flex';
-      document.getElementById('btnModifier').href = 'modifier-chanson.html?id=' + chansonId;
+      document.getElementById('btnModifier').href = 'modifier-chanson?id=' + chansonId;
     }
   }
 
@@ -405,7 +408,7 @@
     var div = document.getElementById('themesList');
     if (res.data && res.data.length > 0) {
       div.innerHTML = res.data.map(function(d) {
-        return '<span class="theme-pill"><a href="themes.html?id=' + escHtml(d.theme_id) + '">' + escHtml((d.themes && d.themes.nom) || '—') + '</a></span>';
+        return '<span class="theme-pill"><a href="themes?id=' + escHtml(d.theme_id) + '">' + escHtml((d.themes && d.themes.nom) || '—') + '</a></span>';
       }).join('');
     }
   }
@@ -476,7 +479,7 @@
     var res = await sb.from('chansons').delete().eq('id', chansonId);
     if (res.error) { showToast('Erreur lors de la suppression.', 'error'); return; }
     showToast('Chanson supprimée.', 'success');
-    setTimeout(function() { window.location.href = 'repertoire.html'; }, 1500);
+    setTimeout(function() { window.location.href = 'repertoire'; }, 1500);
   });
 
   initPage();
