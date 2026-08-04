@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="melodie-cache.js"></script>
   <link rel="stylesheet" href="css/style.css" />
   <style>
     html,body{background:#0D1B2A!important;color:#FAF6ED!important;min-height:100vh;font-family:'Lato',sans-serif}
@@ -193,11 +194,17 @@
     function showToast(msg,type){var tc=document.getElementById("toastContainer");var t=document.createElement("div");t.className="toast toast-"+(type||"info");t.textContent=msg;tc.appendChild(t);setTimeout(function(){t.classList.add("toast-show");},10);setTimeout(function(){t.classList.remove("toast-show");setTimeout(function(){if(tc.contains(t))tc.removeChild(t);},400);},3500);}
 
     async function authGuard(){
-      var r=await sb.auth.getSession();
-      if(!r.data.session){window.location.href="index.html";return null;}
-      var p=await sb.from("profils").select("*").eq("id",r.data.session.user.id).single();
-      if(!p.data||!p.data.actif){window.location.href="index.html";return null;}
-      return p.data;
+      var identity;
+      try {
+        identity = await melodieResolveIdentity();
+      } catch (e) {
+        console.warn('[init] melodieResolveIdentity a échoué :', e);
+        window.location.href = '/';
+        return null;
+      }
+      if (!identity) return null;
+      if (!identity.profil.actif) { window.location.href = '/'; return null; }
+      return identity.profil;
     }
 
     // TABS
@@ -212,180 +219,216 @@
 
     });
 
-    // ── CULTES ──
+    // ── CULTES — cache offline en stale-while-revalidate ──
     async function chargerCultes(){
-      var res=await sb.from("cultes").select("id,theme,date_culte,statut,notes,profils(nom)").order("date_culte",{ascending:false});
       var container=document.getElementById("listeCultes");
-      var cultes=res.data||[];
-      if(cultes.length===0){container.innerHTML='<div class="prog-pub-empty">Aucun culte pour l\'instant.</div>';return;}
-      container.innerHTML="";
-      cultes.forEach(function(c){
-        var statut=c.statut||"en_preparation";
-        var dateStr=new Date(c.date_culte).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
-        var badgeLabel=statut==="valide"?"&#10003; Valid&eacute;":statut==="archive"?"&#128193; Archiv&eacute;":"&#9203; En pr&eacute;paration";
-        var badgeClass=statut==="valide"?"prog-prop-badge-accepte":statut==="archive"?"prog-prop-badge-archive":"prog-prop-badge-en_attente";
 
-        var card=document.createElement("div");card.className="prog-prop-card";
-        var detailId="culte-det-"+c.id;
+      await melodieCache('programme-cultes', async function() {
+        var res=await sb.from("cultes").select("id,theme,date_culte,statut,notes,profils(nom)").order("date_culte",{ascending:false});
+        if (res.error) throw res.error;
+        return res.data || [];
+      }, function(cultes, fromCache) {
+        if (cultes === null) {
+          container.innerHTML = '<div class="prog-pub-empty">Indisponible hors ligne pour l\'instant.</div>';
+          return;
+        }
+        if(cultes.length===0){container.innerHTML='<div class="prog-pub-empty">Aucun culte pour l\'instant.</div>';return;}
+        container.innerHTML="";
+        cultes.forEach(function(c){
+          var statut=c.statut||"en_preparation";
+          var dateStr=new Date(c.date_culte).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
+          var badgeLabel=statut==="valide"?"&#10003; Valid&eacute;":statut==="archive"?"&#128193; Archiv&eacute;":"&#9203; En pr&eacute;paration";
+          var badgeClass=statut==="valide"?"prog-prop-badge-accepte":statut==="archive"?"prog-prop-badge-archive":"prog-prop-badge-en_attente";
 
-        card.innerHTML='<div class="prog-prop-header">'
-          +'<div class="prog-prop-left">'
-          +'<div class="prog-prop-titre">&#9962; '+escHtml(c.theme)+'</div>'
-          +'<div class="prog-prop-meta">&#128197; '+dateStr+(c.profils?" &middot; "+escHtml(c.profils.nom):"")+'</div>'
-          +'</div>'
-          +'<span class="prog-prop-badge '+badgeClass+'">'+badgeLabel+'</span>'
-          +'</div>'
-          +'<div class="prog-prop-detail" id="'+detailId+'">'
-          +'<div class="culte-detail-loading" style="text-align:center;color:rgba(250,246,237,.4);font-style:italic;padding:.8rem 0;">Chargement…</div>'
-          +'</div>';
+          var card=document.createElement("div");card.className="prog-prop-card";
+          var detailId="culte-det-"+c.id;
 
-        var loaded=false;
-        (function(culte,id){
-          card.addEventListener("click",function(e){
-            if(e.target.tagName==="AUDIO"||e.target.tagName==="A"||e.target.tagName==="BUTTON")return;
-            if(statut==="en_preparation")return; /* pas cliquable */
-            var d=document.getElementById(id);
-            if(!d)return;
-            var isOpen=d.classList.contains("open");
-            if(!isOpen&&!loaded){
-              loaded=true;
-              chargerDetailCulte(culte,id);
-            }
-            d.classList.toggle("open");
-          });
-        })(c,detailId);
+          card.innerHTML='<div class="prog-prop-header">'
+            +'<div class="prog-prop-left">'
+            +'<div class="prog-prop-titre">&#9962; '+escHtml(c.theme)+'</div>'
+            +'<div class="prog-prop-meta">&#128197; '+dateStr+(c.profils?" &middot; "+escHtml(c.profils.nom):"")+'</div>'
+            +'</div>'
+            +'<span class="prog-prop-badge '+badgeClass+'">'+badgeLabel+'</span>'
+            +'</div>'
+            +'<div class="prog-prop-detail" id="'+detailId+'">'
+            +'<div class="culte-detail-loading" style="text-align:center;color:rgba(250,246,237,.4);font-style:italic;padding:.8rem 0;">Chargement…</div>'
+            +'</div>';
 
-        container.appendChild(card);
+          var loaded=false;
+          (function(culte,id){
+            card.addEventListener("click",function(e){
+              if(e.target.tagName==="AUDIO"||e.target.tagName==="A"||e.target.tagName==="BUTTON")return;
+              if(statut==="en_preparation")return; /* pas cliquable */
+              var d=document.getElementById(id);
+              if(!d)return;
+              var isOpen=d.classList.contains("open");
+              if(!isOpen&&!loaded){
+                loaded=true;
+                chargerDetailCulte(culte,id);
+              }
+              d.classList.toggle("open");
+            });
+          })(c,detailId);
+
+          container.appendChild(card);
+        });
       });
     }
 
     async function chargerDetailCulte(culte,detailId){
       var d=document.getElementById(detailId);if(!d)return;
-      var progRes=await sb.from("programme_culte").select("id,ordre,rubrique,tonalite,tonalite_libre,chansons(id,numero,titre,langue,audio_url)").eq("culte_id",culte.id).order("ordre",{ascending:true});
-      var programme=progRes.data||[];
-      var verset="";if(culte.notes){try{verset=JSON.parse(culte.notes).verset||"";}catch(e){}}
-      var parRubrique={};RUBRIQUES_ORDER.forEach(function(r){parRubrique[r]=[];});
-      programme.forEach(function(p){var r=p.rubrique||"Autre";if(!parRubrique[r])parRubrique[r]=[];parRubrique[r].push(p);});
-      var programmeHtml="";
-      RUBRIQUES_ORDER.forEach(function(rubrique){
-        var items=parRubrique[rubrique]||[];if(items.length===0)return;
-        var ton=items[0].tonalite==="autre"?(items[0].tonalite_libre||""):(items[0].tonalite||"");
-        programmeHtml+='<div class="prog-detail-rubrique"><div class="prog-detail-rubrique-label">'+escHtml(rubrique)+(ton?'<span class="prog-detail-tonal">Tonalit&eacute; : '+escHtml(ton)+"</span>":"")+'</div>';
-        items.forEach(function(item){
-          var ch=item.chansons||{};var audioId="ca-"+item.id;
-          var audioHtml="";
-          if(ch.audio_url){audioHtml='<div class="prog-chanson-audio"><button class="prog-btn-ecouter" data-audio-id="'+audioId+'" data-url="'+escHtml(ch.audio_url)+'">&#127911; &Eacute;couter</button><a class="prog-btn-dl-chanson" href="'+escHtml(ch.audio_url)+'" download target="_blank">&#11015;&#65039; T&eacute;l&eacute;charger</a></div><audio class="prog-inline-player" id="'+audioId+'" controls preload="none"></audio>';}
-          programmeHtml+='<div class="prog-detail-chanson"><div class="prog-detail-chanson-row"><span class="prog-detail-chanson-num">'+( ch.numero?"#"+escHtml(String(ch.numero)):"&mdash;")+'</span><span class="prog-detail-chanson-titre">'+escHtml(ch.titre||"&mdash;")+'</span><span class="prog-detail-chanson-langue">'+escHtml(ch.langue||"")+'</span></div>'+audioHtml+'</div>';
+
+      await melodieCache('programme-detail-culte-'+culte.id, async function() {
+        var progRes=await sb.from("programme_culte").select("id,ordre,rubrique,tonalite,tonalite_libre,chansons(id,numero,titre,langue,audio_url)").eq("culte_id",culte.id).order("ordre",{ascending:true});
+        if (progRes.error) throw progRes.error;
+        return progRes.data || [];
+      }, function(programme, fromCache) {
+        if (programme === null) {
+          d.innerHTML = '<div class="prog-pub-empty">Indisponible hors ligne pour l\'instant.</div>';
+          return;
+        }
+        var verset="";if(culte.notes){try{verset=JSON.parse(culte.notes).verset||"";}catch(e){}}
+        var parRubrique={};RUBRIQUES_ORDER.forEach(function(r){parRubrique[r]=[];});
+        programme.forEach(function(p){var r=p.rubrique||"Autre";if(!parRubrique[r])parRubrique[r]=[];parRubrique[r].push(p);});
+        var programmeHtml="";
+        RUBRIQUES_ORDER.forEach(function(rubrique){
+          var items=parRubrique[rubrique]||[];if(items.length===0)return;
+          var ton=items[0].tonalite==="autre"?(items[0].tonalite_libre||""):(items[0].tonalite||"");
+          programmeHtml+='<div class="prog-detail-rubrique"><div class="prog-detail-rubrique-label">'+escHtml(rubrique)+(ton?'<span class="prog-detail-tonal">Tonalit&eacute; : '+escHtml(ton)+"</span>":"")+'</div>';
+          items.forEach(function(item){
+            var ch=item.chansons||{};var audioId="ca-"+item.id;
+            var audioHtml="";
+            if(ch.audio_url){audioHtml='<div class="prog-chanson-audio"><button class="prog-btn-ecouter" data-audio-id="'+audioId+'" data-url="'+escHtml(ch.audio_url)+'">&#127911; &Eacute;couter</button><a class="prog-btn-dl-chanson" href="'+escHtml(ch.audio_url)+'" download target="_blank">&#11015;&#65039; T&eacute;l&eacute;charger</a></div><audio class="prog-inline-player" id="'+audioId+'" controls preload="none"></audio>';}
+            programmeHtml+='<div class="prog-detail-chanson"><div class="prog-detail-chanson-row"><span class="prog-detail-chanson-num">'+( ch.numero?"#"+escHtml(String(ch.numero)):"&mdash;")+'</span><span class="prog-detail-chanson-titre">'+escHtml(ch.titre||"&mdash;")+'</span><span class="prog-detail-chanson-langue">'+escHtml(ch.langue||"")+'</span></div>'+audioHtml+'</div>';
+          });
+          programmeHtml+="</div>";
         });
-        programmeHtml+="</div>";
-      });
-      d.innerHTML=(verset?'<div class="prog-detail-verset">&laquo; '+escHtml(verset)+' &raquo;</div>':"")
-        +(programme.length>0?programmeHtml:'<div class="prog-pub-empty">Aucune chanson dans ce programme.</div>')
-      /* PDF disponible seulement si date >= aujourd'hui */
-      var culteDate=new Date(culte.date_culte);culteDate.setHours(0,0,0,0);
-      var aujourdHui=new Date();aujourdHui.setHours(0,0,0,0);
-      var pdfDispo=culteDate>=aujourdHui;
-      var pdfBtn=pdfDispo
-        ?'<button class="btn-pdf" onclick="genererPDF(\''+escHtml(culte.theme)+'\',\''+escHtml(formatDate(culte.date_culte))+'\',this._prog,\''+escHtml(verset)+'\',\'culte\')">&#128196; T&eacute;l&eacute;charger PDF</button>'
-        :'<span style="font-size:.75rem;color:rgba(250,246,237,.35);font-style:italic;padding:.4rem .6rem;border:1px solid rgba(250,246,237,.1);border-radius:6px;">&#128274; PDF non disponible (culte passé)</span>';
-      d.innerHTML+='<div class="prog-detail-actions" style="margin-top:.8rem;">'+pdfBtn+'</div>';
-      var btnPdf=d.querySelector(".btn-pdf");if(btnPdf)btnPdf._prog=programme;
-      /* Audio players */
-      d.querySelectorAll(".prog-btn-ecouter").forEach(function(btn){
-        btn.addEventListener("click",function(){
-          var aid=btn.getAttribute("data-audio-id");var url=btn.getAttribute("data-url");var player=document.getElementById(aid);if(!player)return;
-          var isOpen=player.classList.contains("open");
-          document.querySelectorAll(".prog-inline-player.open").forEach(function(p){p.pause();p.src="";p.classList.remove("open");});
-          document.querySelectorAll(".prog-btn-ecouter").forEach(function(b){b.innerHTML="&#127911; &Eacute;couter";});
-          if(!isOpen){player.src=url;player.classList.add("open");player.play();btn.innerHTML="&#9209; Fermer";}
+        d.innerHTML=(verset?'<div class="prog-detail-verset">&laquo; '+escHtml(verset)+' &raquo;</div>':"")
+          +(programme.length>0?programmeHtml:'<div class="prog-pub-empty">Aucune chanson dans ce programme.</div>')
+        /* PDF disponible seulement si date >= aujourd'hui */
+        var culteDate=new Date(culte.date_culte);culteDate.setHours(0,0,0,0);
+        var aujourdHui=new Date();aujourdHui.setHours(0,0,0,0);
+        var pdfDispo=culteDate>=aujourdHui;
+        var pdfBtn=pdfDispo
+          ?'<button class="btn-pdf" onclick="genererPDF(\''+escHtml(culte.theme)+'\',\''+escHtml(formatDate(culte.date_culte))+'\',this._prog,\''+escHtml(verset)+'\',\'culte\')">&#128196; T&eacute;l&eacute;charger PDF</button>'
+          :'<span style="font-size:.75rem;color:rgba(250,246,237,.35);font-style:italic;padding:.4rem .6rem;border:1px solid rgba(250,246,237,.1);border-radius:6px;">&#128274; PDF non disponible (culte passé)</span>';
+        d.innerHTML+='<div class="prog-detail-actions" style="margin-top:.8rem;">'+pdfBtn+'</div>';
+        var btnPdf=d.querySelector(".btn-pdf");if(btnPdf)btnPdf._prog=programme;
+        /* Audio players */
+        d.querySelectorAll(".prog-btn-ecouter").forEach(function(btn){
+          btn.addEventListener("click",function(){
+            var aid=btn.getAttribute("data-audio-id");var url=btn.getAttribute("data-url");var player=document.getElementById(aid);if(!player)return;
+            var isOpen=player.classList.contains("open");
+            document.querySelectorAll(".prog-inline-player.open").forEach(function(p){p.pause();p.src="";p.classList.remove("open");});
+            document.querySelectorAll(".prog-btn-ecouter").forEach(function(b){b.innerHTML="&#127911; &Eacute;couter";});
+            if(!isOpen){player.src=url;player.classList.add("open");player.play();btn.innerHTML="&#9209; Fermer";}
+          });
         });
       });
     }
 
-    // ── ÉVÉNEMENTS VALIDÉS ──
+    // ── ÉVÉNEMENTS VALIDÉS — cache offline ──
     async function chargerEvenements(){
-      var res=await sb.from("evenements").select("id,titre,date_event,description,statut").order("date_event",{ascending:false});
       var container=document.getElementById("listeEvenements");
-      var evs=res.data||[];
-      if(evs.length===0){container.innerHTML='<div class="prog-pub-empty">Aucun &eacute;v&eacute;nement pour l\'instant.</div>';return;}
-      container.innerHTML="";
-      evs.forEach(function(ev){
-        var statut=ev.statut||"en_preparation";
-        var dateStr=new Date(ev.date_event).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
-        var badgeLabel=statut==="valide"?"&#10003; Valid&eacute;":statut==="archive"?"&#128193; Archiv&eacute;":"&#9203; En pr&eacute;paration";
-        var badgeClass=statut==="valide"?"prog-prop-badge-accepte":statut==="archive"?"prog-prop-badge-archive":"prog-prop-badge-en_attente";
 
-        var today=new Date();today.setHours(0,0,0,0);
-        var d2=new Date(ev.date_event);var diff=Math.ceil((d2-today)/86400000);
-        var cdStr=diff<0?"Passé":diff===0?"Aujourd'hui":diff===1?"Demain":"J-"+diff;
+      await melodieCache('programme-evenements', async function() {
+        var res=await sb.from("evenements").select("id,titre,date_event,description,statut").order("date_event",{ascending:false});
+        if (res.error) throw res.error;
+        return res.data || [];
+      }, function(evs, fromCache) {
+        if (evs === null) {
+          container.innerHTML = '<div class="prog-pub-empty">Indisponible hors ligne pour l\'instant.</div>';
+          return;
+        }
+        if(evs.length===0){container.innerHTML='<div class="prog-pub-empty">Aucun &eacute;v&eacute;nement pour l\'instant.</div>';return;}
+        container.innerHTML="";
+        evs.forEach(function(ev){
+          var statut=ev.statut||"en_preparation";
+          var dateStr=new Date(ev.date_event).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
+          var badgeLabel=statut==="valide"?"&#10003; Valid&eacute;":statut==="archive"?"&#128193; Archiv&eacute;":"&#9203; En pr&eacute;paration";
+          var badgeClass=statut==="valide"?"prog-prop-badge-accepte":statut==="archive"?"prog-prop-badge-archive":"prog-prop-badge-en_attente";
 
-        var card=document.createElement("div");card.className="prog-prop-card";
-        var detailId="ev-det-"+ev.id;
+          var today=new Date();today.setHours(0,0,0,0);
+          var d2=new Date(ev.date_event);var diff=Math.ceil((d2-today)/86400000);
+          var cdStr=diff<0?"Passé":diff===0?"Aujourd'hui":diff===1?"Demain":"J-"+diff;
 
-        card.innerHTML='<div class="prog-prop-header">'
-          +'<div class="prog-prop-left">'
-          +'<div class="prog-prop-titre">&#128197; '+escHtml(ev.titre)+'</div>'
-          +'<div class="prog-prop-meta">&#128197; '+dateStr+' &middot; '+escHtml(cdStr)+'</div>'
-          +(ev.description?'<div class="prog-prop-auteur">'+escHtml(ev.description.substring(0,80))+(ev.description.length>80?"&hellip;":"")+'</div>':"")
-          +'</div>'
-          +'<span class="prog-prop-badge '+badgeClass+'">'+badgeLabel+'</span>'
-          +'</div>'
-          +'<div class="prog-prop-detail" id="'+detailId+'">'
-          +'<div style="text-align:center;color:rgba(250,246,237,.4);font-style:italic;padding:.8rem 0;">Chargement…</div>'
-          +'</div>';
+          var card=document.createElement("div");card.className="prog-prop-card";
+          var detailId="ev-det-"+ev.id;
 
-        var loaded=false;
-        (function(evenement,id){
-          card.addEventListener("click",function(e){
-            if(e.target.tagName==="AUDIO"||e.target.tagName==="A"||e.target.tagName==="BUTTON")return;
-            if(statut==="en_preparation")return; /* pas cliquable */
-            var det=document.getElementById(id);if(!det)return;
-            var isOpen=det.classList.contains("open");
-            if(!isOpen&&!loaded){loaded=true;chargerDetailEvenement(evenement,id);}
-            det.classList.toggle("open");
-          });
-        })(ev,detailId);
+          card.innerHTML='<div class="prog-prop-header">'
+            +'<div class="prog-prop-left">'
+            +'<div class="prog-prop-titre">&#128197; '+escHtml(ev.titre)+'</div>'
+            +'<div class="prog-prop-meta">&#128197; '+dateStr+' &middot; '+escHtml(cdStr)+'</div>'
+            +(ev.description?'<div class="prog-prop-auteur">'+escHtml(ev.description.substring(0,80))+(ev.description.length>80?"&hellip;":"")+'</div>':"")
+            +'</div>'
+            +'<span class="prog-prop-badge '+badgeClass+'">'+badgeLabel+'</span>'
+            +'</div>'
+            +'<div class="prog-prop-detail" id="'+detailId+'">'
+            +'<div style="text-align:center;color:rgba(250,246,237,.4);font-style:italic;padding:.8rem 0;">Chargement…</div>'
+            +'</div>';
 
-        container.appendChild(card);
+          var loaded=false;
+          (function(evenement,id){
+            card.addEventListener("click",function(e){
+              if(e.target.tagName==="AUDIO"||e.target.tagName==="A"||e.target.tagName==="BUTTON")return;
+              if(statut==="en_preparation")return; /* pas cliquable */
+              var det=document.getElementById(id);if(!det)return;
+              var isOpen=det.classList.contains("open");
+              if(!isOpen&&!loaded){loaded=true;chargerDetailEvenement(evenement,id);}
+              det.classList.toggle("open");
+            });
+          })(ev,detailId);
+
+          container.appendChild(card);
+        });
       });
     }
 
     async function chargerDetailEvenement(ev,detailId){
       var d=document.getElementById(detailId);if(!d)return;
-      var progRes=await sb.from("programme_evenement").select("id,ordre,rubrique,tonalite,tonalite_libre,chansons(id,numero,titre,langue,audio_url)").eq("evenement_id",ev.id).order("ordre",{ascending:true});
-      var programme=progRes.data||[];
-      var parRubrique={};RUBRIQUES_ORDER.forEach(function(r){parRubrique[r]=[];});
-      programme.forEach(function(p){var r=p.rubrique||"Autre";if(!parRubrique[r])parRubrique[r]=[];parRubrique[r].push(p);});
-      var programmeHtml="";
-      RUBRIQUES_ORDER.forEach(function(rubrique){
-        var items=parRubrique[rubrique]||[];if(items.length===0)return;
-        var ton=items[0].tonalite==="autre"?(items[0].tonalite_libre||""):(items[0].tonalite||"");
-        programmeHtml+='<div class="prog-detail-rubrique"><div class="prog-detail-rubrique-label">'+escHtml(rubrique)+(ton?'<span class="prog-detail-tonal">Tonalit&eacute; : '+escHtml(ton)+"</span>":"")+'</div>';
-        items.forEach(function(item){
-          var ch=item.chansons||{};var audioId="ea-"+item.id;
-          var audioHtml="";
-          if(ch.audio_url){audioHtml='<div class="prog-chanson-audio"><button class="prog-btn-ecouter" data-audio-id="'+audioId+'" data-url="'+escHtml(ch.audio_url)+'">&#127911; &Eacute;couter</button><a class="prog-btn-dl-chanson" href="'+escHtml(ch.audio_url)+'" download target="_blank">&#11015;&#65039; T&eacute;l&eacute;charger</a></div><audio class="prog-inline-player" id="'+audioId+'" controls preload="none"></audio>';}
-          programmeHtml+='<div class="prog-detail-chanson"><div class="prog-detail-chanson-row"><span class="prog-detail-chanson-num">'+( ch.numero?"#"+escHtml(String(ch.numero)):"&mdash;")+'</span><span class="prog-detail-chanson-titre">'+escHtml(ch.titre||"&mdash;")+'</span><span class="prog-detail-chanson-langue">'+escHtml(ch.langue||"")+'</span></div>'+audioHtml+'</div>';
+
+      await melodieCache('programme-detail-evenement-'+ev.id, async function() {
+        var progRes=await sb.from("programme_evenement").select("id,ordre,rubrique,tonalite,tonalite_libre,chansons(id,numero,titre,langue,audio_url)").eq("evenement_id",ev.id).order("ordre",{ascending:true});
+        if (progRes.error) throw progRes.error;
+        return progRes.data || [];
+      }, function(programme, fromCache) {
+        if (programme === null) {
+          d.innerHTML = '<div class="prog-pub-empty">Indisponible hors ligne pour l\'instant.</div>';
+          return;
+        }
+        var parRubrique={};RUBRIQUES_ORDER.forEach(function(r){parRubrique[r]=[];});
+        programme.forEach(function(p){var r=p.rubrique||"Autre";if(!parRubrique[r])parRubrique[r]=[];parRubrique[r].push(p);});
+        var programmeHtml="";
+        RUBRIQUES_ORDER.forEach(function(rubrique){
+          var items=parRubrique[rubrique]||[];if(items.length===0)return;
+          var ton=items[0].tonalite==="autre"?(items[0].tonalite_libre||""):(items[0].tonalite||"");
+          programmeHtml+='<div class="prog-detail-rubrique"><div class="prog-detail-rubrique-label">'+escHtml(rubrique)+(ton?'<span class="prog-detail-tonal">Tonalit&eacute; : '+escHtml(ton)+"</span>":"")+'</div>';
+          items.forEach(function(item){
+            var ch=item.chansons||{};var audioId="ea-"+item.id;
+            var audioHtml="";
+            if(ch.audio_url){audioHtml='<div class="prog-chanson-audio"><button class="prog-btn-ecouter" data-audio-id="'+audioId+'" data-url="'+escHtml(ch.audio_url)+'">&#127911; &Eacute;couter</button><a class="prog-btn-dl-chanson" href="'+escHtml(ch.audio_url)+'" download target="_blank">&#11015;&#65039; T&eacute;l&eacute;charger</a></div><audio class="prog-inline-player" id="'+audioId+'" controls preload="none"></audio>';}
+            programmeHtml+='<div class="prog-detail-chanson"><div class="prog-detail-chanson-row"><span class="prog-detail-chanson-num">'+( ch.numero?"#"+escHtml(String(ch.numero)):"&mdash;")+'</span><span class="prog-detail-chanson-titre">'+escHtml(ch.titre||"&mdash;")+'</span><span class="prog-detail-chanson-langue">'+escHtml(ch.langue||"")+'</span></div>'+audioHtml+'</div>';
+          });
+          programmeHtml+="</div>";
         });
-        programmeHtml+="</div>";
-      });
-      d.innerHTML=(programme.length>0?programmeHtml:'<div class="prog-pub-empty">Aucune chanson dans ce programme.</div>')
-      /* PDF disponible seulement si date >= aujourd'hui */
-      var evDate=new Date(ev.date_event);evDate.setHours(0,0,0,0);
-      var aujourdHuiEv=new Date();aujourdHuiEv.setHours(0,0,0,0);
-      var pdfDispoEv=evDate>=aujourdHuiEv;
-      var pdfBtnEv=pdfDispoEv
-        ?'<button class="btn-pdf" onclick="genererPDF(\''+escHtml(ev.titre)+'\',\''+escHtml(formatDate(ev.date_event))+'\',this._prog,\''+escHtml(ev.description||"")+'\',\'evenement\')">&#128196; T&eacute;l&eacute;charger PDF</button>'
-        :'<span style="font-size:.75rem;color:rgba(250,246,237,.35);font-style:italic;padding:.4rem .6rem;border:1px solid rgba(250,246,237,.1);border-radius:6px;">&#128274; PDF non disponible (événement passé)</span>';
-      d.innerHTML+='<div class="prog-detail-actions" style="margin-top:.8rem;">'+pdfBtnEv+'</div>';
-      var btnPdf=d.querySelector(".btn-pdf");if(btnPdf)btnPdf._prog=programme;
-      d.querySelectorAll(".prog-btn-ecouter").forEach(function(btn){
-        btn.addEventListener("click",function(){
-          var aid=btn.getAttribute("data-audio-id");var url=btn.getAttribute("data-url");var player=document.getElementById(aid);if(!player)return;
-          var isOpen=player.classList.contains("open");
-          document.querySelectorAll(".prog-inline-player.open").forEach(function(p){p.pause();p.src="";p.classList.remove("open");});
-          document.querySelectorAll(".prog-btn-ecouter").forEach(function(b){b.innerHTML="&#127911; &Eacute;couter";});
-          if(!isOpen){player.src=url;player.classList.add("open");player.play();btn.innerHTML="&#9209; Fermer";}
+        d.innerHTML=(programme.length>0?programmeHtml:'<div class="prog-pub-empty">Aucune chanson dans ce programme.</div>')
+        /* PDF disponible seulement si date >= aujourd'hui */
+        var evDate=new Date(ev.date_event);evDate.setHours(0,0,0,0);
+        var aujourdHuiEv=new Date();aujourdHuiEv.setHours(0,0,0,0);
+        var pdfDispoEv=evDate>=aujourdHuiEv;
+        var pdfBtnEv=pdfDispoEv
+          ?'<button class="btn-pdf" onclick="genererPDF(\''+escHtml(ev.titre)+'\',\''+escHtml(formatDate(ev.date_event))+'\',this._prog,\''+escHtml(ev.description||"")+'\',\'evenement\')">&#128196; T&eacute;l&eacute;charger PDF</button>'
+          :'<span style="font-size:.75rem;color:rgba(250,246,237,.35);font-style:italic;padding:.4rem .6rem;border:1px solid rgba(250,246,237,.1);border-radius:6px;">&#128274; PDF non disponible (événement passé)</span>';
+        d.innerHTML+='<div class="prog-detail-actions" style="margin-top:.8rem;">'+pdfBtnEv+'</div>';
+        var btnPdf=d.querySelector(".btn-pdf");if(btnPdf)btnPdf._prog=programme;
+        d.querySelectorAll(".prog-btn-ecouter").forEach(function(btn){
+          btn.addEventListener("click",function(){
+            var aid=btn.getAttribute("data-audio-id");var url=btn.getAttribute("data-url");var player=document.getElementById(aid);if(!player)return;
+            var isOpen=player.classList.contains("open");
+            document.querySelectorAll(".prog-inline-player.open").forEach(function(p){p.pause();p.src="";p.classList.remove("open");});
+            document.querySelectorAll(".prog-btn-ecouter").forEach(function(b){b.innerHTML="&#127911; &Eacute;couter";});
+            if(!isOpen){player.src=url;player.classList.add("open");player.play();btn.innerHTML="&#9209; Fermer";}
+          });
         });
       });
     }
@@ -411,27 +454,36 @@
       var overlay=document.getElementById("pdfOverlay");overlay.style.display="block";overlay.scrollTop=0;document.body.style.overflow="hidden";
     }
 
-    // ── PROPOSITIONS ──
+    // ── PROPOSITIONS — cache offline ──
     async function chargerPropositions(){
-      var res=await sb.from("propositions").select("id,titre,artiste,langue,rubrique,statut,created_at,paroles,commentaire,audio_url,profils(nom,email)").order("created_at",{ascending:false});
       var container=document.getElementById("listePropositions");
-      var props=res.data||[];
-      if(props.length===0){container.innerHTML='<div class="prog-pub-empty">Aucune proposition pour l\'instant.</div>';return;}
-      container.innerHTML="";
-      props.forEach(function(p){
-        var auteur=(p.profils&&(p.profils.nom||p.profils.email))||"Membre";
-        var date=new Date(p.created_at).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"});
-        var badgeLabel=p.statut==="en_attente"?"&#9203; En attente":p.statut==="accepte"?"&#10003; Acceptée":"&#10007; Refusée";
-        var card=document.createElement("div");card.className="prog-prop-card";
-        var detailId="prop-det-"+p.id;var playerId="prop-player-"+p.id;
-        var audioSection="";
-        if(p.audio_url){audioSection='<div class="prop-audio-bloc"><div class="prop-audio-label">&#127925; Audio joint</div><audio class="prop-audio-player" id="'+playerId+'" controls preload="none" src="'+escHtml(p.audio_url)+'"></audio><a class="prop-audio-dl" href="'+escHtml(p.audio_url)+'" download target="_blank">&#11015;&#65039; Télécharger l\'audio</a></div>';}
-        var parolesSection=p.paroles?'<div style="padding:.7rem .8rem;background:rgba(13,27,42,.5);border-radius:8px;border-left:3px solid rgba(201,168,76,.35);margin-bottom:.6rem;"><div style="font-family:Cinzel,serif;font-size:.65rem;color:#C9A84C;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem;">Paroles</div><pre style="font-family:\'Playfair Display\',serif;font-size:.82rem;color:rgba(250,246,237,.85);white-space:pre-wrap;line-height:1.8;margin:0;">'+escHtml(p.paroles)+'</pre></div>':"";
-        var commentaireSection=p.commentaire?'<div style="padding:.5rem .8rem;border-left:2px solid rgba(201,168,76,.3);background:rgba(201,168,76,.05);border-radius:0 6px 6px 0;"><div style="font-size:.7rem;color:#C9A84C;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;">Commentaire</div><p style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:.82rem;color:rgba(250,246,237,.7);margin:0;line-height:1.6;">'+escHtml(p.commentaire)+'</p></div>':"";
-        card.innerHTML='<div class="prog-prop-header"><div class="prog-prop-left"><div class="prog-prop-titre">'+escHtml(p.titre)+(p.audio_url?'<span style="font-size:.72rem;color:#C9A84C;margin-left:.3rem;">&#127925;</span>':"")+'</div><div class="prog-prop-meta">'+(p.artiste?escHtml(p.artiste)+" · ":"")+escHtml(p.langue||"")+(p.rubrique?" · "+escHtml(p.rubrique):"")+'</div><div class="prog-prop-auteur">&#128100; <span>'+escHtml(auteur)+'</span> · <span>'+date+"</span></div></div>"+'<span class="prog-prop-badge prog-prop-badge-'+p.statut+'">'+badgeLabel+"</span></div>"+'<div class="prog-prop-detail" id="'+detailId+'">'+audioSection+parolesSection+commentaireSection+"</div>";
-        (function(id){card.addEventListener("click",function(e){if(e.target.tagName==="AUDIO"||e.target.tagName==="A"||e.target.tagName==="BUTTON")return;var d=document.getElementById(id);if(d)d.classList.toggle("open");});
-        })(detailId);
-        container.appendChild(card);
+
+      await melodieCache('programme-propositions', async function() {
+        var res=await sb.from("propositions").select("id,titre,artiste,langue,rubrique,statut,created_at,paroles,commentaire,audio_url,profils(nom,email)").order("created_at",{ascending:false});
+        if (res.error) throw res.error;
+        return res.data || [];
+      }, function(props, fromCache) {
+        if (props === null) {
+          container.innerHTML = '<div class="prog-pub-empty">Indisponible hors ligne pour l\'instant.</div>';
+          return;
+        }
+        if(props.length===0){container.innerHTML='<div class="prog-pub-empty">Aucune proposition pour l\'instant.</div>';return;}
+        container.innerHTML="";
+        props.forEach(function(p){
+          var auteur=(p.profils&&(p.profils.nom||p.profils.email))||"Membre";
+          var date=new Date(p.created_at).toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"});
+          var badgeLabel=p.statut==="en_attente"?"&#9203; En attente":p.statut==="accepte"?"&#10003; Acceptée":"&#10007; Refusée";
+          var card=document.createElement("div");card.className="prog-prop-card";
+          var detailId="prop-det-"+p.id;var playerId="prop-player-"+p.id;
+          var audioSection="";
+          if(p.audio_url){audioSection='<div class="prop-audio-bloc"><div class="prop-audio-label">&#127925; Audio joint</div><audio class="prop-audio-player" id="'+playerId+'" controls preload="none" src="'+escHtml(p.audio_url)+'"></audio><a class="prop-audio-dl" href="'+escHtml(p.audio_url)+'" download target="_blank">&#11015;&#65039; Télécharger l\'audio</a></div>';}
+          var parolesSection=p.paroles?'<div style="padding:.7rem .8rem;background:rgba(13,27,42,.5);border-radius:8px;border-left:3px solid rgba(201,168,76,.35);margin-bottom:.6rem;"><div style="font-family:Cinzel,serif;font-size:.65rem;color:#C9A84C;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem;">Paroles</div><pre style="font-family:\'Playfair Display\',serif;font-size:.82rem;color:rgba(250,246,237,.85);white-space:pre-wrap;line-height:1.8;margin:0;">'+escHtml(p.paroles)+'</pre></div>':"";
+          var commentaireSection=p.commentaire?'<div style="padding:.5rem .8rem;border-left:2px solid rgba(201,168,76,.3);background:rgba(201,168,76,.05);border-radius:0 6px 6px 0;"><div style="font-size:.7rem;color:#C9A84C;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;">Commentaire</div><p style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:.82rem;color:rgba(250,246,237,.7);margin:0;line-height:1.6;">'+escHtml(p.commentaire)+'</p></div>':"";
+          card.innerHTML='<div class="prog-prop-header"><div class="prog-prop-left"><div class="prog-prop-titre">'+escHtml(p.titre)+(p.audio_url?'<span style="font-size:.72rem;color:#C9A84C;margin-left:.3rem;">&#127925;</span>':"")+'</div><div class="prog-prop-meta">'+(p.artiste?escHtml(p.artiste)+" · ":"")+escHtml(p.langue||"")+(p.rubrique?" · "+escHtml(p.rubrique):"")+'</div><div class="prog-prop-auteur">&#128100; <span>'+escHtml(auteur)+'</span> · <span>'+date+"</span></div></div>"+'<span class="prog-prop-badge prog-prop-badge-'+p.statut+'">'+badgeLabel+"</span></div>"+'<div class="prog-prop-detail" id="'+detailId+'">'+audioSection+parolesSection+commentaireSection+"</div>";
+          (function(id){card.addEventListener("click",function(e){if(e.target.tagName==="AUDIO"||e.target.tagName==="A"||e.target.tagName==="BUTTON")return;var d=document.getElementById(id);if(d)d.classList.toggle("open");});
+          })(detailId);
+          container.appendChild(card);
+        });
       });
     }
 
