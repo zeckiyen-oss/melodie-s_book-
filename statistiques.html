@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="melodie-cache.js"></script>
   <link rel="stylesheet" href="css/style.css" />
 
   <style>
@@ -410,15 +411,21 @@
     }
 
     (async function init() {
-      var r = await sb.auth.getSession();
-      if (!r.data.session) { window.location.href = "index.html"; return; }
-      var p = await sb.from("profils").select("*").eq("id", r.data.session.user.id).single();
-      if (!p.data || !p.data.actif) { window.location.href = "index.html"; return; }
+      var identity;
+      try {
+        identity = await melodieResolveIdentity();
+      } catch (e) {
+        console.warn('[init] melodieResolveIdentity a échoué :', e);
+        window.location.href = '/';
+        return;
+      }
+      if (!identity) return;
+      if (!identity.profil.actif) { window.location.href = '/'; return; }
 
       /* Visible aux membres, préparateurs ET admins */
-      userRole = p.data.role || "membre";
+      userRole = identity.profil.role || "membre";
 
-      await buildSharedNavbar(p.data, "statistiques");
+      await buildSharedNavbar(identity.profil, "statistiques");
       await loadStats();
       hideLoader();
     })();
