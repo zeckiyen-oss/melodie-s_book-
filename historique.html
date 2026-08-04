@@ -38,7 +38,7 @@
           <p class="histo-sous-titre">Tous les programmes de culte archivés</p>
         </div>
       </div>
-      <a href="preparation-culte.html" class="btn-nouveau-culte" id="btnNouveauCulte" style="display:none">
+      <a href="preparation-culte" class="btn-nouveau-culte" id="btnNouveauCulte" style="display:none">
         ✦ Nouveau culte
       </a>
     </div>
@@ -152,16 +152,19 @@
   }
 
   async function initPage() {
-    var sessionData = await sb.auth.getSession();
-    var session = sessionData.data.session;
-    if (!session) { window.location.href = 'index.html'; return; }
+    var identity;
+    try {
+      identity = await melodieResolveIdentity();
+    } catch (e) {
+      console.warn('[init] melodieResolveIdentity a échoué :', e);
+      window.location.href = '/';
+      return;
+    }
+    if (!identity) return;
+    if (!identity.profil.actif) { window.location.href = '/'; return; }
 
-    var profilData = await sb.from('profils').select('*').eq('id', session.user.id).single();
-    var profil = profilData.data;
-    if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
-
-    isAdmin = profil.role === 'admin';
-    await buildSharedNavbar(profil, 'historique');
+    isAdmin = identity.profil.role === 'admin';
+    await buildSharedNavbar(identity.profil, 'historique');
 
     if (isAdmin) document.getElementById('btnNouveauCulte').style.display = 'inline-flex';
 
@@ -314,7 +317,7 @@
     var actDiv = document.getElementById('cpanelActions');
     if (isAdmin) {
       actDiv.style.display = 'flex';
-      document.getElementById('btnModifierCulte').href = 'preparation-culte.html?id=' + id;
+      document.getElementById('btnModifierCulte').href = 'preparation-culte?id=' + id;
       document.getElementById('btnArchiverCulte').style.display = c.statut !== 'archive' ? 'inline-flex' : 'none';
     }
 
@@ -359,7 +362,7 @@
       html += '<div class="prog-rubrique"><div class="prog-rubrique-label">' + escHtml(r) + '</div>';
       parRubrique[r].forEach(function(p) {
         var ch = p.chansons || {};
-        html += '<a href="chanson.html?id=' + escHtml(ch.id || '') + '" class="prog-chanson" id="prog-lien-' + escHtml(ch.id || '') + '">'
+        html += '<a href="chanson?id=' + escHtml(ch.id || '') + '" class="prog-chanson" id="prog-lien-' + escHtml(ch.id || '') + '">'
           + '<span class="prog-ordre">' + (p.ordre || '') + '</span>'
           + (ch.numero ? '<span class="prog-num">#' + escHtml(String(ch.numero)) + '</span>' : '')
           + '<span class="prog-chanson-titre">' + escHtml(ch.titre || '—') + '</span>'
