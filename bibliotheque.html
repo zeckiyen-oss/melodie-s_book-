@@ -422,28 +422,39 @@
     }
 
     await chargerChansons();
-
-    document.getElementById('loader').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'block';
   }
 
+  // CHARGEMENT — cache offline en stale-while-revalidate
   async function chargerChansons() {
-    var res = await sb
-      .from('chansons')
-      .select('id, numero, titre, rubrique, langue, style, audio_url')
-      .order('rubrique')
-      .order('titre');
+    var premierAffichage = true;
 
-    if (res.error) { showToast('Erreur de chargement', 'error'); return; }
+    await melodieCache('bibliotheque-chansons', async function() {
+      var res = await sb
+        .from('chansons')
+        .select('id, numero, titre, rubrique, langue, style, audio_url')
+        .order('rubrique')
+        .order('titre');
+      if (res.error) throw res.error;
+      return res.data || [];
+    }, function(data, fromCache) {
+      if (data === null) {
+        if (premierAffichage) {
+          showToast('Indisponible hors ligne pour l\'instant.', 'error');
+        }
+      } else {
+        toutesChansons = data;
+        var avecAudio = toutesChansons.filter(function(c) { return c.audio_url; }).length;
+        document.querySelector('#statTotal .stat-num').textContent  = toutesChansons.length;
+        document.querySelector('#statAudios .stat-num').textContent = avecAudio;
+        filtrer();
+      }
 
-    toutesChansons = res.data || [];
-
-    var avecAudio = toutesChansons.filter(function(c) { return c.audio_url; }).length;
-
-    document.querySelector('#statTotal .stat-num').textContent  = toutesChansons.length;
-    document.querySelector('#statAudios .stat-num').textContent = avecAudio;
-
-    filtrer();
+      if (premierAffichage) {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        premierAffichage = false;
+      }
+    });
   }
 
   document.getElementById('filtreTabs').addEventListener('click', function(e) {
