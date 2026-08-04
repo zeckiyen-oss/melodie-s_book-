@@ -352,7 +352,7 @@
       <div class="vide-icon">📭</div>
       <p class="vide-titre">Aucune ressource trouvée</p>
       <p class="vide-desc">Modifiez vos filtres ou ajoutez des audios aux chansons.</p>
-      <a href="ajouter-chanson.html" class="btn-ajouter-vide" id="btnAjouterVide" style="display:none">
+      <a href="ajouter-chanson" class="btn-ajouter-vide" id="btnAjouterVide" style="display:none">
         + Ajouter une chanson
       </a>
     </div>
@@ -402,16 +402,19 @@
   }
 
   async function initPage() {
-    var sessionData = await sb.auth.getSession();
-    var session = sessionData.data.session;
-    if (!session) { window.location.href = 'index.html'; return; }
+    var identity;
+    try {
+      identity = await melodieResolveIdentity();
+    } catch (e) {
+      console.warn('[init] melodieResolveIdentity a échoué :', e);
+      window.location.href = '/';
+      return;
+    }
+    if (!identity) return;
+    if (!identity.profil.actif) { window.location.href = '/'; return; }
 
-    var profilData = await sb.from('profils').select('*').eq('id', session.user.id).single();
-    var profil = profilData.data;
-    if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
-
-    isAdmin = profil.role === 'admin';
-    buildSharedNavbar(profil, 'bibliotheque');
+    isAdmin = identity.profil.role === 'admin';
+    await buildSharedNavbar(identity.profil, 'bibliotheque');
 
     if (isAdmin) {
       document.getElementById('btnAjouterVide').style.display = 'inline-block';
@@ -541,7 +544,7 @@
       + '<div class="biblio-item-left">'
         + (c.numero ? '<span class="item-num">#' + escHtml(String(c.numero)) + '</span>' : '')
         + '<div class="item-info">'
-          + '<a href="chanson.html?id=' + escHtml(c.id) + '" class="item-titre">' + escHtml(c.titre) + '</a>'
+          + '<a href="chanson?id=' + escHtml(c.id) + '" class="item-titre">' + escHtml(c.titre) + '</a>'
           + '<span class="item-langue">' + escHtml(c.langue || '') + (c.style ? ' · ' + escHtml(c.style) : '') + '</span>'
         + '</div>'
       + '</div>'
