@@ -38,7 +38,7 @@
           <p class="themes-sous-titre">Explorez le répertoire par thème spirituel</p>
         </div>
       </div>
-      <a href="gestion-themes.html" class="btn-gerer" id="btnGerer" style="display:none">
+      <a href="gestion-themes" class="btn-gerer" id="btnGerer" style="display:none">
         ⚙️ Gérer les thèmes
       </a>
     </div>
@@ -55,7 +55,7 @@
       <div class="vide-icon">🏷️</div>
       <p class="vide-titre">Aucun thème trouvé</p>
       <p class="vide-desc" id="videDesc">Aucun thème n'a encore été créé.</p>
-      <a href="gestion-themes.html" class="btn-creer-theme" id="btnCreerTheme" style="display:none">+ Créer le premier thème</a>
+      <a href="gestion-themes" class="btn-creer-theme" id="btnCreerTheme" style="display:none">+ Créer le premier thème</a>
     </div>
 
     <!-- PANNEAU DÉTAIL -->
@@ -123,16 +123,19 @@
   }
 
   async function initPage() {
-    var sessionData = await sb.auth.getSession();
-    var session = sessionData.data.session;
-    if (!session) { window.location.href = 'index.html'; return; }
+    var identity;
+    try {
+      identity = await melodieResolveIdentity();
+    } catch (e) {
+      console.warn('[init] melodieResolveIdentity a échoué :', e);
+      window.location.href = '/';
+      return;
+    }
+    if (!identity) return;
+    if (!identity.profil.actif) { window.location.href = '/'; return; }
 
-    var profilData = await sb.from('profils').select('*').eq('id', session.user.id).single();
-    var profil = profilData.data;
-    if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
-
-    isAdmin = profil.role === 'admin';
-    await buildSharedNavbar(profil, 'themes');
+    isAdmin = identity.profil.role === 'admin';
+    await buildSharedNavbar(identity.profil, 'themes');
 
     if (isAdmin) {
       document.getElementById('btnGerer').style.display = 'inline-flex';
@@ -242,7 +245,7 @@
     document.getElementById('detailTitre').textContent      = theme.nom;
     document.getElementById('detailDescription').textContent = theme.description || '';
     document.getElementById('detailCompteur').textContent   = theme.nb_chansons + ' chanson' + (theme.nb_chansons > 1 ? 's' : '');
-    document.getElementById('btnVoirRepertoire').href       = 'repertoire.html?theme=' + theme.id;
+    document.getElementById('btnVoirRepertoire').href       = 'repertoire?theme=' + theme.id;
     document.getElementById('detailChansons').innerHTML     = '<p class="chargement-txt">Chargement…</p>';
     document.getElementById('themeDetailOverlay').style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -285,7 +288,7 @@
       bloc.className = 'rubrique-groupe';
       var inner = '<div class="rubrique-label">' + escHtml(r) + '</div><div class="rubrique-chansons">';
       parRubrique[r].forEach(function(ch) {
-        inner += '<a href="chanson.html?id=' + escHtml(ch.id) + '" class="chanson-ligne" id="lien-' + escHtml(ch.id) + '">'
+        inner += '<a href="chanson?id=' + escHtml(ch.id) + '" class="chanson-ligne" id="lien-' + escHtml(ch.id) + '">'
           + (ch.numero ? '<span class="ch-num">#' + escHtml(String(ch.numero)) + '</span>' : '')
           + '<span class="ch-titre">' + escHtml(ch.titre) + '</span>'
           + '<span class="ch-langue">' + escHtml(ch.langue || '') + '</span>'
