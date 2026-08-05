@@ -9,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
   <script src="melodie-cache.js"></script>
+  <script src="melodie-queue.js"></script>
 
   <style>
     html, body { background: #0D1B2A !important; color: #FAF6ED !important; min-height: 100vh; margin: 0; padding: 0; font-family: 'Lato', sans-serif; }
@@ -323,6 +324,7 @@
       <span class="recap-label">Total programme :</span>
       <span class="recap-nb" id="recapNb">0</span>
       <span class="recap-label">chanson(s) sélectionnée(s)</span>
+      <span class="recap-label" id="queueBadge" style="display:none;color:#F0D98A;font-weight:700;"></span>
     </div>
 
     <!-- RUBRIQUES -->
@@ -371,7 +373,7 @@
     var culteData = null;
     var profilUser = null;
 
-    // programme[rubrique] = [ {id, chanson_id, ordre, tonalite, tonalite_libre, titre, numero}, ... ]
+    // programme[rubrique] = [ {id, chanson_id, ordre, tonalite, tonalite_libre, titre, numero, queueEntryId?}, ... ]
     var programme = {};
 
     // tonalites[rubrique] = { note, libre }
@@ -403,6 +405,7 @@
         setTimeout(function() { if (tc.contains(t)) tc.removeChild(t); }, 400);
       }, 3500);
     }
+    window.showToast = showToast; // melodie-queue.js s'en sert pour ses propres toasts de sync
 
     function hideLoader() {
       document.getElementById("pageLoader").style.display = "none";
@@ -427,6 +430,21 @@
       document.getElementById("recapNb").textContent = totalChansons();
     }
 
+    function tempId() {
+      return 'temp-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+    }
+
+    function majQueueBadge() {
+      var el = document.getElementById('queueBadge');
+      var n = (typeof melodieQueueCount === 'function') ? melodieQueueCount() : 0;
+      if (n > 0) {
+        el.style.display = 'inline';
+        el.textContent = '· ' + n + ' action(s) en attente de synchronisation';
+      } else {
+        el.style.display = 'none';
+      }
+    }
+
     // ── AUTH ─────────────────────────────────────────────────
     async function authGuard() {
       var identity;
@@ -447,94 +465,144 @@
       return identity.profil;
     }
 
-    // ── CHARGER CULTE ─────────────────────────────────────────
+    // ── CHARGER CULTE — lecture offline via cache ──────────────
     async function chargerCulte() {
       var params = new URLSearchParams(window.location.search);
-      culteId = params.get("id");
-      var res;
-      if (culteId) {
-        res = await sb.from("cultes").select("*").eq("id", culteId).single();
-      } else {
+      var culteIdParam = params.get("id");
+      var cacheKey = culteIdParam ? ('prep-culte-' + culteIdParam) : ('prep-culte-mine-' + profilUser.id);
+      var resultat = { ok: false };
+
+      await melodieCache(cacheKey, async function() {
+        var res;
+        if (culteIdParam) {
+          res = await sb.from("cultes").select("*").eq("id", culteIdParam).single();
+          if (res.error || !res.data) throw (res.error || new Error('Culte introuvable'));
+          return res.data;
+        }
         res = await sb.from("cultes").select("*")
           .eq("statut","en_preparation").eq("preparateur_id", profilUser.id)
           .order("date_culte",{ascending:true}).limit(1).single();
-      }
-      if (res.error || !res.data) {
-        if (profilUser.role === "admin" && !culteId) {
+        if (!res.error && res.data) return res.data;
+        if (profilUser.role === "admin") {
           var res2 = await sb.from("cultes").select("*")
             .eq("statut","en_preparation").order("date_culte",{ascending:true}).limit(1).single();
-          if (res2.error || !res2.data) {
+          if (!res2.error && res2.data) return res2.data;
+        }
+        throw new Error('Aucun culte en préparation');
+      }, function(data, fromCache) {
+        if (data === null) {
+          if (navigator.onLine) {
             document.getElementById("prepTitre").textContent = "Aucun culte en préparation";
-            document.getElementById("prepMeta").textContent  = "Créez un culte via la page Désignateur.";
-            hideLoader(); return false;
+            document.getElementById("prepMeta").textContent  = "Créez un culte via la page Désignateur, ou vérifiez qu'un culte vous est assigné.";
+          } else {
+            document.getElementById("prepTitre").textContent = "Indisponible hors ligne";
+            document.getElementById("prepMeta").textContent  = "Ouvrez cette page en ligne une première fois pour pouvoir la consulter hors ligne.";
           }
-          culteData = res2.data;
-        } else {
-          document.getElementById("prepTitre").textContent = "Aucun culte assigné";
-          document.getElementById("prepMeta").textContent  = "Vous n'avez pas de culte en préparation.";
-          hideLoader(); return false;
+          hideLoader();
+          return;
         }
-      } else {
-        culteData = res.data;
-      }
-      culteId = culteData.id;
-      document.getElementById("prepTitre").textContent = culteData.theme || "Culte du " + formatDate(culteData.date_culte);
-      document.getElementById("prepMeta").textContent  = "&#128197; " + formatDate(culteData.date_culte) + "  |  Statut : En préparation";
-      if (culteData.notes) {
-        try {
-          var meta = JSON.parse(culteData.notes);
-          document.getElementById("versetCulte").value = meta.verset || "";
-          document.getElementById("notesPrep").value   = meta.notes  || "";
-        } catch(e) {
-          document.getElementById("notesPrep").value = culteData.notes || "";
+        culteData = data;
+        culteId   = data.id;
+        document.getElementById("prepTitre").textContent = culteData.theme || "Culte du " + formatDate(culteData.date_culte);
+        document.getElementById("prepMeta").textContent  = "&#128197; " + formatDate(culteData.date_culte) + "  |  Statut : En préparation" + (!navigator.onLine ? " · hors ligne (dernière version connue)" : "");
+        if (culteData.notes) {
+          try {
+            var meta = JSON.parse(culteData.notes);
+            document.getElementById("versetCulte").value = meta.verset || "";
+            document.getElementById("notesPrep").value   = meta.notes  || "";
+          } catch(e) {
+            document.getElementById("notesPrep").value = culteData.notes || "";
+          }
         }
-      }
-      return true;
+        resultat.ok = true;
+      });
+
+      return resultat.ok;
     }
 
-    // ── CHARGER TOUTES CHANSONS ───────────────────────────────
+    // ── CHARGER TOUTES CHANSONS — lecture offline via cache ────
     async function chargerChansons() {
-      var res = await sb.from("chansons").select("id, titre, numero, rubrique, langue").order("titre");
-      var all = res.data || [];
-      chansonsByRubrique = {};
-      RUBRIQUES_ORDER.forEach(function(r) { chansonsByRubrique[r] = []; });
-      all.forEach(function(c) {
-        var r = c.rubrique || "Autre";
-        if (!chansonsByRubrique[r]) chansonsByRubrique[r] = [];
-        chansonsByRubrique[r].push(c);
-      });
-    }
-
-    // ── CHARGER PROGRAMME ─────────────────────────────────────
-    async function chargerProgramme() {
-      var res = await sb.from("programme_culte")
-        .select("id, chanson_id, rubrique, ordre, tonalite, tonalite_libre, chansons(id, titre, numero, langue)")
-        .eq("culte_id", culteId)
-        .order("ordre", { ascending: true });
-
-      programme  = {};
-      tonalites  = {};
-      RUBRIQUES_ORDER.forEach(function(r) { programme[r] = []; tonalites[r] = { note: "", libre: "" }; });
-
-      (res.data || []).forEach(function(p) {
-        var r = p.rubrique || "Autre";
-        if (!programme[r]) programme[r] = [];
-        programme[r].push({
-          id:           p.id,
-          chanson_id:   p.chanson_id,
-          ordre:        p.ordre,
-          tonalite:     p.tonalite || "",
-          tonalite_libre: p.tonalite_libre || "",
-          titre:        p.chansons ? p.chansons.titre  : "N/A",
-          numero:       p.chansons ? p.chansons.numero : "",
-          langue:       p.chansons ? p.chansons.langue : ""
+      await melodieCache('prep-toutes-chansons', async function() {
+        var res = await sb.from("chansons").select("id, titre, numero, rubrique, langue").order("titre");
+        if (res.error) throw res.error;
+        return res.data || [];
+      }, function(all, fromCache) {
+        chansonsByRubrique = {};
+        RUBRIQUES_ORDER.forEach(function(r) { chansonsByRubrique[r] = []; });
+        (all || []).forEach(function(c) {
+          var r = c.rubrique || "Autre";
+          if (!chansonsByRubrique[r]) chansonsByRubrique[r] = [];
+          chansonsByRubrique[r].push(c);
         });
-        // On prend la tonalité du premier élément de la rubrique
-        if (!tonalites[r]) tonalites[r] = { note: "", libre: "" };
-        if (!tonalites[r].note && p.tonalite) tonalites[r].note = p.tonalite;
-        if (!tonalites[r].libre && p.tonalite_libre) tonalites[r].libre = p.tonalite_libre;
       });
     }
+
+    // ── CHARGER PROGRAMME — lecture offline via cache ──────────
+    async function chargerProgramme() {
+      if (!culteId) return;
+      await melodieCache('prep-programme-' + culteId, async function() {
+        var res = await sb.from("programme_culte")
+          .select("id, chanson_id, rubrique, ordre, tonalite, tonalite_libre, chansons(id, titre, numero, langue)")
+          .eq("culte_id", culteId)
+          .order("ordre", { ascending: true });
+        if (res.error) throw res.error;
+        return res.data || [];
+      }, function(data, fromCache) {
+        programme  = {};
+        tonalites  = {};
+        RUBRIQUES_ORDER.forEach(function(r) { programme[r] = []; tonalites[r] = { note: "", libre: "" }; });
+
+        (data || []).forEach(function(p) {
+          var r = p.rubrique || "Autre";
+          if (!programme[r]) programme[r] = [];
+          programme[r].push({
+            id:           p.id,
+            chanson_id:   p.chanson_id,
+            ordre:        p.ordre,
+            tonalite:     p.tonalite || "",
+            tonalite_libre: p.tonalite_libre || "",
+            titre:        p.chansons ? p.chansons.titre  : "N/A",
+            numero:       p.chansons ? p.chansons.numero : "",
+            langue:       p.chansons ? p.chansons.langue : ""
+          });
+          if (!tonalites[r]) tonalites[r] = { note: "", libre: "" };
+          if (!tonalites[r].note && p.tonalite) tonalites[r].note = p.tonalite;
+          if (!tonalites[r].libre && p.tonalite_libre) tonalites[r].libre = p.tonalite_libre;
+        });
+
+        renderRubriques();
+      });
+    }
+
+    // ── RÉCONCILIATION FILE D'ATTENTE ──────────────────────────
+    melodieOnQueueSync(function(entry, result) {
+      if (!result.success) return;
+      var toucheCeCulte = false;
+      var reconcilie = false;
+
+      entry.ops.forEach(function(op, i) {
+        if (op.table !== 'programme_culte') return;
+        if (op.op === 'insert' && op.payload && op.payload.culte_id === culteId) {
+          toucheCeCulte = true;
+          RUBRIQUES_ORDER.forEach(function(rubrique) {
+            (programme[rubrique] || []).forEach(function(item) {
+              if (item.queueEntryId === entry.id) {
+                var real = result.results && result.results[i];
+                if (real && real.id) { item.id = real.id; delete item.queueEntryId; reconcilie = true; }
+              }
+            });
+          });
+        }
+        if (op.op === 'delete') toucheCeCulte = true;
+      });
+
+      majQueueBadge();
+      if (toucheCeCulte && !reconcilie) {
+        chargerProgramme();
+      } else if (reconcilie) {
+        renderRubriques();
+      }
+    });
 
     // ── RENDRE LES RUBRIQUES ──────────────────────────────────
     function renderRubriques() {
@@ -706,49 +774,83 @@
       });
     }
 
-    // ── TOGGLE CHANSON ────────────────────────────────────────
+    // ── AJOUT/RETRAIT — écrit en direct si en ligne, en file sinon ──
     async function toggleChanson(rubrique, chanson) {
       var selIds = (programme[rubrique] || []).map(function(p) { return p.chanson_id; });
       var idx    = selIds.indexOf(chanson.id);
 
       if (idx === -1) {
-        // Ajouter
         var ordre = (programme[rubrique] || []).length + 1;
-        var res = await sb.from("programme_culte").insert({
-          culte_id:       culteId,
-          chanson_id:     chanson.id,
-          rubrique:       rubrique,
-          ordre:          ordre,
-          tonalite:       "",
-          tonalite_libre: ""
-        }).select().single();
 
-        if (res.error) { showToast("Erreur lors de l'ajout.", "error"); return; }
+        if (!navigator.onLine) {
+          var localId = tempId();
+          var qEntry = melodieQueueMutation({
+            table: 'programme_culte',
+            op: 'insert',
+            payload: { culte_id: culteId, chanson_id: chanson.id, rubrique: rubrique, ordre: ordre, tonalite: '', tonalite_libre: '' }
+          }, 'Ajout de "' + chanson.titre + '" au programme');
 
-        if (!programme[rubrique]) programme[rubrique] = [];
-        programme[rubrique].push({
-          id:           res.data.id,
-          chanson_id:   chanson.id,
-          ordre:        ordre,
-          tonalite:     "",
-          tonalite_libre: "",
-          titre:        chanson.titre,
-          numero:       chanson.numero,
-          langue:       chanson.langue || ""
-        });
-        showToast(chanson.titre + " ajoutée.", "success");
+          if (!programme[rubrique]) programme[rubrique] = [];
+          programme[rubrique].push({
+            id: localId, queueEntryId: qEntry.id, chanson_id: chanson.id, ordre: ordre,
+            tonalite: '', tonalite_libre: '',
+            titre: chanson.titre, numero: chanson.numero, langue: chanson.langue || ''
+          });
+          showToast('Hors ligne : ajout mis en attente, sera synchronisé à la reconnexion.', 'info');
+          majQueueBadge();
+        } else {
+          var res = await sb.from("programme_culte").insert({
+            culte_id: culteId, chanson_id: chanson.id, rubrique: rubrique, ordre: ordre, tonalite: "", tonalite_libre: ""
+          }).select().single();
+          if (res.error) { showToast("Erreur lors de l'ajout.", "error"); return; }
+          if (!programme[rubrique]) programme[rubrique] = [];
+          programme[rubrique].push({
+            id: res.data.id, chanson_id: chanson.id, ordre: ordre, tonalite: "", tonalite_libre: "",
+            titre: chanson.titre, numero: chanson.numero, langue: chanson.langue || ""
+          });
+          showToast(chanson.titre + " ajoutée.", "success");
+        }
       } else {
-        // Retirer immédiatement (sans confirmation ici car c'est un toggle)
         var entry = programme[rubrique][idx];
-        var res = await sb.from("programme_culte").delete().eq("id", entry.id);
-        if (res.error) { showToast("Erreur lors du retrait.", "error"); return; }
-        programme[rubrique].splice(idx, 1);
-        showToast(chanson.titre + " retirée.", "info");
+        await retirerChansonProgramme(rubrique, idx, entry);
       }
 
       renderListeChansonsPourRubrique(rubrique);
       renderSelectionnesPourRubrique(rubrique);
       majRecap();
+    }
+
+    async function retirerChansonProgramme(rubrique, idx, entry) {
+      var estTemp = String(entry.id).indexOf('temp-') === 0;
+
+      if (!navigator.onLine) {
+        if (estTemp) {
+          melodieCancelQueueEntry(entry.queueEntryId);
+          showToast(entry.titre + ' retirée (ajout annulé).', 'info');
+        } else {
+          melodieQueueMutation({
+            table: 'programme_culte', op: 'delete', match: { id: entry.id }
+          }, 'Retrait de "' + entry.titre + '" du programme');
+          showToast('Hors ligne : retrait mis en attente, sera synchronisé à la reconnexion.', 'info');
+        }
+        programme[rubrique].splice(idx, 1);
+        majQueueBadge();
+        return;
+      }
+
+      if (estTemp) {
+        // filet de sécurité : l'insertion n'a en réalité jamais eu lieu côté serveur
+        melodieCancelQueueEntry(entry.queueEntryId);
+        programme[rubrique].splice(idx, 1);
+        showToast(entry.titre + " retirée.", "info");
+        majQueueBadge();
+        return;
+      }
+
+      var res = await sb.from("programme_culte").delete().eq("id", entry.id);
+      if (res.error) { showToast("Erreur lors du retrait.", "error"); return; }
+      programme[rubrique].splice(idx, 1);
+      showToast(entry.titre + " retirée.", "info");
     }
 
     // ── SUPPRESSION depuis liste sélectionnées ─────────────────
@@ -776,51 +878,83 @@
       if (idx === -1) return;
 
       var entry = programme[r][idx];
-      var res   = await sb.from("programme_culte").delete().eq("id", entry.id);
-      if (res.error) { showToast("Erreur lors du retrait.", "error"); return; }
-      programme[r].splice(idx, 1);
+      await retirerChansonProgramme(r, idx, entry);
 
       renderListeChansonsPourRubrique(r);
       renderSelectionnesPourRubrique(r);
       majRecap();
-      showToast("Chanson retirée.", "info");
     });
 
     // ── SAUVEGARDER ──────────────────────────────────────────
     document.getElementById("btnSauvegarder").addEventListener("click", async function() {
       var btn = this;
       btn.disabled = true; btn.textContent = "Sauvegarde…";
+
       try {
-        // Sauvegarder tonalités dans chaque ligne du programme
-        var promises = [];
-        RUBRIQUES_ORDER.forEach(function(rubrique) {
-          var items = programme[rubrique] || [];
-          var ton   = tonalites[rubrique] || { note: "", libre: "" };
-          items.forEach(function(p, i) {
-            promises.push(
-              sb.from("programme_culte").update({
-                ordre:          i + 1,
-                tonalite:       ton.note,
-                tonalite_libre: ton.libre
-              }).eq("id", p.id)
-            );
+        if (!navigator.onLine) {
+          var ops = [];
+          RUBRIQUES_ORDER.forEach(function(rubrique) {
+            var items = programme[rubrique] || [];
+            var ton   = tonalites[rubrique] || { note: "", libre: "" };
+            items.forEach(function(p, i) {
+              var estTemp = String(p.id).indexOf('temp-') === 0;
+              if (estTemp) {
+                // corrige directement l'insertion encore en attente : pas de vrai id à mettre à jour
+                melodieUpdateQueueEntry(p.queueEntryId, function(qEntry) {
+                  qEntry.ops[0].payload.ordre = i + 1;
+                  qEntry.ops[0].payload.tonalite = ton.note;
+                  qEntry.ops[0].payload.tonalite_libre = ton.libre;
+                });
+              } else {
+                ops.push({
+                  table: 'programme_culte', op: 'update', match: { id: p.id },
+                  payload: { ordre: i + 1, tonalite: ton.note, tonalite_libre: ton.libre }
+                });
+              }
+            });
           });
-        });
-        var meta = JSON.stringify({
-          verset: document.getElementById("versetCulte").value,
-          notes:  document.getElementById("notesPrep").value
-        });
-        promises.push(sb.from("cultes").update({ notes: meta }).eq("id", culteId));
-        await Promise.all(promises);
-        showToast("Programme sauvegardé.", "success");
+          ops.push({
+            table: 'cultes', op: 'update', match: { id: culteId },
+            payload: { notes: JSON.stringify({
+              verset: document.getElementById("versetCulte").value,
+              notes:  document.getElementById("notesPrep").value
+            }) }
+          });
+          melodieQueueMutation(ops, 'Sauvegarde du programme de "' + (culteData ? (culteData.theme || 'culte') : 'culte') + '"');
+          showToast('Hors ligne : sauvegarde mise en attente, sera synchronisée à la reconnexion.', 'info');
+          majQueueBadge();
+        } else {
+          var promises = [];
+          RUBRIQUES_ORDER.forEach(function(rubrique) {
+            var items = programme[rubrique] || [];
+            var ton   = tonalites[rubrique] || { note: "", libre: "" };
+            items.forEach(function(p, i) {
+              if (String(p.id).indexOf('temp-') === 0) return; // pas encore synchronisé
+              promises.push(
+                sb.from("programme_culte").update({
+                  ordre:          i + 1,
+                  tonalite:       ton.note,
+                  tonalite_libre: ton.libre
+                }).eq("id", p.id)
+              );
+            });
+          });
+          var meta = JSON.stringify({
+            verset: document.getElementById("versetCulte").value,
+            notes:  document.getElementById("notesPrep").value
+          });
+          promises.push(sb.from("cultes").update({ notes: meta }).eq("id", culteId));
+          await Promise.all(promises);
+          showToast("Programme sauvegardé.", "success");
+        }
       } catch(err) {
         showToast("Erreur lors de la sauvegarde.", "error");
       }
-      btn.disabled = false; btn.textContent = "&#128190; Sauvegarder";
+      btn.disabled = false;
       btn.innerHTML = "&#128190; Sauvegarder";
     });
 
-    // ── PDF ───────────────────────────────────────────────────
+    // ── PDF (aucun appel réseau, fonctionne déjà hors ligne) ────
     document.getElementById("btnPdf").addEventListener("click", function() {
       var verset = document.getElementById("versetCulte").value;
       var notes  = document.getElementById("notesPrep").value;
@@ -879,8 +1013,9 @@
       buildSharedNavbar(profilUser, "preparation-culte");
       var ok = await chargerCulte();
       if (!ok) return;
-      await Promise.all([chargerChansons(), chargerProgramme()]);
-      renderRubriques();
+      await chargerChansons();
+      await chargerProgramme();
+      majQueueBadge();
       hideLoader();
     })();
   </script>
