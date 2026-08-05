@@ -23,6 +23,12 @@
        if (result.success) { ... }
      });
 
+   Pour corriger une opération encore en attente avant qu'elle ne parte
+   (ex : mettre à jour la tonalité d'un ajout de chanson pas encore synchronisé) :
+     melodieUpdateQueueEntry(queueEntryId, function(entry) {
+       entry.ops[0].payload.tonalite = 'Sol';
+     });
+
    Fiabilité : la synchronisation se déclenche à coup sûr quand l'app est
    ouverte et connectée (événement 'online', chargement de page, vérification
    périodique). Elle ne se déclenche PAS si l'app reste fermée en arrière-plan —
@@ -75,6 +81,18 @@
   function melodieCancelQueueEntry(id) {
     var queue = _readQueue().filter(function (e) { return e.id !== id; });
     _writeQueue(queue);
+  }
+
+  function melodieUpdateQueueEntry(id, updaterFn) {
+    var queue = _readQueue();
+    var idx = -1;
+    for (var i = 0; i < queue.length; i++) {
+      if (queue[i].id === id) { idx = i; break; }
+    }
+    if (idx === -1) return false;
+    updaterFn(queue[idx]);
+    _writeQueue(queue);
+    return true;
   }
 
   function melodieQueueCount() {
@@ -169,6 +187,7 @@
 
   window.melodieQueueMutation    = melodieQueueMutation;
   window.melodieCancelQueueEntry = melodieCancelQueueEntry;
+  window.melodieUpdateQueueEntry = melodieUpdateQueueEntry;
   window.melodieQueueCount       = melodieQueueCount;
   window.melodieQueueEntries     = melodieQueueEntries;
   window.melodieOnQueueSync      = melodieOnQueueSync;
