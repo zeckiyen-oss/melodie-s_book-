@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="melodie-cache.js"></script>
+  <script src="melodie-queue.js"></script>
   <style>
     html,body{background:#0D1B2A!important;color:#FAF6ED!important;min-height:100vh;margin:0;padding:0;font-family:'Lato',sans-serif}
     .page-loader{position:fixed;inset:0;z-index:9999;background:#0D1B2A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem}
@@ -142,6 +144,7 @@
       <span class="recap-label">Total :</span>
       <span class="recap-nb" id="recapNb">0</span>
       <span class="recap-label">chanson(s) sélectionnée(s)</span>
+      <span class="recap-label" id="queueBadge" style="display:none;color:#F0D98A;font-weight:700;"></span>
     </div>
 
     <div class="prep-rubriques-titre">&#127925; Programme par rubrique</div>
@@ -189,10 +192,27 @@
 
     function escHtml(s){if(s==null)return"";return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
     function showToast(msg,type){var tc=document.getElementById("toastContainer");var t=document.createElement("div");t.className="toast toast-"+(type||"info");t.textContent=msg;tc.appendChild(t);setTimeout(function(){t.classList.add("toast-show");},10);setTimeout(function(){t.classList.remove("toast-show");setTimeout(function(){if(tc.contains(t))tc.removeChild(t);},400);},3500);}
+    window.showToast = showToast; // melodie-queue.js s'en sert pour ses propres toasts de sync
+
     function hideLoader(){document.getElementById("pageLoader").style.display="none";document.getElementById("prepMain").style.display="block";}
     function formatDate(d){if(!d)return"";var p=d.split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:d;}
     function totalChansons(){var n=0;RUBRIQUES_ORDER.forEach(function(r){if(programme[r])n+=programme[r].length;});return n;}
     function majRecap(){document.getElementById("recapNb").textContent=totalChansons();}
+
+    function tempId() {
+      return 'temp-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+    }
+
+    function majQueueBadge() {
+      var el = document.getElementById('queueBadge');
+      var n = (typeof melodieQueueCount === 'function') ? melodieQueueCount() : 0;
+      if (n > 0) {
+        el.style.display = 'inline';
+        el.textContent = '· ' + n + ' action(s) en attente de synchronisation';
+      } else {
+        el.style.display = 'none';
+      }
+    }
 
     function afficherAccesRefuse(titre,desc){
       var main=document.getElementById("prepMain");
@@ -201,66 +221,133 @@
     }
 
     async function authGuard(){
-      var r=await sb.auth.getSession();
-      if(!r.data.session){window.location.href="index.html";return null;}
-      var p=await sb.from("profils").select("*").eq("id",r.data.session.user.id).single();
-      if(!p.data||!p.data.actif){window.location.href="index.html";return null;}
+      var identity;
+      try {
+        identity = await melodieResolveIdentity();
+      } catch (e) {
+        console.warn('[init] melodieResolveIdentity a échoué :', e);
+        window.location.href = '/';
+        return null;
+      }
+      if (!identity) return null;
+      if (!identity.profil.actif) { window.location.href = '/'; return null; }
       /* Membres ordinaires n'ont pas accès */
-      if(p.data.role==="membre"){window.location.href="dashboard.html";return null;}
-      return p.data;
+      if (identity.profil.role === "membre") { window.location.href = "dashboard"; return null; }
+      return identity.profil;
     }
 
-    async function chargerEvenement(){
-      var params=new URLSearchParams(window.location.search);
-      evenementId=params.get("id");
-      var res;
-      if(evenementId){
-        res=await sb.from("evenements").select("*").eq("id",evenementId).single();
-      } else {
-        /* Chercher l'événement en préparation assigné à ce préparateur */
-        res=await sb.from("evenements").select("*").eq("statut","en_preparation").eq("preparateur_id",profilUser.id).order("date_event",{ascending:true}).limit(1).single();
-      }
-      if(res.error||!res.data){
-        if(profilUser.role==="admin"&&!evenementId){
-          var res2=await sb.from("evenements").select("*").eq("statut","en_preparation").order("date_event",{ascending:true}).limit(1).single();
-          if(res2.error||!res2.data){afficherAccesRefuse("Aucun événement en préparation","Créez un événement depuis la page Événements.");hideLoader();return false;}
-          evenementData=res2.data;
+    // ── CHARGER ÉVÉNEMENT — lecture offline via cache ──────────
+    async function chargerEvenement() {
+      var params = new URLSearchParams(window.location.search);
+      var evenementIdParam = params.get("id");
+      var cacheKey = evenementIdParam ? ('prep-evenement-' + evenementIdParam) : ('prep-evenement-mine-' + profilUser.id);
+      var resultat = { ok: false };
+
+      await melodieCache(cacheKey, async function() {
+        var res;
+        if (evenementIdParam) {
+          res = await sb.from("evenements").select("*").eq("id", evenementIdParam).single();
+          if (res.error || !res.data) throw (res.error || new Error('Événement introuvable'));
         } else {
-          afficherAccesRefuse("Aucun événement assigné","Vous n'avez pas d'événement en préparation pour le moment.");hideLoader();return false;
+          res = await sb.from("evenements").select("*").eq("statut","en_preparation").eq("preparateur_id", profilUser.id).order("date_event",{ascending:true}).limit(1).single();
+          if (res.error || !res.data) {
+            if (profilUser.role === "admin") {
+              var res2 = await sb.from("evenements").select("*").eq("statut","en_preparation").order("date_event",{ascending:true}).limit(1).single();
+              if (res2.error || !res2.data) throw new Error('Aucun événement en préparation');
+              res = res2;
+            } else {
+              throw new Error('Aucun événement assigné');
+            }
+          }
         }
-      } else {
-        evenementData=res.data;
-      }
-      /* Vérification stricte : seul le préparateur désigné ou un admin peut accéder */
-      if(profilUser.role==="preparateur"&&evenementData.preparateur_id!==profilUser.id){
-        afficherAccesRefuse("Accès non autorisé","Vous n'êtes pas le préparateur désigné pour cet événement.");hideLoader();return false;
-      }
-      evenementId=evenementData.id;
-      document.getElementById("prepTitre").textContent=evenementData.titre||"Événement du "+formatDate(evenementData.date_event);
-      document.getElementById("prepMeta").textContent="&#128197; "+formatDate(evenementData.date_event)+"  |  Statut : En préparation";
-      if(evenementData.description){document.getElementById("descEvenement").value=evenementData.description||"";}
-      return true;
+        /* Vérification stricte : seul le préparateur désigné ou un admin peut accéder */
+        if (profilUser.role === "preparateur" && res.data.preparateur_id !== profilUser.id) {
+          throw new Error('Accès non autorisé');
+        }
+        return res.data;
+      }, function(data, fromCache) {
+        if (data === null) {
+          if (navigator.onLine) {
+            afficherAccesRefuse("Aucun événement accessible", "Vous n'avez pas d'événement en préparation assigné, ou vous n'y êtes pas autorisé.");
+          } else {
+            afficherAccesRefuse("Indisponible hors ligne", "Ouvrez cette page en ligne une première fois pour pouvoir la consulter hors ligne.");
+          }
+          hideLoader();
+          return;
+        }
+        evenementData = data;
+        evenementId   = data.id;
+        document.getElementById("prepTitre").textContent = evenementData.titre || "Événement du " + formatDate(evenementData.date_event);
+        document.getElementById("prepMeta").textContent  = "&#128197; " + formatDate(evenementData.date_event) + "  |  Statut : En préparation" + (!navigator.onLine ? " · hors ligne (dernière version connue)" : "");
+        if (evenementData.description) { document.getElementById("descEvenement").value = evenementData.description || ""; }
+        resultat.ok = true;
+      });
+
+      return resultat.ok;
     }
 
+    // ── CHARGER TOUTES CHANSONS — lecture offline via cache ────
     async function chargerChansons(){
-      var res=await sb.from("chansons").select("id,titre,numero,rubrique,langue").order("titre");
-      var all=res.data||[];
-      chansonsByRubrique={};RUBRIQUES_ORDER.forEach(function(r){chansonsByRubrique[r]=[];});
-      all.forEach(function(c){var r=c.rubrique||"Autre";if(!chansonsByRubrique[r])chansonsByRubrique[r]=[];chansonsByRubrique[r].push(c);});
-    }
-
-    async function chargerProgramme(){
-      var res=await sb.from("programme_evenement").select("id,chanson_id,rubrique,ordre,tonalite,tonalite_libre,chansons(id,titre,numero,langue)").eq("evenement_id",evenementId).order("ordre",{ascending:true});
-      programme={};tonalites={};
-      RUBRIQUES_ORDER.forEach(function(r){programme[r]=[];tonalites[r]={note:"",libre:""};});
-      (res.data||[]).forEach(function(p){
-        var r=p.rubrique||"Autre";if(!programme[r])programme[r]=[];
-        programme[r].push({id:p.id,chanson_id:p.chanson_id,ordre:p.ordre,tonalite:p.tonalite||"",tonalite_libre:p.tonalite_libre||"",titre:p.chansons?p.chansons.titre:"N/A",numero:p.chansons?p.chansons.numero:"",langue:p.chansons?p.chansons.langue:""});
-        if(!tonalites[r])tonalites[r]={note:"",libre:""};
-        if(!tonalites[r].note&&p.tonalite)tonalites[r].note=p.tonalite;
-        if(!tonalites[r].libre&&p.tonalite_libre)tonalites[r].libre=p.tonalite_libre;
+      await melodieCache('prep-toutes-chansons', async function() {
+        var res = await sb.from("chansons").select("id,titre,numero,rubrique,langue").order("titre");
+        if (res.error) throw res.error;
+        return res.data || [];
+      }, function(all, fromCache) {
+        chansonsByRubrique={};RUBRIQUES_ORDER.forEach(function(r){chansonsByRubrique[r]=[];});
+        (all||[]).forEach(function(c){var r=c.rubrique||"Autre";if(!chansonsByRubrique[r])chansonsByRubrique[r]=[];chansonsByRubrique[r].push(c);});
       });
     }
+
+    // ── CHARGER PROGRAMME — lecture offline via cache ──────────
+    async function chargerProgramme(){
+      if (!evenementId) return;
+      await melodieCache('prep-programme-evenement-' + evenementId, async function() {
+        var res = await sb.from("programme_evenement").select("id,chanson_id,rubrique,ordre,tonalite,tonalite_libre,chansons(id,titre,numero,langue)").eq("evenement_id",evenementId).order("ordre",{ascending:true});
+        if (res.error) throw res.error;
+        return res.data || [];
+      }, function(data, fromCache) {
+        programme={};tonalites={};
+        RUBRIQUES_ORDER.forEach(function(r){programme[r]=[];tonalites[r]={note:"",libre:""};});
+        (data||[]).forEach(function(p){
+          var r=p.rubrique||"Autre";if(!programme[r])programme[r]=[];
+          programme[r].push({id:p.id,chanson_id:p.chanson_id,ordre:p.ordre,tonalite:p.tonalite||"",tonalite_libre:p.tonalite_libre||"",titre:p.chansons?p.chansons.titre:"N/A",numero:p.chansons?p.chansons.numero:"",langue:p.chansons?p.chansons.langue:""});
+          if(!tonalites[r])tonalites[r]={note:"",libre:""};
+          if(!tonalites[r].note&&p.tonalite)tonalites[r].note=p.tonalite;
+          if(!tonalites[r].libre&&p.tonalite_libre)tonalites[r].libre=p.tonalite_libre;
+        });
+        renderRubriques();
+      });
+    }
+
+    // ── RÉCONCILIATION FILE D'ATTENTE ──────────────────────────
+    melodieOnQueueSync(function(entry, result) {
+      if (!result.success) return;
+      var toucheCetEvenement = false;
+      var reconcilie = false;
+
+      entry.ops.forEach(function(op, i) {
+        if (op.table !== 'programme_evenement') return;
+        if (op.op === 'insert' && op.payload && op.payload.evenement_id === evenementId) {
+          toucheCetEvenement = true;
+          RUBRIQUES_ORDER.forEach(function(rubrique) {
+            (programme[rubrique] || []).forEach(function(item) {
+              if (item.queueEntryId === entry.id) {
+                var real = result.results && result.results[i];
+                if (real && real.id) { item.id = real.id; delete item.queueEntryId; reconcilie = true; }
+              }
+            });
+          });
+        }
+        if (op.op === 'delete') toucheCetEvenement = true;
+      });
+
+      majQueueBadge();
+      if (toucheCetEvenement && !reconcilie) {
+        chargerProgramme();
+      } else if (reconcilie) {
+        renderRubriques();
+      }
+    });
 
     function renderRubriques(){
       var container=document.getElementById("rubriquesContainer");container.innerHTML="";
@@ -316,22 +403,72 @@
       sel.querySelectorAll(".prog-item-del").forEach(function(btn){btn.addEventListener("click",function(e){e.stopPropagation();demanderSuppression(btn.getAttribute("data-rubrique"),btn.getAttribute("data-chansonid"),btn.getAttribute("data-titre"));});});
     }
 
+    // ── AJOUT/RETRAIT — écrit en direct si en ligne, en file sinon ──
     async function toggleChanson(rubrique,chanson){
       var selIds=(programme[rubrique]||[]).map(function(p){return p.chanson_id;});var idx=selIds.indexOf(chanson.id);
+
       if(idx===-1){
         var ordre=(programme[rubrique]||[]).length+1;
-        var res=await sb.from("programme_evenement").insert({evenement_id:evenementId,chanson_id:chanson.id,rubrique:rubrique,ordre:ordre,tonalite:"",tonalite_libre:""}).select().single();
-        if(res.error){showToast("Erreur lors de l'ajout.","error");return;}
-        if(!programme[rubrique])programme[rubrique]=[];
-        programme[rubrique].push({id:res.data.id,chanson_id:chanson.id,ordre:ordre,tonalite:"",tonalite_libre:"",titre:chanson.titre,numero:chanson.numero,langue:chanson.langue||""});
-        showToast(chanson.titre+" ajoutée.","success");
+
+        if (!navigator.onLine) {
+          var localId = tempId();
+          var qEntry = melodieQueueMutation({
+            table: 'programme_evenement', op: 'insert',
+            payload: { evenement_id: evenementId, chanson_id: chanson.id, rubrique: rubrique, ordre: ordre, tonalite: '', tonalite_libre: '' }
+          }, 'Ajout de "' + chanson.titre + '" au programme');
+
+          if(!programme[rubrique])programme[rubrique]=[];
+          programme[rubrique].push({
+            id: localId, queueEntryId: qEntry.id, chanson_id: chanson.id, ordre: ordre,
+            tonalite: '', tonalite_libre: '',
+            titre: chanson.titre, numero: chanson.numero, langue: chanson.langue || ''
+          });
+          showToast('Hors ligne : ajout mis en attente, sera synchronisé à la reconnexion.', 'info');
+          majQueueBadge();
+        } else {
+          var res=await sb.from("programme_evenement").insert({evenement_id:evenementId,chanson_id:chanson.id,rubrique:rubrique,ordre:ordre,tonalite:"",tonalite_libre:""}).select().single();
+          if(res.error){showToast("Erreur lors de l'ajout.","error");return;}
+          if(!programme[rubrique])programme[rubrique]=[];
+          programme[rubrique].push({id:res.data.id,chanson_id:chanson.id,ordre:ordre,tonalite:"",tonalite_libre:"",titre:chanson.titre,numero:chanson.numero,langue:chanson.langue||""});
+          showToast(chanson.titre+" ajoutée.","success");
+        }
       } else {
         var entry=programme[rubrique][idx];
-        var res=await sb.from("programme_evenement").delete().eq("id",entry.id);
-        if(res.error){showToast("Erreur lors du retrait.","error");return;}
-        programme[rubrique].splice(idx,1);showToast(chanson.titre+" retirée.","info");
+        await retirerChansonProgramme(rubrique, idx, entry);
       }
       renderListeChansonsPourRubrique(rubrique);renderSelectionnesPourRubrique(rubrique);majRecap();
+    }
+
+    async function retirerChansonProgramme(rubrique, idx, entry) {
+      var estTemp = String(entry.id).indexOf('temp-') === 0;
+
+      if (!navigator.onLine) {
+        if (estTemp) {
+          melodieCancelQueueEntry(entry.queueEntryId);
+          showToast(entry.titre + ' retirée (ajout annulé).', 'info');
+        } else {
+          melodieQueueMutation({
+            table: 'programme_evenement', op: 'delete', match: { id: entry.id }
+          }, 'Retrait de "' + entry.titre + '" du programme');
+          showToast('Hors ligne : retrait mis en attente, sera synchronisé à la reconnexion.', 'info');
+        }
+        programme[rubrique].splice(idx, 1);
+        majQueueBadge();
+        return;
+      }
+
+      if (estTemp) {
+        melodieCancelQueueEntry(entry.queueEntryId);
+        programme[rubrique].splice(idx, 1);
+        showToast(entry.titre + " retirée.", "info");
+        majQueueBadge();
+        return;
+      }
+
+      var res=await sb.from("programme_evenement").delete().eq("id",entry.id);
+      if(res.error){showToast("Erreur lors du retrait.","error");return;}
+      programme[rubrique].splice(idx,1);
+      showToast(entry.titre+" retirée.","info");
     }
 
     function demanderSuppression(rubrique,chansonId,titre){
@@ -345,22 +482,58 @@
     document.getElementById("btnConfirmSuppr").addEventListener("click",async function(){
       if(!pendingSupprInfo)return;var r=pendingSupprInfo.rubrique;var id=pendingSupprInfo.chanson_id;fermerModal();
       var selIds=(programme[r]||[]).map(function(p){return p.chanson_id;});var idx=selIds.indexOf(id);if(idx===-1)return;
-      var entry=programme[r][idx];var res=await sb.from("programme_evenement").delete().eq("id",entry.id);
-      if(res.error){showToast("Erreur lors du retrait.","error");return;}
-      programme[r].splice(idx,1);renderListeChansonsPourRubrique(r);renderSelectionnesPourRubrique(r);majRecap();showToast("Chanson retirée.","info");
+      var entry=programme[r][idx];
+      await retirerChansonProgramme(r, idx, entry);
+      renderListeChansonsPourRubrique(r);renderSelectionnesPourRubrique(r);majRecap();
     });
 
     document.getElementById("btnSauvegarder").addEventListener("click",async function(){
       var btn=this;btn.disabled=true;btn.textContent="Sauvegarde…";
       try{
-        var promises=[];
-        RUBRIQUES_ORDER.forEach(function(rubrique){var items=programme[rubrique]||[];var ton=tonalites[rubrique]||{note:"",libre:""};items.forEach(function(p,i){promises.push(sb.from("programme_evenement").update({ordre:i+1,tonalite:ton.note,tonalite_libre:ton.libre}).eq("id",p.id));});});
-        promises.push(sb.from("evenements").update({description:document.getElementById("descEvenement").value}).eq("id",evenementId));
-        await Promise.all(promises);showToast("Programme sauvegardé.","success");
+        if (!navigator.onLine) {
+          var ops = [];
+          RUBRIQUES_ORDER.forEach(function(rubrique){
+            var items=programme[rubrique]||[];var ton=tonalites[rubrique]||{note:"",libre:""};
+            items.forEach(function(p,i){
+              var estTemp = String(p.id).indexOf('temp-') === 0;
+              if (estTemp) {
+                melodieUpdateQueueEntry(p.queueEntryId, function(qEntry) {
+                  qEntry.ops[0].payload.ordre = i + 1;
+                  qEntry.ops[0].payload.tonalite = ton.note;
+                  qEntry.ops[0].payload.tonalite_libre = ton.libre;
+                });
+              } else {
+                ops.push({
+                  table: 'programme_evenement', op: 'update', match: { id: p.id },
+                  payload: { ordre: i + 1, tonalite: ton.note, tonalite_libre: ton.libre }
+                });
+              }
+            });
+          });
+          ops.push({
+            table: 'evenements', op: 'update', match: { id: evenementId },
+            payload: { description: document.getElementById("descEvenement").value }
+          });
+          melodieQueueMutation(ops, 'Sauvegarde du programme de "' + (evenementData ? (evenementData.titre || 'événement') : 'événement') + '"');
+          showToast('Hors ligne : sauvegarde mise en attente, sera synchronisée à la reconnexion.', 'info');
+          majQueueBadge();
+        } else {
+          var promises=[];
+          RUBRIQUES_ORDER.forEach(function(rubrique){
+            var items=programme[rubrique]||[];var ton=tonalites[rubrique]||{note:"",libre:""};
+            items.forEach(function(p,i){
+              if (String(p.id).indexOf('temp-') === 0) return;
+              promises.push(sb.from("programme_evenement").update({ordre:i+1,tonalite:ton.note,tonalite_libre:ton.libre}).eq("id",p.id));
+            });
+          });
+          promises.push(sb.from("evenements").update({description:document.getElementById("descEvenement").value}).eq("id",evenementId));
+          await Promise.all(promises);showToast("Programme sauvegardé.","success");
+        }
       }catch(err){showToast("Erreur lors de la sauvegarde.","error");}
       btn.disabled=false;btn.innerHTML="&#128190; Sauvegarder";
     });
 
+    // ── PDF (aucun appel réseau, fonctionne déjà hors ligne) ────
     document.getElementById("btnPdf").addEventListener("click",function(){
       var desc=document.getElementById("descEvenement").value;var dateF=formatDate(evenementData?evenementData.date_event:"");var titre=evenementData?(evenementData.titre||"Événement"):"Événement";var contenu="";
       RUBRIQUES_ORDER.forEach(function(rubrique){var items=programme[rubrique]||[];if(items.length===0)return;var ton=tonalites[rubrique]||{note:"",libre:""};var tonAff=ton.note==="autre"?(ton.libre||""):(ton.note||"");
@@ -378,8 +551,10 @@
       profilUser=await authGuard();if(!profilUser)return;
       buildSharedNavbar(profilUser,"preparation-evenement");
       var ok=await chargerEvenement();if(!ok)return;
-      await Promise.all([chargerChansons(),chargerProgramme()]);
-      renderRubriques();hideLoader();
+      await chargerChansons();
+      await chargerProgramme();
+      majQueueBadge();
+      hideLoader();
     })();
   </script>
 </body>
