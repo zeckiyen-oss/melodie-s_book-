@@ -708,6 +708,13 @@
 
     document.getElementById('btnConfirmerAction').addEventListener('click', async function() {
       if (!actionEnCours) return;
+
+      if (!navigator.onLine) {
+        showToast('Action impossible hors ligne. Connectez-vous à internet.', 'error');
+        fermerModalAction();
+        return;
+      }
+
       var type = actionEnCours.type;
       var membre = actionEnCours.membre;
       var data = actionEnCours.data;
