@@ -11,6 +11,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="melodie-cache.js"></script>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/ajouter-chanson.css" />
 
@@ -271,7 +272,7 @@
 
       <!-- BOUTONS -->
       <div class="form-actions">
-        <a href="repertoire.html" class="btn-annuler">Annuler</a>
+        <a href="repertoire" class="btn-annuler">Annuler</a>
         <button type="button" class="btn-sauvegarder" id="btnSauvegarder">
           <span class="btn-icon">✦</span>
           Enregistrer la chanson
@@ -329,16 +330,19 @@
 
   // INIT
   async function initPage() {
-    var sessionData = await sb.auth.getSession();
-    var session = sessionData.data.session;
-    if (!session) { window.location.href = 'index.html'; return; }
+    var identity;
+    try {
+      identity = await melodieResolveIdentity();
+    } catch (e) {
+      console.warn('[init] melodieResolveIdentity a échoué :', e);
+      window.location.href = '/';
+      return;
+    }
+    if (!identity) return;
+    if (!identity.profil.actif) { window.location.href = '/'; return; }
+    if (identity.profil.role !== 'admin') { window.location.href = 'dashboard'; return; }
 
-    var profilData = await sb.from('profils').select('*').eq('id', session.user.id).single();
-    var profil = profilData.data;
-    if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
-    if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
-
-    await buildSharedNavbar(profil, 'ajouter-chanson');
+    await buildSharedNavbar(identity.profil, 'ajouter-chanson');
     await chargerThemes();
 
     document.getElementById('loader').style.display = 'none';
@@ -351,8 +355,12 @@
   async function chargerThemes() {
     var res = await sb.from('themes').select('*').order('nom');
     var picker = document.getElementById('themesPicker');
-    if (res.error || !res.data || res.data.length === 0) {
-      picker.innerHTML = '<p class="themes-vide">Aucun thème disponible. <a href="gestion-themes.html">Créer des thèmes →</a></p>';
+    if (res.error) {
+      picker.innerHTML = '<p class="themes-vide">Erreur : ' + escHtml(res.error.message) + '</p>';
+      return;
+    }
+    if (!res.data || res.data.length === 0) {
+      picker.innerHTML = '<p class="themes-vide">Aucun thème disponible. <a href="gestion-themes">Créer des thèmes →</a></p>';
       return;
     }
     picker.innerHTML = res.data.map(function(t) {
@@ -528,6 +536,11 @@
     if (!rubrique) { showToast('Choisis une rubrique', 'error'); return; }
     if (!langue)   { showToast('Choisis une langue', 'error'); return; }
 
+    if (!navigator.onLine) {
+      showToast('Action impossible hors ligne. Connectez-vous à internet.', 'error');
+      return;
+    }
+
     var btn = document.getElementById('btnSauvegarder');
     btn.disabled = true;
     btn.textContent = 'Enregistrement…';
@@ -582,7 +595,7 @@
     }
 
     showToast('Chanson enregistrée avec succès !', 'success');
-    setTimeout(function() { window.location.href = 'chanson.html?id=' + chanson.id; }, 1500);
+    setTimeout(function() { window.location.href = 'chanson?id=' + chanson.id; }, 1500);
   });
 
   initPage();
