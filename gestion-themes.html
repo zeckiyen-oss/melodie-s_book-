@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="melodie-cache.js"></script>
 
   <style>
     html, body { background: #0D1B2A !important; color: #FAF6ED !important; min-height: 100vh; }
@@ -363,16 +364,19 @@
     }
 
     async function init() {
-      var sessionData = await sb.auth.getSession();
-      var session = sessionData.data.session;
-      if (!session) { window.location.href = 'index.html'; return; }
+      var identity;
+      try {
+        identity = await melodieResolveIdentity();
+      } catch (e) {
+        console.warn('[init] melodieResolveIdentity a échoué :', e);
+        window.location.href = '/';
+        return;
+      }
+      if (!identity) return;
+      if (!identity.profil.actif) { window.location.href = '/'; return; }
+      if (identity.profil.role !== 'admin') { window.location.href = 'dashboard'; return; }
 
-      var profilData = await sb.from('profils').select('*').eq('id', session.user.id).single();
-      var profil = profilData.data;
-      if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
-      if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
-
-      buildSharedNavbar(profil, 'gestion-themes');
+      buildSharedNavbar(identity.profil, 'gestion-themes');
       await chargerThemes();
       hideLoader();
     }
@@ -482,6 +486,11 @@
 
       if (!nom) { showToast('Le nom du thème est obligatoire.', 'error'); return; }
 
+      if (!navigator.onLine) {
+        showToast('Action impossible hors ligne. Connectez-vous à internet.', 'error');
+        return;
+      }
+
       var btn = document.getElementById('btnSauvegarder');
       btn.disabled = true;
 
@@ -520,6 +529,10 @@
     });
 
     document.getElementById('btnConfirmerSupprimer').addEventListener('click', async function() {
+      if (!navigator.onLine) {
+        showToast('Action impossible hors ligne. Connectez-vous à internet.', 'error');
+        return;
+      }
       if (!themeASupprimer) return;
       await sb.from('chansons_themes').delete().eq('theme_id', themeASupprimer);
       var res = await sb.from('themes').delete().eq('id', themeASupprimer);
