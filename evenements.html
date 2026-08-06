@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="melodie-cache.js"></script>
   <style>
     html,body{background:#0D1B2A!important;color:#FAF6ED!important;min-height:100vh}
     .loader-overlay{position:fixed;inset:0;z-index:9999;background:#0D1B2A;display:flex;align-items:center;justify-content:center}
@@ -233,12 +234,18 @@
     function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast toast-'+(type||'info')+' show';setTimeout(function(){t.classList.remove('show');},3500);}
 
     async function init(){
-      var s=await sb.auth.getSession();
-      if(!s.data.session){window.location.href='index.html';return;}
-      var p=await sb.from('profils').select('*').eq('id',s.data.session.user.id).single();
-      if(!p.data||!p.data.actif){window.location.href='index.html';return;}
-      if(p.data.role!=='admin'){window.location.href='dashboard.html';return;}
-      buildSharedNavbar(p.data,'evenements');
+      var identity;
+      try {
+        identity = await melodieResolveIdentity();
+      } catch (e) {
+        console.warn('[init] melodieResolveIdentity a échoué :', e);
+        window.location.href = '/';
+        return;
+      }
+      if (!identity) return;
+      if (!identity.profil.actif) { window.location.href = '/'; return; }
+      if (identity.profil.role !== 'admin') { window.location.href = 'dashboard'; return; }
+      buildSharedNavbar(identity.profil,'evenements');
       await Promise.all([chargerMembres(),chargerEvenements()]);
       hideLoader();
     }
@@ -349,6 +356,10 @@
       var statut=document.getElementById('evStatut').value;
       if(!titre){showToast('Le titre est obligatoire.','error');return;}
       if(!date_event){showToast('La date est obligatoire.','error');return;}
+      if (!navigator.onLine) {
+        showToast('Action impossible hors ligne. Connectez-vous à internet.', 'error');
+        return;
+      }
       var btn=this;btn.disabled=true;
       var payload={titre:titre,date_event:date_event,description:description||null,preparateur_id:preparateur_id,statut:statut};
       var res=id?await sb.from('evenements').update(payload).eq('id',id):await sb.from('evenements').insert(payload);
@@ -366,6 +377,10 @@
       document.getElementById('modalValider').style.display='flex';
     }
     document.getElementById('btnConfirmerValider').addEventListener('click',async function(){
+      if (!navigator.onLine) {
+        showToast('Action impossible hors ligne. Connectez-vous à internet.', 'error');
+        return;
+      }
       if(!evAValider)return;var btn=this;btn.disabled=true;
       var res=await sb.from('evenements').update({statut:'valide'}).eq('id',evAValider);
       btn.disabled=false;document.getElementById('modalValider').style.display='none';evAValider=null;
@@ -379,6 +394,10 @@
     document.getElementById('btnAnnulerSupprimer').addEventListener('click',fermerModalSupprimer);
     document.getElementById('modalSupprimer').addEventListener('click',function(e){if(e.target===this)fermerModalSupprimer();});
     document.getElementById('btnConfirmerSupprimer').addEventListener('click',async function(){
+      if (!navigator.onLine) {
+        showToast('Action impossible hors ligne. Connectez-vous à internet.', 'error');
+        return;
+      }
       if(!evASupprimer)return;
       await sb.from('programme_evenement').delete().eq('evenement_id',evASupprimer);
       var res=await sb.from('evenements').delete().eq('id',evASupprimer);
