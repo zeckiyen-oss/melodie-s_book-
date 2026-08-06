@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="melodie-cache.js"></script>
 
   <style>
     html, body { background: #0D1B2A !important; color: #FAF6ED !important; }
@@ -227,7 +228,7 @@
       <p>Votre proposition a bien été soumise. L'administrateur l'examinera prochainement.</p>
       <div class="modal-actions">
         <button class="btn-secondary" id="btnFermerModal">Faire une autre proposition</button>
-        <a href="repertoire.html" class="btn-primary">Voir le répertoire</a>
+        <a href="repertoire" class="btn-primary">Voir le répertoire</a>
       </div>
     </div>
   </div>
@@ -241,7 +242,7 @@
   var CLD_CLOUD  = 'dqs0okwy2';
   var CLD_PRESET = 'melodie_audio';
 
-  var currentUser = null;
+  var currentUserId = null;
   var audioPropFichier = null;
   var audioPropUrlFinal = null;
 
@@ -263,25 +264,42 @@
   }
 
   async function init() {
-    var r = await sb.auth.getSession();
-    if (!r.data.session) { window.location.href = 'index.html'; return; }
-    currentUser = r.data.session.user;
+    var identity;
+    try {
+      identity = await melodieResolveIdentity();
+    } catch (e) {
+      console.warn('[init] melodieResolveIdentity a échoué :', e);
+      window.location.href = '/';
+      return;
+    }
+    if (!identity) return;
+    if (!identity.profil.actif) { window.location.href = '/'; return; }
+    currentUserId = identity.userId;
 
-    var p = await sb.from('profils').select('*').eq('id', currentUser.id).single();
-    if (!p.data || !p.data.actif) { window.location.href = 'index.html'; return; }
-
-    await buildSharedNavbar(p.data, 'proposer');
+    await buildSharedNavbar(identity.profil, 'proposer');
     hideLoader();
     chargerMesPropositions();
   }
 
   async function chargerMesPropositions() {
-    var res = await sb.from('propositions').select('*').eq('propose_par', currentUser.id).order('created_at', { ascending: false }).limit(5);
     var container = document.getElementById('mesPropositions');
-    if (res.error || !res.data || res.data.length === 0) {
+
+    if (!navigator.onLine) {
+      container.innerHTML = '<p class="props-empty">Indisponible hors ligne. Reconnectez-vous pour voir vos propositions.</p>';
+      return;
+    }
+
+    var res = await sb.from('propositions').select('*').eq('propose_par', currentUserId).order('created_at', { ascending: false }).limit(5);
+
+    if (res.error) {
+      container.innerHTML = '<p class="props-empty">Erreur de chargement.</p>';
+      return;
+    }
+    if (!res.data || res.data.length === 0) {
       container.innerHTML = '<p class="props-empty">Vous n\'avez pas encore fait de proposition.</p>';
       return;
     }
+
     var labels = { en_attente:'⏳ En attente', accepte:'✅ Accepté', refuse:'❌ Refusé' };
     container.innerHTML = res.data.map(function(p) {
       return '<div class="prop-item prop-' + p.statut + '">'
@@ -393,6 +411,11 @@
     if (!langue)   { showToast('Veuillez choisir une langue.', 'error'); return; }
     if (!rubrique) { showToast('Veuillez choisir une rubrique.', 'error'); return; }
 
+    if (!navigator.onLine) {
+      showToast('Action impossible hors ligne. Connectez-vous à internet.', 'error');
+      return;
+    }
+
     var btn = document.getElementById('btnSoumettre');
     btn.disabled = true;
     btn.innerHTML = '<span class="btn-icon">↻</span> Envoi…';
@@ -427,7 +450,7 @@
       commentaire: commentaire || null,
       audio_url: audioPropUrlFinal || null,
       statut: 'en_attente',
-      propose_par: currentUser.id
+      propose_par: currentUserId
     });
 
     btn.disabled = false;
@@ -439,7 +462,7 @@
         var res2 = await sb.from('propositions').insert({
           titre: titre, artiste: artiste || null, langue: langue, rubrique: rubrique,
           paroles: paroles || null, commentaire: commentaire || null,
-          statut: 'en_attente', propose_par: currentUser.id
+          statut: 'en_attente', propose_par: currentUserId
         });
         if (res2.error) { showToast('Erreur lors de l\'envoi. Réessayez.', 'error'); return; }
       } else {
