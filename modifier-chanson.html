@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="melodie-cache.js"></script>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/ajouter-chanson.css" />
 
@@ -251,20 +252,23 @@
   });
 
   async function initPage() {
-    var sessionData = await sb.auth.getSession();
-    var session = sessionData.data.session;
-    if (!session) { window.location.href = 'index.html'; return; }
+    var identity;
+    try {
+      identity = await melodieResolveIdentity();
+    } catch (e) {
+      console.warn('[init] melodieResolveIdentity a échoué :', e);
+      window.location.href = '/';
+      return;
+    }
+    if (!identity) return;
+    if (!identity.profil.actif) { window.location.href = '/'; return; }
+    if (identity.profil.role !== 'admin') { window.location.href = 'dashboard'; return; }
 
-    var profilData = await sb.from('profils').select('*').eq('id', session.user.id).single();
-    var profil = profilData.data;
-    if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
-    if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
-
-    await buildSharedNavbar(profil, 'modifier-chanson');
+    await buildSharedNavbar(identity.profil, 'modifier-chanson');
 
     var params = new URLSearchParams(window.location.search);
     chansonId = params.get('id');
-    if (!chansonId) { window.location.href = 'repertoire.html'; return; }
+    if (!chansonId) { window.location.href = 'repertoire'; return; }
 
     await chargerThemes();
     await chargerChanson();
@@ -276,15 +280,19 @@
   async function chargerChanson() {
     var res = await sb.from('chansons').select('*').eq('id', chansonId).single();
     if (res.error || !res.data) {
-      showToast('Chanson introuvable.', 'error');
-      setTimeout(function() { window.location.href = 'repertoire.html'; }, 2000);
+      if (!navigator.onLine) {
+        showToast('Indisponible hors ligne. Connectez-vous à internet.', 'error');
+      } else {
+        showToast('Chanson introuvable' + (res.error ? ' : ' + res.error.message : '') + '.', 'error');
+      }
+      setTimeout(function() { window.location.href = 'repertoire'; }, 2000);
       return;
     }
     var ch = res.data;
     document.title = 'Modifier — ' + ch.titre;
     document.getElementById('pageTitre').textContent     = 'Modifier : ' + ch.titre;
     document.getElementById('pageSousTitre').textContent = ch.rubrique || '';
-    document.getElementById('btnAnnuler').href           = 'chanson.html?id=' + chansonId;
+    document.getElementById('btnAnnuler').href           = 'chanson?id=' + chansonId;
     document.getElementById('numero').value  = ch.numero  || '';
     document.getElementById('titre').value   = ch.titre   || '';
     document.getElementById('langue').value  = ch.langue  || '';
@@ -316,8 +324,12 @@
   async function chargerThemes() {
     var res = await sb.from('themes').select('*').order('nom');
     var picker = document.getElementById('themesPicker');
+    if (res.error) {
+      picker.innerHTML = '<p class="themes-vide">Erreur : ' + escHtml(res.error.message) + '</p>';
+      return;
+    }
     if (!res.data || res.data.length === 0) {
-      picker.innerHTML = '<p class="themes-vide">Aucun thème. <a href="gestion-themes.html">Créer des thèmes →</a></p>';
+      picker.innerHTML = '<p class="themes-vide">Aucun thème. <a href="gestion-themes">Créer des thèmes →</a></p>';
       return;
     }
     picker.innerHTML = res.data.map(function(t) {
@@ -493,6 +505,11 @@
     if (!rubrique) { showToast('Choisis une rubrique', 'error'); return; }
     if (!langue)   { showToast('Choisis une langue', 'error'); return; }
 
+    if (!navigator.onLine) {
+      showToast('Action impossible hors ligne. Connectez-vous à internet.', 'error');
+      return;
+    }
+
     var btn = document.getElementById('btnSauvegarder');
     btn.disabled = true;
     btn.textContent = 'Enregistrement…';
@@ -548,7 +565,7 @@
     }
 
     showToast('Modifications enregistrées !', 'success');
-    setTimeout(function() { window.location.href = 'chanson.html?id=' + chansonId; }, 1500);
+    setTimeout(function() { window.location.href = 'chanson?id=' + chansonId; }, 1500);
   });
 
   initPage();
