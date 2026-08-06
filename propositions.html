@@ -213,7 +213,11 @@
 
     async function chargerPropositions() {
       var res = await sb.from('propositions').select('*, profils(nom, email, photo_url)').order('created_at', { ascending: false });
-      if (res.error) { showToast('Erreur de chargement.', 'error'); return; }
+      if (res.error) {
+        console.error('[chargerPropositions] erreur Supabase :', res.error);
+        showToast('Erreur : ' + (res.error.message || 'chargement impossible'), 'error');
+        return;
+      }
       propositions = res.data || [];
       mettreAJourCompteurs();
       appliquerFiltres();
