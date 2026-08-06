@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="melodie-cache.js"></script>
 
   <style>
     html, body { background: #0D1B2A !important; color: #FAF6ED !important; min-height: 100vh; }
@@ -410,17 +411,20 @@
     }
 
     async function init() {
-      var sessionData = await sb.auth.getSession();
-      var session = sessionData.data.session;
-      if (!session) { window.location.href = 'index.html'; return; }
-      currentUser = session.user;
+      var identity;
+      try {
+        identity = await melodieResolveIdentity();
+      } catch (e) {
+        console.warn('[init] melodieResolveIdentity a échoué :', e);
+        window.location.href = '/';
+        return;
+      }
+      if (!identity) return;
+      if (!identity.profil.actif) { window.location.href = '/'; return; }
+      if (identity.profil.role !== 'admin') { window.location.href = 'dashboard'; return; }
+      currentUser = { id: identity.userId };
 
-      var profilData = await sb.from('profils').select('*').eq('id', currentUser.id).single();
-      var profil = profilData.data;
-      if (!profil || !profil.actif) { window.location.href = 'index.html'; return; }
-      if (profil.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
-
-      buildSharedNavbar(profil, 'designateur');
+      buildSharedNavbar(identity.profil, 'designateur');
       await Promise.all([chargerMembres(), chargerCultes()]);
       hideLoader();
     }
@@ -512,7 +516,7 @@
           + '<div class="ds-culte-actions">'
             + '<button class="btn-secondary ds-btn-sm btn-edit-culte" data-id="' + c.id + '">&#9999;&#65039; Modifier</button>'
             + '<button class="btn-secondary ds-btn-sm ds-btn-danger btn-del-culte" data-id="' + c.id + '">&#128465; Supprimer</button>'
-            + '<a href="preparation-culte.html?id=' + escHtml(c.id) + '" class="btn-primary ds-btn-sm">&#128330; Voir prog.</a>'
+            + '<a href="preparation-culte?id=' + escHtml(c.id) + '" class="btn-primary ds-btn-sm">&#128330; Voir prog.</a>'
           + '</div>';
         container.appendChild(div);
       });
@@ -584,6 +588,10 @@
     });
 
     document.getElementById('btnConfirmerDesignation').addEventListener('click', async function() {
+      if (!navigator.onLine) {
+        showToast('Action impossible hors ligne. Connectez-vous à internet.', 'error');
+        return;
+      }
       if (!pendingSave) return;
       var id = pendingSave.id;
       var theme = pendingSave.theme;
@@ -628,6 +636,10 @@
     });
 
     document.getElementById('btnConfirmerSupprimerCulte').addEventListener('click', async function() {
+      if (!navigator.onLine) {
+        showToast('Action impossible hors ligne. Connectez-vous à internet.', 'error');
+        return;
+      }
       if (!culteASupprimer) return;
       await sb.from('programme_culte').delete().eq('culte_id', culteASupprimer);
       var res = await sb.from('cultes').delete().eq('id', culteASupprimer);
