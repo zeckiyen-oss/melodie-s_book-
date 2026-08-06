@@ -460,7 +460,11 @@
 
     async function chargerMembres() {
       var res = await sb.from('profils').select('*').order('created_at', { ascending: false });
-      if (res.error) { showToast('Erreur de chargement.', 'error'); return; }
+      if (res.error) {
+        console.error('[chargerMembres] erreur Supabase :', res.error);
+        showToast('Erreur : ' + (res.error.message || 'chargement impossible'), 'error');
+        return;
+      }
       membres = res.data || [];
       mettreAJourCompteurs();
       appliquerFiltre();
