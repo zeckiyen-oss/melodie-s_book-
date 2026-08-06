@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="melodie-cache.js"></script>
 </head>
 <body class="page-propositions">
 
@@ -193,14 +194,19 @@
     }
 
     async function init() {
-      var r = await sb.auth.getSession();
-      if (!r.data.session) { window.location.href = 'index.html'; return; }
+      var identity;
+      try {
+        identity = await melodieResolveIdentity();
+      } catch (e) {
+        console.warn('[init] melodieResolveIdentity a échoué :', e);
+        window.location.href = '/';
+        return;
+      }
+      if (!identity) return;
+      if (!identity.profil.actif) { window.location.href = '/'; return; }
+      if (identity.profil.role !== 'admin') { window.location.href = 'dashboard'; return; }
 
-      var p = await sb.from('profils').select('*').eq('id', r.data.session.user.id).single();
-      if (!p.data || !p.data.actif) { window.location.href = 'index.html'; return; }
-      if (p.data.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
-
-      await buildSharedNavbar(p.data, 'propositions');
+      await buildSharedNavbar(identity.profil, 'propositions');
       await chargerPropositions();
       hideLoader();
     }
@@ -361,6 +367,10 @@
     function ouvrirModalAjouter(p) {
       document.getElementById('modalAjouter').style.display = 'flex';
       document.getElementById('btnConfirmerAjouter').onclick = async function() {
+        if (!navigator.onLine) {
+          showToast('Action impossible hors ligne. Connectez-vous à internet.', 'error');
+          return;
+        }
         var btn = this;
         btn.disabled = true;
         btn.textContent = 'Traitement…';
@@ -396,6 +406,10 @@
     function ouvrirModalRefuser(p) {
       document.getElementById('modalRefuser').style.display = 'flex';
       document.getElementById('btnConfirmerRefuser').onclick = async function() {
+        if (!navigator.onLine) {
+          showToast('Action impossible hors ligne. Connectez-vous à internet.', 'error');
+          return;
+        }
         var btn = this;
         btn.disabled = true;
         btn.textContent = 'Traitement…';
