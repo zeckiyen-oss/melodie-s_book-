@@ -335,7 +335,7 @@
       <div class="section-card" id="prochainEvCard">
         <div class="section-card-header">
           <div class="section-card-title"><span>&#128197;</span> Prochain événement</div>
-          <a href="evenements" class="section-card-link" id="lienEvenements">Gérer →</a>
+          <a href="evenements" class="section-card-link" id="lienEvenements" data-online-only="1">Gérer →</a>
         </div>
         <div class="section-card-body" id="prochainEvBody">
           <div class="no-culte">Chargement…</div>
@@ -356,7 +356,7 @@
       <div class="section-card col-full" id="propositionsSection" style="display:none;">
         <div class="section-card-header">
           <div class="section-card-title"><span>&#128161;</span> Propositions en attente</div>
-          <a href="propositions" class="section-card-link">Gérer →</a>
+          <a href="propositions" class="section-card-link" data-online-only="1">Gérer →</a>
         </div>
         <div class="section-card-body" id="propositionsBody">
           <div class="no-culte">Aucune proposition en attente.</div>
@@ -399,6 +399,9 @@
       }
     }
 
+    /* Chaque item peut porter onlineOnly:true — ces pages nécessitent
+       une connexion internet (écriture, ou données non mises en cache).
+       Doit rester synchronisé avec MELODIE_ONLINE_ONLY_PAGES (navbar.js). */
     function buildQuickAccess(role, nbPropositions) {
       var grid = document.getElementById('quickAccessGrid');
       grid.innerHTML = '';
@@ -408,7 +411,7 @@
         { icon: '&#128218;', label: 'Themes',       href: 'themes' },
         { icon: '&#128218;', label: 'Bibliotheque', href: 'bibliotheque' },
         { icon: '&#128220;', label: 'Historique',   href: 'historique' },
-        { icon: '&#128161;', label: 'Proposer',     href: 'proposer' },
+        { icon: '&#128161;', label: 'Proposer',     href: 'proposer', onlineOnly: true },
         { icon: '&#128330;', label: 'Programme',    href: 'programme' }
       ];
 
@@ -418,23 +421,27 @@
       }
 
       if (role === 'admin') {
-        items.push({ icon: '&#10133;',  label: 'Ajouter chanson', href: 'ajouter-chanson' });
-        items.push({ icon: '&#128197;', label: 'Evenements',      href: 'evenements' });
-        items.push({ icon: '&#127919;', label: 'Designateur',     href: 'designateur' });
-        items.push({ icon: '&#10003;',  label: 'Validation',      href: 'validation-programme' });
-        items.push({ icon: '&#128101;', label: 'Comptes',         href: 'comptes' });
-        items.push({ icon: '&#128202;', label: 'Statistiques',    href: 'statistiques' });
-        items.push({ icon: '&#128203;', label: 'Propositions',    href: 'propositions', badge: nbPropositions });
+        items.push({ icon: '&#10133;',  label: 'Ajouter chanson', href: 'ajouter-chanson', onlineOnly: true });
+        items.push({ icon: '&#128197;', label: 'Evenements',      href: 'evenements', onlineOnly: true });
+        items.push({ icon: '&#127919;', label: 'Designateur',     href: 'designateur', onlineOnly: true });
+        items.push({ icon: '&#10003;',  label: 'Validation',      href: 'validation-programme', onlineOnly: true });
+        items.push({ icon: '&#128101;', label: 'Comptes',         href: 'comptes', onlineOnly: true });
+        items.push({ icon: '&#128202;', label: 'Statistiques',    href: 'statistiques', onlineOnly: true });
+        items.push({ icon: '&#128203;', label: 'Propositions',    href: 'propositions', badge: nbPropositions, onlineOnly: true });
       }
 
       items.forEach(function(item) {
         var a = document.createElement('a');
         a.className = 'qa-card';
         a.href = item.href;
+        if (item.onlineOnly) a.setAttribute('data-online-only', '1');
         var badgeHtml = (item.badge && item.badge > 0) ? '<span class="qa-badge">' + item.badge + '</span>' : '';
         a.innerHTML = badgeHtml + '<span class="qa-icon">' + item.icon + '</span><span class="qa-label">' + item.label + '</span>';
         grid.appendChild(a);
       });
+
+      // Réapplique les gardes hors ligne sur les cartes qu'on vient d'injecter
+      if (window.melodieApplyOfflineGuards) window.melodieApplyOfflineGuards();
     }
 
     function displayProchainCulte(culte) {
@@ -517,8 +524,9 @@
         return '<div class="proposition-item"><div>'
           + '<div class="proposition-titre">' + escHtml(p.titre) + '</div>'
           + '<div class="proposition-artiste">' + escHtml(p.artiste || '') + ' · ' + escHtml(p.langue || '') + '</div>'
-          + '</div><a href="propositions" class="btn-voir">Voir</a></div>';
+          + '</div><a href="propositions" class="btn-voir" data-online-only="1">Voir</a></div>';
       }).join('');
+      if (window.melodieApplyOfflineGuards) window.melodieApplyOfflineGuards();
     }
 
     async function init() {
