@@ -11,7 +11,35 @@
    NOTE : tous les liens utilisent des URLs SANS .html
    (Cloudflare Pages échoue sur les URLs .html directes —
    voir diagnostic du 2026-07-09).
+
+   GARDE-FOUS HORS LIGNE (2026-08-07) :
+   Les pages listées dans MELODIE_ONLINE_ONLY_PAGES nécessitent
+   une connexion internet pour fonctionner (écriture, ou lecture
+   de données non mises en cache). Leurs liens dans la navbar
+   sont automatiquement désactivés hors ligne.
+   Pour les boutons internes à une page (ex: "Ajouter une
+   chanson" dans repertoire.html), ajoutez l'attribut
+   data-online-only="1" sur l'élément, puis appelez
+   window.melodieApplyOfflineGuards() après l'avoir injecté
+   dans le DOM.
    ============================================================ */
+
+/* Pages nécessitant une connexion internet pour être utilisées.
+   Toute page absente de cette liste est considérée offline-safe
+   (lecture via melodie-cache.js, ou écriture via melodie-queue.js
+   pour preparation-culte / preparation-evenement). */
+var MELODIE_ONLINE_ONLY_PAGES = [
+  "comptes",
+  "validation-programme",
+  "proposer",
+  "propositions",
+  "ajouter-chanson",
+  "modifier-chanson",
+  "designateur",
+  "gestion-themes",
+  "evenements",
+  "statistiques"
+];
 
 /* ── Résolution d'identité, sûre hors ligne ──────────────────
    À appeler en tout début de init() sur chaque page protégée,
@@ -147,7 +175,9 @@ async function buildSharedNavbar(profil, pageActive) {
 
   liensFiltres.forEach(function(l) {
     var isActive = l.id === pageActive;
-    navHtml += '<a href="' + l.href + '" class="snav-link' + (isActive ? ' snav-link-active' : '') + '">'
+    var isOnlineOnly = MELODIE_ONLINE_ONLY_PAGES.indexOf(l.id) !== -1;
+    navHtml += '<a href="' + l.href + '" class="snav-link' + (isActive ? ' snav-link-active' : '') + '"'
+      + (isOnlineOnly ? ' data-online-only="1"' : '') + '>'
       + l.label + '</a>';
   });
 
@@ -180,10 +210,87 @@ async function buildSharedNavbar(profil, pageActive) {
       ".snav-link{display:inline-flex;align-items:center;padding:0.55rem 0.85rem;font-family:'Lato',sans-serif;font-size:0.8rem;font-weight:600;color:rgba(250,246,237,0.6);text-decoration:none;letter-spacing:0.03em;white-space:nowrap;border-bottom:2px solid transparent;transition:color 0.2s,border-color 0.2s;}",
       ".snav-link:hover{color:#FAF6ED;}",
       ".snav-link-active{color:#F0D98A;border-bottom-color:#C9A84C;}",
-      "body{padding-top:0!important;}"
+      "body{padding-top:0!important;}",
+      /* ── Garde-fous hors ligne ── */
+      ".melodie-disabled{opacity:0.32!important;pointer-events:none!important;cursor:not-allowed!important;filter:grayscale(0.6);}",
+      ".melodie-offline-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:rgba(13,27,42,0.97);border:1px solid rgba(201,168,76,0.4);color:#F0D98A;font-family:'Lato',sans-serif;font-size:0.82rem;font-weight:600;padding:0.7rem 1.2rem;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:9999;opacity:0;transition:opacity 0.25s ease,transform 0.25s ease;pointer-events:none;text-align:center;max-width:88vw;}",
+      ".melodie-offline-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}"
     ].join("");
     document.head.appendChild(style);
   }
+
+  melodieApplyOfflineGuards();
+  melodieBindOfflineListeners();
+}
+
+/* ── Garde-fous hors ligne ────────────────────────────────────
+   Désactive tout élément [data-online-only] quand l'appareil
+   est hors ligne (navbar ET boutons internes aux pages).
+   Idempotent : peut être rappelée autant de fois que nécessaire
+   (ex: après avoir injecté dynamiquement des boutons dans une
+   page — cf. quickAccessGrid du dashboard).
+   ============================================================ */
+function melodieApplyOfflineGuards() {
+  var offline = !navigator.onLine;
+  document.body.classList.toggle('melodie-offline', offline);
+
+  var els = document.querySelectorAll('[data-online-only]');
+  els.forEach(function(el) {
+    if (offline) {
+      el.classList.add('melodie-disabled');
+      el.setAttribute('aria-disabled', 'true');
+      if (el.tagName === 'A' && el.hasAttribute('href')) {
+        el.dataset.melodieHref = el.getAttribute('href');
+        el.removeAttribute('href');
+      }
+      if (el.tagName === 'BUTTON') el.disabled = true;
+    } else {
+      el.classList.remove('melodie-disabled');
+      el.removeAttribute('aria-disabled');
+      if (el.tagName === 'A' && el.dataset.melodieHref) {
+        el.setAttribute('href', el.dataset.melodieHref);
+        delete el.dataset.melodieHref;
+      }
+      if (el.tagName === 'BUTTON') el.disabled = false;
+    }
+  });
+}
+window.melodieApplyOfflineGuards = melodieApplyOfflineGuards;
+
+/* Lie les écouteurs online/offline une seule fois par session de page,
+   même si buildSharedNavbar est rappelée. */
+function melodieBindOfflineListeners() {
+  if (window._melodieOfflineListenersBound) return;
+  window._melodieOfflineListenersBound = true;
+  window.addEventListener('online', melodieApplyOfflineGuards);
+  window.addEventListener('offline', melodieApplyOfflineGuards);
+
+  // Filet de sécurité : si un élément désactivé est cliqué malgré tout
+  // (ex: race condition juste au moment du passage hors ligne),
+  // on bloque l'action et on affiche un message clair.
+  document.addEventListener('click', function(e) {
+    if (!document.body.classList.contains('melodie-offline')) return;
+    var el = e.target.closest && e.target.closest('[data-online-only]');
+    if (el) {
+      e.preventDefault();
+      e.stopPropagation();
+      melodieOfflineToast();
+    }
+  }, true);
+}
+
+function melodieOfflineToast() {
+  var existing = document.querySelector('.melodie-offline-toast');
+  if (existing) existing.remove();
+  var toast = document.createElement('div');
+  toast.className = 'melodie-offline-toast';
+  toast.textContent = 'Action impossible hors ligne. Connectez-vous à internet.';
+  document.body.appendChild(toast);
+  requestAnimationFrame(function() { toast.classList.add('show'); });
+  setTimeout(function() {
+    toast.classList.remove('show');
+    setTimeout(function() { toast.remove(); }, 300);
+  }, 2600);
 }
 
 async function snavLogout() {
