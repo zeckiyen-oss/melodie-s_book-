@@ -11,6 +11,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="navbar.js"></script>
+  <script src="melodie-cache.js"></script>
   
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0D1B2A" />
@@ -120,8 +121,8 @@
         </div>
       </div>
       <div class="chanson-actions" id="chActions" style="display:none">
-        <a href="#" class="btn-action btn-modifier" id="btnModifier">✏️ Modifier</a>
-        <button class="btn-action btn-supprimer" id="btnSupprimer">🗑️ Supprimer</button>
+        <a href="#" class="btn-action btn-modifier" id="btnModifier" data-online-only="1">✏️ Modifier</a>
+        <button class="btn-action btn-supprimer" id="btnSupprimer" data-online-only="1">🗑️ Supprimer</button>
       </div>
     </header>
 
@@ -141,7 +142,7 @@
               Votre navigateur ne supporte pas l'audio.
             </audio>
             <p class="audio-hint">Utilisez les contrôles pour lire la chanson</p>
-            <button class="btn-suppr-audio" id="btnSupprimerAudio" style="display:none">🗑️ Supprimer l'audio</button>
+            <button class="btn-suppr-audio" id="btnSupprimerAudio" style="display:none" data-online-only="1">🗑️ Supprimer l'audio</button>
           </div>
 
           <div id="audioVide" style="display:none">
@@ -149,7 +150,7 @@
           </div>
 
           <div class="audio-upload-zone" id="audioUploadZone" style="display:none">
-            <button class="btn-choisir-audio" id="btnChoisirAudio">📂 Choisir un fichier audio</button>
+            <button class="btn-choisir-audio" id="btnChoisirAudio" data-online-only="1">📂 Choisir un fichier audio</button>
             <input type="file" id="audioFileInput" accept="audio/*" />
             <p class="audio-upload-hint">MP3, M4A, WAV — max 50 Mo</p>
             <div class="audio-upload-progress" id="audioProgress">
@@ -336,9 +337,10 @@
   async function loadChanson() {
     var premierAffichage = true;
 
-    await melodieFetch('chanson-' + chansonId, async function() {
+    await melodieCache('chanson-' + chansonId, async function() {
       var res = await sb.from('chansons').select('*').eq('id', chansonId).single();
-      if (res.error || !res.data) return null;
+      if (res.error) throw res.error;
+      if (!res.data) throw new Error('Chanson introuvable');
       return res.data;
     }, function(ch, fromCache) {
       if (!ch) {
@@ -387,7 +389,8 @@
       if (currentProfil.role === 'admin') {
         document.getElementById('btnSupprimerAudio').style.display = 'inline-block';
       }
-      melodieCacheAudio(ch.audio_url);
+      // NB : le cache audio hors ligne est géré par le service worker (sw.js v8),
+      // pas de mise en cache manuelle nécessaire ici.
     } else {
       document.getElementById('audioVide').style.display = 'block';
     }
@@ -397,6 +400,9 @@
       document.getElementById('chActions').style.display = 'flex';
       document.getElementById('btnModifier').href = 'modifier-chanson?id=' + chansonId;
     }
+
+    // Réapplique les gardes hors ligne sur les boutons d'action qu'on vient de révéler
+    if (window.melodieApplyOfflineGuards) window.melodieApplyOfflineGuards();
   }
 
   async function loadThemes() {
