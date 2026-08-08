@@ -84,7 +84,7 @@
         </div>
       </div>
       <div class="page-header-actions" id="adminActions" style="display:none;">
-        <a href="ajouter-chanson" class="btn-primary">
+        <a href="ajouter-chanson" class="btn-primary" data-online-only="1">
           <span>➕</span> Ajouter une chanson
         </a>
       </div>
@@ -214,7 +214,7 @@
         div.className = 'rep-item';
 
         var adminBtn = userRole === 'admin'
-          ? '<a href="modifier-chanson?id=' + c.id + '" class="rep-btn-edit" title="Modifier" onclick="event.stopPropagation()">✏️</a>' : '';
+          ? '<a href="modifier-chanson?id=' + c.id + '" class="rep-btn-edit" title="Modifier" data-online-only="1" onclick="event.stopPropagation()">✏️</a>' : '';
 
         var audioBadge = c.audio_url ? '<span title="Audio disponible">🎵</span>' : '';
 
@@ -275,6 +275,9 @@
       });
 
       renderPagination();
+
+      // Réapplique les gardes hors ligne sur les liens "Modifier" qu'on vient d'injecter
+      if (window.melodieApplyOfflineGuards) window.melodieApplyOfflineGuards();
     }
 
     function renderPagination() {
@@ -328,7 +331,10 @@
 
       userRole = identity.profil.role || 'membre';
       await buildSharedNavbar(identity.profil, 'repertoire');
-      if (userRole === 'admin') document.getElementById('adminActions').style.display = 'flex';
+      if (userRole === 'admin') {
+        document.getElementById('adminActions').style.display = 'flex';
+        if (window.melodieApplyOfflineGuards) window.melodieApplyOfflineGuards();
+      }
 
       var premierAffichage = true;
 
