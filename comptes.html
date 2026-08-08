@@ -404,7 +404,7 @@
 
       <div class="modal-actions">
         <button class="btn-secondary" id="btnAnnulerModalAction">Annuler</button>
-        <button class="btn-primary" id="btnConfirmerAction">Confirmer</button>
+        <button class="btn-primary" id="btnConfirmerAction" data-online-only="1">Confirmer</button>
       </div>
     </div>
   </div>
@@ -453,7 +453,7 @@
 
       if (identity.profil.role !== 'admin') { window.location.href = 'dashboard'; return; }
 
-      buildSharedNavbar(identity.profil, 'comptes');
+      await buildSharedNavbar(identity.profil, 'comptes');
       await chargerMembres();
       hideLoader();
     }
@@ -582,15 +582,15 @@
           '<div class="cp-actions-section">'
             + '<div class="cp-actions-title">Actions</div>'
             + '<div class="cp-actions-grid">'
-              + '<button class="cp-action-btn cp-action-valider" id="btnValider">&#10003; Valider le compte</button>'
-              + '<button class="cp-action-btn cp-action-rejeter" id="btnRejeter">&#128465; Rejeter</button>'
+              + '<button class="cp-action-btn cp-action-valider" id="btnValider" data-online-only="1">&#10003; Valider le compte</button>'
+              + '<button class="cp-action-btn cp-action-rejeter" id="btnRejeter" data-online-only="1">&#128465; Rejeter</button>'
             + '</div>'
           + '</div>';
       } else if (!estMoi) {
         var roles = ['membre','preparateur','admin'];
         var roleLabels = { admin:'Admin', preparateur:'Préparateur', membre:'Membre' };
         var roleButtons = roles.map(function(r) {
-          return '<button class="cp-role-option' + (m.role === r ? ' cp-role-option-active' : '') + '" data-role="' + r + '">' + roleLabels[r] + '</button>';
+          return '<button class="cp-role-option' + (m.role === r ? ' cp-role-option-active' : '') + '" data-role="' + r + '" data-online-only="1">' + roleLabels[r] + '</button>';
         }).join('');
         actionsHtml =
           '<div class="cp-actions-section">'
@@ -599,7 +599,7 @@
           + '</div>'
           + '<div class="cp-actions-section">'
             + '<div class="cp-actions-title">Gestion du compte</div>'
-            + '<button class="cp-action-btn cp-action-desactiver" id="btnDesactiver">&#128274; Désactiver le compte</button>'
+            + '<button class="cp-action-btn cp-action-desactiver" id="btnDesactiver" data-online-only="1">&#128274; Désactiver le compte</button>'
           + '</div>';
       } else {
         actionsHtml = '<div class="cp-info-moi">C\'est votre propre compte. Vous ne pouvez pas le modifier.</div>';
@@ -644,6 +644,9 @@
           if (btn) demanderAction('role', btn.getAttribute('data-role'));
         });
       }
+
+      // Réapplique les gardes hors ligne sur les boutons d'action qu'on vient d'injecter
+      if (window.melodieApplyOfflineGuards) window.melodieApplyOfflineGuards();
     }
 
     var actionConfigs = {
