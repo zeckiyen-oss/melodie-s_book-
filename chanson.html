@@ -138,7 +138,7 @@
           </div>
 
           <div class="audio-player-custom" id="audioPlayerWrap" style="display:none">
-            <audio id="audioPlayer" controls preload="metadata" style="width:100%;border-radius:8px;">
+            <audio id="audioPlayer" controls controlsList="nodownload" preload="metadata" style="width:100%;border-radius:8px;">
               Votre navigateur ne supporte pas l'audio.
             </audio>
             <p class="audio-hint">Utilisez les contrôles pour lire la chanson</p>
@@ -247,7 +247,6 @@
   function getBadgeClass(type, val) {
     var map = {
       langue:   { 'Français':'badge-fr', 'Anglais':'badge-en', 'Gun':'badge-default', 'Fon':'badge-default', 'Adja':'badge-default', 'Yoruba':'badge-default', 'Autre':'badge-autre' },
-      style:    { contemporain:'badge-contemp', classique:'badge-class', gospel:'badge-gospel', cantique:'badge-cant' },
       rubrique: { Adoration:'badge-adora', Louange:'badge-louange', 'Prélude':'badge-prelude', Offrande:'badge-offrand', 'Méditation':'badge-medit', Envoi:'badge-envoi', 'Chant de réflexion':'badge-reflexion' }
     };
     return (map[type] && map[type][val]) ? map[type][val] : 'badge-default';
@@ -370,7 +369,6 @@
 
     var tags = [
       ch.langue   ? '<span class="badge ' + getBadgeClass('langue',   ch.langue)   + '">' + escHtml(ch.langue)   + '</span>' : '',
-      ch.style    ? '<span class="badge ' + getBadgeClass('style',    ch.style)    + '">' + escHtml(ch.style)    + '</span>' : '',
       ch.rubrique ? '<span class="badge ' + getBadgeClass('rubrique', ch.rubrique) + '">' + escHtml(ch.rubrique) + '</span>' : '',
     ].join('');
     document.getElementById('chTags').innerHTML = tags;
