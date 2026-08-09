@@ -52,8 +52,6 @@
     .rep-btn-audio { display:inline-flex; align-items:center; gap:0.35rem; padding:0.3rem 0.75rem; border-radius:7px; font-family:'Lato',sans-serif; font-size:0.75rem; font-weight:700; cursor:pointer; border:none; transition:background 0.2s; }
     .rep-btn-ecouter { background:rgba(201,168,76,0.15); border:1px solid rgba(201,168,76,0.35); color:#F0D98A; }
     .rep-btn-ecouter:hover { background:rgba(201,168,76,0.28); }
-    .rep-btn-dl { background:rgba(76,175,130,0.12); border:1px solid rgba(76,175,130,0.3); color:#7ecfaf; text-decoration:none; }
-    .rep-btn-dl:hover { background:rgba(76,175,130,0.22); }
     .filtres-row { display:flex; flex-wrap:wrap; gap:0.8rem; align-items:flex-end; }
     @media (max-width:600px) {
       .filtres-row { flex-direction:column; gap:0.6rem; }
@@ -121,16 +119,6 @@
             <option value="Adja">Adja</option>
             <option value="Yoruba">Yoruba</option>
             <option value="Autre">Autre</option>
-          </select>
-        </div>
-        <div class="filtre-group">
-          <label class="filtre-label">Style</label>
-          <select class="filtre-select" id="filtreStyle">
-            <option value="">Tous</option>
-            <option value="Gospel">Gospel</option>
-            <option value="Contemporain">Contemporain</option>
-            <option value="Traditionnel">Traditionnel</option>
-            <option value="Classique">Classique</option>
           </select>
         </div>
         <div class="filtre-group">
@@ -237,10 +225,9 @@
           var playerId = 'audio-player-' + c.id;
           audioZoneHtml = '<div class="rep-audio-actions" style="margin-top:0.5rem;display:flex;gap:0.5rem;flex-wrap:wrap;">'
             + '<button class="rep-btn-audio rep-btn-ecouter" data-zone="' + zoneId + '" data-player="' + playerId + '" data-url="' + escHtml(c.audio_url) + '">🎧 Écouter</button>'
-            + '<a class="rep-btn-audio rep-btn-dl" href="' + escHtml(c.audio_url) + '" download target="_blank">⬇️ Télécharger</a>'
             + '</div>'
             + '<div class="rep-audio-zone" id="' + zoneId + '">'
-            + '<audio class="rep-audio-player" id="' + playerId + '" controls preload="none"></audio>'
+            + '<audio class="rep-audio-player" id="' + playerId + '" controls controlsList="nodownload" preload="none"></audio>'
             + '</div>';
         }
 
@@ -298,14 +285,12 @@
       var search   = document.getElementById('searchInput').value.toLowerCase().trim();
       var rubrique = document.getElementById('filtreRubrique').value;
       var langue   = document.getElementById('filtreLangue').value;
-      var style    = document.getElementById('filtreStyle').value;
       var tri      = document.getElementById('triSelect').value;
       document.getElementById('searchClear').classList.toggle('hidden', !search);
       filteredChansons = allChansons.filter(function(c) {
         return (!search || (c.titre&&c.titre.toLowerCase().indexOf(search)!==-1) || (c.numero&&String(c.numero).indexOf(search)!==-1))
           && (!rubrique || c.rubrique===rubrique)
-          && (!langue   || c.langue===langue)
-          && (!style    || c.style===style);
+          && (!langue   || c.langue===langue);
       });
       filteredChansons.sort(function(a,b) {
         if (tri==='numero')   return (a.numero||9999)-(b.numero||9999);
@@ -368,7 +353,6 @@
     });
     document.getElementById('filtreRubrique').addEventListener('change', applyFiltres);
     document.getElementById('filtreLangue').addEventListener('change', applyFiltres);
-    document.getElementById('filtreStyle').addEventListener('change', applyFiltres);
     document.getElementById('triSelect').addEventListener('change', applyFiltres);
 
     init();
