@@ -87,7 +87,7 @@
     }
 
     /* ── MAIN ── */
-    .cp-main { max-width: 960px; margin: 0 auto; padding: 1.4rem 1rem 4rem; }
+    .cp-main { max-width: 720px; margin: 0 auto; padding: 1.4rem 1rem 4rem; }
 
     /* ── TOOLBAR ── */
     .cp-toolbar {
@@ -124,31 +124,40 @@
     }
     .cp-search-input::placeholder { color: rgba(250,246,237,0.3); }
 
-    /* ── LAYOUT ── */
-    .cp-layout {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-    @media (min-width: 680px) {
-      .cp-layout { grid-template-columns: 1fr 320px; }
-    }
-
-    /* ── LISTE ── */
+    /* ── LISTE (accordéon inline) ── */
     .cp-list-section { display: flex; flex-direction: column; gap: 0.6rem; }
     .cp-count { font-size: 0.78rem; color: rgba(250,246,237,0.35); margin-bottom: 0.2rem; }
     .cp-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .cp-item-wrap { display: flex; flex-direction: column; }
 
     .cp-item {
       display: flex; align-items: center; gap: 0.8rem;
       background: linear-gradient(145deg, #1A2E45, #152438);
       border: 1px solid rgba(201,168,76,0.15); border-radius: 12px;
       padding: 0.75rem 1rem; cursor: pointer;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s, border-radius 0.2s;
     }
     .cp-item:hover { border-color: rgba(201,168,76,0.35); }
-    .cp-item-active { border-color: #C9A84C !important; box-shadow: 0 0 0 2px rgba(201,168,76,0.2); }
     .cp-item-pending { border-left: 3px solid rgba(240,217,138,0.5); }
+    .cp-item-expanded {
+      border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+      border-color: #C9A84C !important;
+      box-shadow: 0 0 0 2px rgba(201,168,76,0.15);
+    }
+
+    /* Panneau accordéon : s'allonge juste sous le compte cliqué */
+    .cp-item-detail {
+      max-height: 0; overflow: hidden; opacity: 0;
+      transition: max-height 0.35s ease, opacity 0.25s ease;
+      background: linear-gradient(145deg, #1A2E45, #152438);
+      border: 1px solid rgba(201,168,76,0.15); border-top: none;
+      border-radius: 0 0 12px 12px;
+    }
+    .cp-item-detail.open {
+      max-height: 900px; opacity: 1; border-color: #C9A84C;
+    }
+    .cp-detail-body { padding: 1.2rem; display: flex; flex-direction: column; gap: 1rem; }
 
     .cp-item-avatar-wrap { position: relative; flex-shrink: 0; }
     .cp-avatar {
@@ -194,22 +203,6 @@
     }
     @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
     .cp-empty { text-align: center; color: rgba(250,246,237,0.3); font-style: italic; padding: 2rem 0; font-size: 0.85rem; }
-
-    /* ── DÉTAIL ── */
-    .cp-detail-aside { display: flex; flex-direction: column; gap: 0.8rem; }
-    .cp-detail-card {
-      background: linear-gradient(145deg, #1A2E45, #152438);
-      border: 1px solid rgba(201,168,76,0.2); border-radius: 16px;
-      overflow: hidden; min-height: 200px;
-    }
-    .cp-detail-idle {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 0.8rem; padding: 3rem 1.5rem; text-align: center;
-    }
-    .cp-detail-idle-icon { font-size: 2rem; opacity: 0.3; }
-    .cp-detail-idle p { font-size: 0.82rem; color: rgba(250,246,237,0.35); margin: 0; }
-    .cp-detail-body { padding: 1.2rem; display: flex; flex-direction: column; gap: 1rem; }
 
     /* Profil dans le détail */
     .cp-detail-profil { display: flex; align-items: center; gap: 0.9rem; }
@@ -362,28 +355,15 @@
       </div>
     </div>
 
-    <div class="cp-layout">
+    <section class="cp-list-section">
+      <div class="cp-count" id="cpCount">Chargement…</div>
+      <div class="cp-list" id="cpList">
+        <div class="cp-skeleton"></div>
+        <div class="cp-skeleton"></div>
+        <div class="cp-skeleton"></div>
+      </div>
+    </section>
 
-      <section class="cp-list-section">
-        <div class="cp-count" id="cpCount">Chargement…</div>
-        <div class="cp-list" id="cpList">
-          <div class="cp-skeleton"></div>
-          <div class="cp-skeleton"></div>
-          <div class="cp-skeleton"></div>
-        </div>
-      </section>
-
-      <aside class="cp-detail-aside">
-        <div class="cp-detail-card">
-          <div class="cp-detail-idle" id="cpDetailIdle">
-            <div class="cp-detail-idle-icon">&#128101;</div>
-            <p>Sélectionnez un membre pour gérer son compte.</p>
-          </div>
-          <div class="cp-detail-body" id="cpDetailBody" style="display:none;"></div>
-        </div>
-      </aside>
-
-    </div>
   </main>
 
   <!-- MODAL ACTION -->
@@ -418,7 +398,8 @@
     var currentUserId = null;
     var membres = [];
     var filtre = 'attente';
-    var membreSelectionne = null;
+    var membreSelectionneId = null; // id du compte actuellement déplié (accordéon)
+    var itemRefs = {}; // id -> { itemEl, detailEl, membre }
     var actionEnCours = null;
 
     function escHtml(str) {
@@ -487,12 +468,14 @@
       document.querySelectorAll('.cp-tab').forEach(function(t) { t.classList.remove('active'); });
       tab.classList.add('active');
       filtre = tab.dataset.filtre;
-      membreSelectionne = null;
-      resetDetail();
+      membreSelectionneId = null;
       appliquerFiltre();
     });
 
-    document.getElementById('cpSearch').addEventListener('input', appliquerFiltre);
+    document.getElementById('cpSearch').addEventListener('input', function() {
+      membreSelectionneId = null;
+      appliquerFiltre();
+    });
 
     function appliquerFiltre() {
       var q = document.getElementById('cpSearch').value.toLowerCase().trim();
@@ -512,6 +495,8 @@
       var count = document.getElementById('cpCount');
       count.textContent = liste.length + ' membre' + (liste.length !== 1 ? 's' : '');
 
+      itemRefs = {};
+
       if (liste.length === 0) {
         container.innerHTML = '<div class="cp-empty">Aucun membre dans cette catégorie.</div>';
         return;
@@ -522,18 +507,20 @@
         var initiale = (m.nom || m.email || '?')[0].toUpperCase();
         var dateInscrit = new Date(m.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
         var roleLabel = { admin:'Admin', preparateur:'Préparateur', membre:'Membre' }[m.role] || m.role;
-        var isActive = membreSelectionne && membreSelectionne.id === m.id;
         var estMoi = m.id === currentUserId;
 
-        var div = document.createElement('div');
-        div.className = 'cp-item' + (isActive ? ' cp-item-active' : '') + (m.actif ? '' : ' cp-item-pending');
-        div.setAttribute('data-id', m.id);
+        var wrap = document.createElement('div');
+        wrap.className = 'cp-item-wrap';
+
+        var itemEl = document.createElement('div');
+        itemEl.className = 'cp-item' + (m.actif ? '' : ' cp-item-pending');
+        itemEl.setAttribute('data-id', m.id);
 
         var avatarHtml = m.photo_url
           ? '<img src="' + escHtml(m.photo_url) + '" class="cp-avatar" alt="" />'
           : '<div class="cp-avatar-fallback">' + initiale + '</div>';
 
-        div.innerHTML =
+        itemEl.innerHTML =
           '<div class="cp-item-avatar-wrap">'
             + avatarHtml
             + (m.actif ? '' : '<span class="cp-pending-dot" title="En attente de validation"></span>')
@@ -548,33 +535,73 @@
             + (!m.actif ? '<span class="cp-statut-badge cp-statut-pending">En attente</span>' : '')
           + '</div>';
 
-        div.addEventListener('click', function() { selectionnerMembre(m.id); });
-        container.appendChild(div);
+        var detailEl = document.createElement('div');
+        detailEl.className = 'cp-item-detail';
+
+        itemEl.addEventListener('click', function() { toggleMembre(m.id); });
+
+        wrap.appendChild(itemEl);
+        wrap.appendChild(detailEl);
+        container.appendChild(wrap);
+
+        itemRefs[m.id] = { itemEl: itemEl, detailEl: detailEl, membre: m };
       });
+
+      // Ré-ouvre l'accordéon déjà sélectionné si le membre est toujours dans la liste
+      // (ex: après une action, ou un rafraîchissement des données)
+      if (membreSelectionneId && itemRefs[membreSelectionneId]) {
+        expandMembre(membreSelectionneId, false);
+      } else {
+        membreSelectionneId = null;
+      }
     }
 
-    function selectionnerMembre(id) {
-      membreSelectionne = membres.find(function(m) { return m.id === id; });
-      document.querySelectorAll('.cp-item').forEach(function(el) {
-        el.classList.toggle('cp-item-active', el.getAttribute('data-id') === id);
-      });
-      afficherDetail(membreSelectionne);
+    function toggleMembre(id) {
+      if (membreSelectionneId === id) {
+        collapseMembre(id);
+        membreSelectionneId = null;
+        return;
+      }
+      if (membreSelectionneId) collapseMembre(membreSelectionneId);
+      membreSelectionneId = id;
+      expandMembre(id, true);
     }
 
-    function resetDetail() {
-      document.getElementById('cpDetailIdle').style.display = 'flex';
-      document.getElementById('cpDetailBody').style.display = 'none';
+    function collapseMembre(id) {
+      var ref = itemRefs[id];
+      if (!ref) return;
+      ref.itemEl.classList.remove('cp-item-expanded');
+      ref.detailEl.classList.remove('open');
     }
 
-    function afficherDetail(m) {
-      document.getElementById('cpDetailIdle').style.display = 'none';
-      var body = document.getElementById('cpDetailBody');
-      body.style.display = 'block';
+    function expandMembre(id, animate) {
+      var ref = itemRefs[id];
+      if (!ref) return;
+      var m = ref.membre;
 
-      var initiale = (m.nom || m.email || '?')[0].toUpperCase();
+      ref.detailEl.innerHTML = '<div class="cp-detail-body">' + buildDetailHtml(m) + '</div>';
+      wireDetailActions(ref.detailEl);
+      ref.itemEl.classList.add('cp-item-expanded');
+
+      if (animate) {
+        // Force un frame de rendu avant d'ajouter 'open' pour que la transition CSS s'anime
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            ref.detailEl.classList.add('open');
+          });
+        });
+      } else {
+        ref.detailEl.classList.add('open');
+      }
+
+      if (window.melodieApplyOfflineGuards) window.melodieApplyOfflineGuards();
+    }
+
+    function buildDetailHtml(m) {
       var dateInscrit = new Date(m.created_at).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
       var estMoi = m.id === currentUserId;
       var roleLabel = { admin:'Admin', preparateur:'Préparateur', membre:'Membre' }[m.role] || m.role;
+      var initiale = (m.nom || m.email || '?')[0].toUpperCase();
 
       var actionsHtml = '';
       if (!m.actif) {
@@ -582,24 +609,24 @@
           '<div class="cp-actions-section">'
             + '<div class="cp-actions-title">Actions</div>'
             + '<div class="cp-actions-grid">'
-              + '<button class="cp-action-btn cp-action-valider" id="btnValider" data-online-only="1">&#10003; Valider le compte</button>'
-              + '<button class="cp-action-btn cp-action-rejeter" id="btnRejeter" data-online-only="1">&#128465; Rejeter</button>'
+              + '<button class="cp-action-btn cp-action-valider" data-action="valider" data-online-only="1">&#10003; Valider le compte</button>'
+              + '<button class="cp-action-btn cp-action-rejeter" data-action="rejeter" data-online-only="1">&#128465; Rejeter</button>'
             + '</div>'
           + '</div>';
       } else if (!estMoi) {
         var roles = ['membre','preparateur','admin'];
         var roleLabels = { admin:'Admin', preparateur:'Préparateur', membre:'Membre' };
         var roleButtons = roles.map(function(r) {
-          return '<button class="cp-role-option' + (m.role === r ? ' cp-role-option-active' : '') + '" data-role="' + r + '" data-online-only="1">' + roleLabels[r] + '</button>';
+          return '<button class="cp-role-option' + (m.role === r ? ' cp-role-option-active' : '') + '" data-action="role" data-role="' + r + '" data-online-only="1">' + roleLabels[r] + '</button>';
         }).join('');
         actionsHtml =
           '<div class="cp-actions-section">'
             + '<div class="cp-actions-title">Changer le rôle</div>'
-            + '<div class="cp-roles-grid" id="cpRolesGrid">' + roleButtons + '</div>'
+            + '<div class="cp-roles-grid">' + roleButtons + '</div>'
           + '</div>'
           + '<div class="cp-actions-section">'
             + '<div class="cp-actions-title">Gestion du compte</div>'
-            + '<button class="cp-action-btn cp-action-desactiver" id="btnDesactiver" data-online-only="1">&#128274; Désactiver le compte</button>'
+            + '<button class="cp-action-btn cp-action-desactiver" data-action="desactiver" data-online-only="1">&#128274; Désactiver le compte</button>'
           + '</div>';
       } else {
         actionsHtml = '<div class="cp-info-moi">C\'est votre propre compte. Vous ne pouvez pas le modifier.</div>';
@@ -609,8 +636,7 @@
         ? '<img src="' + escHtml(m.photo_url) + '" class="cp-detail-avatar" alt="" />'
         : '<div class="cp-detail-avatar-fallback">' + initiale + '</div>';
 
-      body.innerHTML =
-        '<div class="cp-detail-profil">'
+      return '<div class="cp-detail-profil">'
           + avatarHtml
           + '<div class="cp-detail-info">'
             + '<h2 class="cp-detail-nom">' + escHtml(m.nom || 'Sans nom') + '</h2>'
@@ -627,26 +653,17 @@
             + '<span class="cp-meta-val">' + dateInscrit + '</span></div>'
         + '</div>'
         + actionsHtml;
+    }
 
-      var btnValider = document.getElementById('btnValider');
-      if (btnValider) btnValider.addEventListener('click', function() { demanderAction('valider'); });
-
-      var btnRejeter = document.getElementById('btnRejeter');
-      if (btnRejeter) btnRejeter.addEventListener('click', function() { demanderAction('rejeter'); });
-
-      var btnDesactiver = document.getElementById('btnDesactiver');
-      if (btnDesactiver) btnDesactiver.addEventListener('click', function() { demanderAction('desactiver'); });
-
-      var cpRolesGrid = document.getElementById('cpRolesGrid');
-      if (cpRolesGrid) {
-        cpRolesGrid.addEventListener('click', function(e) {
-          var btn = e.target.closest('[data-role]');
-          if (btn) demanderAction('role', btn.getAttribute('data-role'));
-        });
-      }
-
-      // Réapplique les gardes hors ligne sur les boutons d'action qu'on vient d'injecter
-      if (window.melodieApplyOfflineGuards) window.melodieApplyOfflineGuards();
+    function wireDetailActions(detailEl) {
+      detailEl.addEventListener('click', function(e) {
+        e.stopPropagation(); // ne pas re-déclencher le toggle du bandeau parent
+        var btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        var action = btn.getAttribute('data-action');
+        if (action === 'role') demanderAction('role', btn.getAttribute('data-role'));
+        else demanderAction(action);
+      });
     }
 
     var actionConfigs = {
@@ -683,14 +700,16 @@
     };
 
     function demanderAction(type, data) {
-      if (!membreSelectionne) return;
+      if (!membreSelectionneId) return;
+      var membre = membres.find(function(m) { return m.id === membreSelectionneId; });
+      if (!membre) return;
       var config = actionConfigs[type];
       if (!config) return;
-      actionEnCours = { type: type, membre: membreSelectionne, data: data || null };
+      actionEnCours = { type: type, membre: membre, data: data || null };
 
       document.getElementById('modalActionIcon').innerHTML  = config.icon;
       document.getElementById('modalActionTitle').textContent = config.titre;
-      document.getElementById('modalActionMsg').textContent   = config.msg(membreSelectionne, data);
+      document.getElementById('modalActionMsg').textContent   = config.msg(membre, data);
 
       var roleWrap = document.getElementById('modalRoleWrap');
       roleWrap.style.display = (type === 'valider') ? 'block' : 'none';
@@ -698,6 +717,7 @@
 
       var btn = document.getElementById('btnConfirmerAction');
       btn.className = config.btnClass;
+      btn.setAttribute('data-online-only', '1');
       btn.textContent = config.btnLabel;
 
       document.getElementById('modalAction').style.display = 'flex';
@@ -738,14 +758,9 @@
       var msgs = { valider:'Compte validé.', rejeter:'Compte rejeté et supprimé.', desactiver:'Compte désactivé.', role:'Rôle mis à jour.' };
       showToast(msgs[type] || 'Action effectuée.', 'success');
 
-      if (type === 'rejeter') { resetDetail(); membreSelectionne = null; }
+      if (type === 'rejeter') { membreSelectionneId = null; }
 
       await chargerMembres();
-
-      if (membreSelectionne && type !== 'rejeter') {
-        membreSelectionne = membres.find(function(m) { return m.id === membreSelectionne.id; });
-        if (membreSelectionne) afficherDetail(membreSelectionne);
-      }
     });
 
     init();
