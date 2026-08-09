@@ -125,13 +125,13 @@
     </div>
 
     <div class="stats-grid-2col">
-      <div class="stat-card"><h2 class="stat-card-title">&#127928; Chansons par style</h2><div class="bar-chart" id="chartStyle"></div></div>
       <div class="stat-card"><h2 class="stat-card-title">&#9962; Statut des cultes</h2><div class="donut-wrapper" id="chartCultes"></div></div>
+      <div class="stat-card"><h2 class="stat-card-title">&#128197; Statut des événements</h2><div class="donut-wrapper" id="chartEvenements"></div></div>
     </div>
 
-    <div class="stats-grid-2col">
-      <div class="stat-card"><h2 class="stat-card-title">&#128197; Statut des événements</h2><div class="donut-wrapper" id="chartEvenements"></div></div>
-      <div class="stat-card" id="cardPropositionsStatut" style="display:none;"><h2 class="stat-card-title">&#128161; Propositions par statut</h2><div class="donut-wrapper" id="chartPropositions"></div></div>
+    <div class="stat-card stat-card-full" id="cardPropositionsStatut" style="display:none;">
+      <h2 class="stat-card-title">&#128161; Propositions par statut</h2>
+      <div class="donut-wrapper" id="chartPropositions"></div>
     </div>
 
     <div class="stat-card stat-card-full">
@@ -277,7 +277,7 @@
     async function loadStats() {
       try {
         var queries = [
-          sb.from("chansons").select("id, rubrique, langue, style, audio_url"),
+          sb.from("chansons").select("id, rubrique, langue, audio_url"),
           sb.from("themes").select("id"),
           sb.from("cultes").select("id, statut"),
           sb.from("evenements").select("id, date_event, statut")
@@ -333,12 +333,6 @@
         chansons.forEach(function(c) { var l = c.langue || "Non définie"; langues[l] = (langues[l] || 0) + 1; });
         var languesData = Object.keys(langues).map(function(k) { return { label:k, count:langues[k] }; }).sort(function(a,b){return b.count-a.count;});
         renderDonut("chartLangue", languesData);
-
-        /* Styles */
-        var styles = {};
-        chansons.forEach(function(c) { var s = c.style || "Non défini"; styles[s] = (styles[s] || 0) + 1; });
-        var stylesData = Object.keys(styles).map(function(k) { return { label:k, count:styles[k] }; }).sort(function(a,b){return b.count-a.count;});
-        renderBarChart("chartStyle", stylesData, null);
 
         /* Cultes par statut */
         var sc = { "en_preparation":0, "valide":0, "archive":0 };
