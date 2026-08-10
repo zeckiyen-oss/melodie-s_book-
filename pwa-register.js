@@ -1,9 +1,16 @@
 // ============================================
 // Mélodie's Book — pwa-register.js
-// Enregistrement minimaliste du Service Worker
+// Enregistrement du Service Worker + gestion
+// du bouton d'installation PWA (Android/Chrome
+// via beforeinstallprompt, iOS via instructions
+// manuelles, masquage automatique si déjà installée).
 // À inclure dans TOUTES les pages HTML via :
 // <script src="pwa-register.js"></script>
 // Placer juste avant </body>
+//
+// Le bouton doit avoir l'id "melodieInstallBtn"
+// (ex: dashboard.html). Les pages sans ce bouton
+// ne sont pas affectées.
 // ============================================
 
 if ('serviceWorker' in navigator) {
@@ -31,30 +38,100 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Gestion du bouton d'installation PWA (optionnel)
-let deferredPrompt = null;
+// ── Détection : l'app tourne-t-elle déjà en mode installé/standalone ? ──
+function melodieIsStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true; // iOS Safari (propriété historique)
+}
 
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
+// ── Détection iOS : Safari ne déclenche jamais 'beforeinstallprompt' ──
+function melodieIsIOS() {
+  return /iphone|ipad|ipod/i.test(window.navigator.userAgent) && !window.MSStream;
+}
 
-  const btnInstall = document.getElementById('btn-install-pwa');
-  if (btnInstall) {
-    btnInstall.style.display = 'block';
-    btnInstall.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
+function melodieGetInstallBtn() {
+  return document.getElementById('melodieInstallBtn');
+}
+
+function melodieShowInstallBtn() {
+  var btn = melodieGetInstallBtn();
+  if (btn) btn.style.display = 'flex';
+}
+
+function melodieHideInstallBtn() {
+  var btn = melodieGetInstallBtn();
+  if (btn) btn.style.display = 'none';
+}
+
+var deferredPrompt = null;
+
+function melodieSetupInstallBtn() {
+  var btn = melodieGetInstallBtn();
+  if (!btn || btn.dataset.melodieBound) return; // évite un double-binding si rappelé
+  btn.dataset.melodieBound = '1';
+
+  btn.addEventListener('click', async function() {
+    if (deferredPrompt) {
       deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log('[PWA] Choix utilisateur :', outcome);
+      var choice = await deferredPrompt.userChoice;
+      console.log('[PWA] Choix utilisateur :', choice.outcome);
       deferredPrompt = null;
-      btnInstall.style.display = 'none';
-    });
+      melodieHideInstallBtn();
+      return;
+    }
+    if (melodieIsIOS()) {
+      melodieShowIOSInstructions();
+    }
+  });
+}
+
+function melodieShowIOSInstructions() {
+  if (document.getElementById('melodieIOSModal')) return;
+  var overlay = document.createElement('div');
+  overlay.id = 'melodieIOSModal';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:1rem;';
+  overlay.innerHTML =
+    '<div style="background:#1A2E45;border:1px solid rgba(201,168,76,0.4);border-radius:16px;padding:1.6rem 1.4rem;max-width:340px;width:100%;text-align:center;font-family:\'Lato\',sans-serif;color:#FAF6ED;">'
+      + '<div style="font-size:2rem;margin-bottom:0.6rem;">&#128241;</div>'
+      + '<h3 style="font-family:\'Cinzel\',serif;color:#F0D98A;margin:0 0 0.8rem;font-size:1rem;">Installer l\'application</h3>'
+      + '<p style="font-size:0.85rem;line-height:1.6;color:rgba(250,246,237,0.75);margin:0 0 1.2rem;">'
+        + 'Appuyez sur <strong>Partager</strong> &#8593; en bas de Safari, puis sur <strong>Sur l\'écran d\'accueil</strong>.'
+      + '</p>'
+      + '<button id="melodieIOSModalClose" style="background:linear-gradient(135deg,#C9A84C,#F0D98A);color:#0D1B2A;border:none;border-radius:8px;padding:0.6rem 1.4rem;font-family:\'Lato\',sans-serif;font-weight:700;cursor:pointer;">Compris</button>'
+    + '</div>';
+  document.body.appendChild(overlay);
+  document.getElementById('melodieIOSModalClose').addEventListener('click', function() { overlay.remove(); });
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+}
+
+// ── Initialisation à chaque chargement de page ──
+document.addEventListener('DOMContentLoaded', function() {
+  melodieSetupInstallBtn();
+
+  if (melodieIsStandalone()) {
+    // Déjà installée : le bouton ne doit jamais apparaître.
+    melodieHideInstallBtn();
+    return;
+  }
+
+  if (melodieIsIOS()) {
+    // Safari iOS ne proposera jamais 'beforeinstallprompt' : on affiche
+    // nous-mêmes le bouton, avec des instructions manuelles au clic.
+    melodieShowInstallBtn();
   }
 });
 
-window.addEventListener('appinstalled', () => {
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!melodieIsStandalone()) {
+    melodieSetupInstallBtn();
+    melodieShowInstallBtn();
+  }
+});
+
+window.addEventListener('appinstalled', function() {
   console.log('[PWA] Mélodie\'s Book installée avec succès !');
   deferredPrompt = null;
-  const btnInstall = document.getElementById('btn-install-pwa');
-  if (btnInstall) btnInstall.style.display = 'none';
+  melodieHideInstallBtn();
 });
