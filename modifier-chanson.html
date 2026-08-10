@@ -20,7 +20,6 @@
     .audio-actuel-label { font-size: 0.72rem; font-weight: 700; color: #C9A84C; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
     .audio-actuel-player { width:100%; border-radius:8px; display:block; margin-bottom:0.5rem; }
     .audio-actuel-actions { display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center; }
-    .btn-dl-audio { display:inline-flex; align-items:center; gap:0.35rem; padding:0.35rem 0.85rem; background:rgba(201,168,76,0.12); border:1px solid rgba(201,168,76,0.3); border-radius:8px; color:#F0D98A; font-family:'Lato',sans-serif; font-size:0.78rem; font-weight:700; text-decoration:none; cursor:pointer; }
     .btn-suppr-audio-actuel { display:inline-flex; align-items:center; gap:0.35rem; padding:0.35rem 0.85rem; background:rgba(229,83,75,0.1); border:1px solid rgba(229,83,75,0.3); border-radius:8px; color:#e5534b; font-family:'Lato',sans-serif; font-size:0.78rem; font-weight:700; cursor:pointer; }
     .audio-drop-zone { border:2px dashed #C9A84C55; border-radius:10px; padding:1.2rem 1rem; text-align:center; background:rgba(201,168,76,0.04); cursor:pointer; transition:border-color .2s, background .2s; }
     .audio-drop-zone.dragover { border-color:#C9A84C; background:rgba(201,168,76,0.1); }
@@ -106,16 +105,6 @@
               <option value="Autre">Autre</option>
             </select>
           </div>
-          <div class="field-group">
-            <label class="field-label" for="style">Style musical</label>
-            <select id="style" class="field-select">
-              <option value="">— Choisir —</option>
-              <option value="contemporain">Contemporain</option>
-              <option value="classique">Classique</option>
-              <option value="gospel">Gospel</option>
-              <option value="cantique">Cantique</option>
-            </select>
-          </div>
         </div>
       </section>
 
@@ -165,19 +154,18 @@
         <div id="audioActuelWrap" style="display:none">
           <div class="audio-actuel-wrap">
             <div class="audio-actuel-label">🎵 Audio actuel</div>
-            <audio id="audioActuelPlayer" class="audio-actuel-player" controls preload="metadata"></audio>
+            <audio id="audioActuelPlayer" class="audio-actuel-player" controls controlsList="nodownload" preload="metadata"></audio>
             <div class="audio-actuel-actions">
-              <a id="btnDlAudioActuel" class="btn-dl-audio" download target="_blank">⬇️ Télécharger</a>
-              <button type="button" class="btn-suppr-audio-actuel" id="btnSupprimerAudioActuel">🗑️ Supprimer l'audio</button>
+              <button type="button" class="btn-suppr-audio-actuel" id="btnSupprimerAudioActuel" data-online-only="1">🗑️ Supprimer l'audio</button>
             </div>
           </div>
           <p class="field-hint" style="margin-bottom:.6rem;">Pour remplacer l'audio, choisissez un nouveau fichier ci-dessous.</p>
         </div>
 
-        <div class="audio-drop-zone" id="audioDropZone">
+        <div class="audio-drop-zone" id="audioDropZone" data-online-only="1">
           <div class="audio-drop-icon">🎵</div>
           <p class="audio-drop-label" id="audioDropLabel">Glisse un fichier audio ou clique pour choisir</p>
-          <button type="button" class="btn-choisir-audio" id="btnChoisirAudio">📂 Choisir un fichier</button>
+          <button type="button" class="btn-choisir-audio" id="btnChoisirAudio" data-online-only="1">📂 Choisir un fichier</button>
           <input type="file" id="audioFileInput" accept="audio/*" />
           <p class="audio-drop-hint">MP3, M4A, AAC, WAV — max 50 Mo</p>
           <div class="audio-progress-wrap" id="audioProgressWrap">
@@ -191,12 +179,12 @@
           <span class="audio-fichier-nom" id="audioFichierNom"></span>
           <button type="button" class="audio-fichier-suppr" id="btnRetirerNouvelAudio" title="Retirer">✕</button>
         </div>
-        <audio id="audioNouveauPreview" controls></audio>
+        <audio id="audioNouveauPreview" controls controlsList="nodownload"></audio>
       </section>
 
       <div class="form-actions">
         <a href="#" class="btn-annuler" id="btnAnnuler">Annuler</a>
-        <button type="button" class="btn-sauvegarder" id="btnSauvegarder">
+        <button type="button" class="btn-sauvegarder" id="btnSauvegarder" data-online-only="1">
           <span class="btn-icon">✦</span> Enregistrer les modifications
         </button>
       </div>
@@ -296,7 +284,6 @@
     document.getElementById('numero').value  = ch.numero  || '';
     document.getElementById('titre').value   = ch.titre   || '';
     document.getElementById('langue').value  = ch.langue  || '';
-    document.getElementById('style').value   = ch.style   || '';
     document.getElementById('paroles').value = ch.paroles || '';
     if (ch.rubrique) {
       document.getElementById('rubrique').value = ch.rubrique;
@@ -307,7 +294,6 @@
       audioUrlActuelle = ch.audio_url;
       document.getElementById('audioActuelWrap').style.display = 'block';
       document.getElementById('audioActuelPlayer').src = ch.audio_url;
-      document.getElementById('btnDlAudioActuel').href = ch.audio_url;
       document.getElementById('audioDropLabel').textContent = 'Choisir un fichier pour remplacer l\'audio';
     }
 
@@ -546,7 +532,6 @@
       rubrique: rubrique,
       langue:   langue,
       numero:   document.getElementById('numero').value || null,
-      style:    document.getElementById('style').value || null,
       paroles:  document.getElementById('paroles').value.trim() || null,
       audio_url: audioUrlFinale,
     }).eq('id', chansonId);
