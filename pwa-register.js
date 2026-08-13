@@ -81,8 +81,29 @@ function melodieSetupInstallBtn() {
     }
     if (melodieIsIOS()) {
       melodieShowIOSInstructions();
+    } else {
+      melodieShowGenericInstructions();
     }
   });
+}
+
+function melodieShowGenericInstructions() {
+  if (document.getElementById('melodieIOSModal')) return;
+  var overlay = document.createElement('div');
+  overlay.id = 'melodieIOSModal';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:1rem;';
+  overlay.innerHTML =
+    '<div style="background:#1A2E45;border:1px solid rgba(201,168,76,0.4);border-radius:16px;padding:1.6rem 1.4rem;max-width:340px;width:100%;text-align:center;font-family:\'Lato\',sans-serif;color:#FAF6ED;">'
+      + '<div style="font-size:2rem;margin-bottom:0.6rem;">&#128241;</div>'
+      + '<h3 style="font-family:\'Cinzel\',serif;color:#F0D98A;margin:0 0 0.8rem;font-size:1rem;">Installer l\'application</h3>'
+      + '<p style="font-size:0.85rem;line-height:1.6;color:rgba(250,246,237,0.75);margin:0 0 1.2rem;">'
+        + 'Ouvrez le menu <strong>&#8942;</strong> de votre navigateur, puis appuyez sur <strong>Installer l\'application</strong> (choisissez bien "Installer", pas "Créer un raccourci").'
+      + '</p>'
+      + '<button id="melodieIOSModalClose" style="background:linear-gradient(135deg,#C9A84C,#F0D98A);color:#0D1B2A;border:none;border-radius:8px;padding:0.6rem 1.4rem;font-family:\'Lato\',sans-serif;font-weight:700;cursor:pointer;">Compris</button>'
+    + '</div>';
+  document.body.appendChild(overlay);
+  document.getElementById('melodieIOSModalClose').addEventListener('click', function() { overlay.remove(); });
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
 }
 
 function melodieShowIOSInstructions() {
@@ -114,11 +135,12 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
 
-  if (melodieIsIOS()) {
-    // Safari iOS ne proposera jamais 'beforeinstallprompt' : on affiche
-    // nous-mêmes le bouton, avec des instructions manuelles au clic.
-    melodieShowInstallBtn();
-  }
+  // Le bouton reste visible tant que l'app n'est pas installée, MÊME SI
+  // 'beforeinstallprompt' ne s'est pas (encore) déclenché — Chrome peut
+  // retarder cet événement après une désinstallation récente. Le clic
+  // utilise le prompt natif s'il est prêt, sinon affiche des instructions
+  // manuelles (cf. melodieSetupInstallBtn).
+  melodieShowInstallBtn();
 });
 
 window.addEventListener('beforeinstallprompt', function(e) {
