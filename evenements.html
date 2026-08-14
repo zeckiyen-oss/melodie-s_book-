@@ -134,7 +134,7 @@
             <button class="ev-tab" data-filtre="passes">&#128193; Passés</button>
             <button class="ev-tab" data-filtre="all">Tous</button>
           </div>
-          <button class="btn-primary" id="btnNouvelEvenement">&#10022; Nouvel événement</button>
+          <button class="btn-primary" id="btnNouvelEvenement" data-online-only="1">&#10022; Nouvel événement</button>
         </div>
         <div class="ev-count" id="evCount">Chargement…</div>
         <div class="ev-list" id="evList">
@@ -147,7 +147,7 @@
           <div class="ev-form-idle" id="evFormIdle">
             <div class="ev-form-idle-icon">&#128197;</div>
             <p>Sélectionnez un événement ou créez-en un nouveau.</p>
-            <button class="btn-primary" id="btnCreerDepuisIdle">+ Créer un événement</button>
+            <button class="btn-primary" id="btnCreerDepuisIdle" data-online-only="1">+ Créer un événement</button>
           </div>
           <div class="ev-form-body" id="evFormBody" style="display:none;">
             <div class="ev-form-header">
@@ -183,7 +183,7 @@
             </div>
             <div class="ev-form-actions">
               <button class="btn-secondary" id="btnAnnulerForm">Annuler</button>
-              <button class="btn-primary" id="btnSauvegarder">&#128190; Sauvegarder</button>
+              <button class="btn-primary" id="btnSauvegarder" data-online-only="1">&#128190; Sauvegarder</button>
             </div>
           </div>
         </div>
@@ -204,7 +204,7 @@
       <p>Le programme associé sera également supprimé. Cette action est irréversible.</p>
       <div class="modal-actions">
         <button class="btn-secondary" id="btnAnnulerSupprimer">Annuler</button>
-        <button class="btn-danger" id="btnConfirmerSupprimer">Supprimer</button>
+        <button class="btn-danger" id="btnConfirmerSupprimer" data-online-only="1">Supprimer</button>
       </div>
     </div>
   </div>
@@ -216,7 +216,7 @@
       <p id="modalValiderMsg">Ce programme sera visible par toute la chorale.</p>
       <div class="modal-actions">
         <button class="btn-secondary" id="btnAnnulerValider">Annuler</button>
-        <button class="btn-primary" id="btnConfirmerValider">&#10022; Valider</button>
+        <button class="btn-primary" id="btnConfirmerValider" data-online-only="1">&#10022; Valider</button>
       </div>
     </div>
   </div>
@@ -245,7 +245,7 @@
       if (!identity) return;
       if (!identity.profil.actif) { window.location.href = '/'; return; }
       if (identity.profil.role !== 'admin') { window.location.href = 'dashboard'; return; }
-      buildSharedNavbar(identity.profil,'evenements');
+      await buildSharedNavbar(identity.profil,'evenements');
       await Promise.all([chargerMembres(),chargerEvenements()]);
       hideLoader();
     }
@@ -310,7 +310,7 @@
         var prep=ev.profils;
         var prepHtml=prep?'<span class="ev-prep-badge assigned">&#128101; '+escHtml(prep.nom||prep.email)+'</span>':'<span class="ev-prep-badge">Aucun préparateur</span>';
         var cdHtml=passe?'<span class="ev-passe-badge">Passé</span>':(diff===0?'<span class="ev-countdown">Aujourd\'hui</span>':diff===1?'<span class="ev-countdown">Demain</span>':'<span class="ev-countdown">J-'+diff+'</span>');
-        var btnVal=(!passe&&statut==='en_preparation')?'<button class="gt-btn-edit btn-valider-ev" data-id="'+ev.id+'" style="color:#7ecfaf;border-color:rgba(76,175,130,.3);">&#10003; Valider</button>':'';
+        var btnVal=(!passe&&statut==='en_preparation')?'<button class="gt-btn-edit btn-valider-ev" data-id="'+ev.id+'" style="color:#7ecfaf;border-color:rgba(76,175,130,.3);" data-online-only="1">&#10003; Valider</button>':'';
         var div=document.createElement('div');
         div.className='ev-item'+(passe?' ev-item-passe':'');
         div.innerHTML='<div class="ev-item-cal"><span class="ev-cal-jour">'+dateEv.getDate()+'</span><span class="ev-cal-mois">'+dateEv.toLocaleDateString('fr-FR',{month:'short'})+'</span></div>'
@@ -320,12 +320,15 @@
           +'<div class="ev-item-meta"><span class="ev-statut-badge ev-statut-'+statut+'">'+escHtml(statutLabel)+'</span>'+prepHtml+'</div></div>'
           +'<div class="ev-item-right">'+cdHtml+'<div class="ev-item-actions">'+btnVal
           +'<button class="gt-btn-edit btn-edit-ev" data-id="'+ev.id+'">&#9999;&#65039;</button>'
-          +'<button class="gt-btn-delete btn-del-ev" data-id="'+ev.id+'">&#128465;</button></div></div>';
+          +'<button class="gt-btn-delete btn-del-ev" data-id="'+ev.id+'" data-online-only="1">&#128465;</button></div></div>';
         container.appendChild(div);
       });
       container.querySelectorAll('.btn-edit-ev').forEach(function(btn){btn.addEventListener('click',function(){editerEvenement(btn.getAttribute('data-id'));});});
       container.querySelectorAll('.btn-del-ev').forEach(function(btn){btn.addEventListener('click',function(){demanderSuppression(btn.getAttribute('data-id'));});});
       container.querySelectorAll('.btn-valider-ev').forEach(function(btn){btn.addEventListener('click',function(){demanderValidation(btn.getAttribute('data-id'));});});
+
+      // Réapplique les gardes hors ligne sur les boutons qu'on vient d'injecter
+      if (window.melodieApplyOfflineGuards) window.melodieApplyOfflineGuards();
     }
 
     function ouvrirFormulaire(ev){
