@@ -71,8 +71,7 @@
     .prog-prop-detail.open{display:block}
     .prop-audio-bloc{background:rgba(13,27,42,.5);border:1px solid rgba(201,168,76,.18);border-radius:8px;padding:.75rem .9rem;margin-bottom:.6rem}
     .prop-audio-label{font-size:.68rem;font-weight:700;color:#C9A84C;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem}
-    .prop-audio-player{width:100%;border-radius:6px;display:block;margin-bottom:.4rem}
-    .prop-audio-dl{display:inline-flex;align-items:center;gap:.3rem;padding:.28rem .7rem;background:rgba(76,175,130,.1);border:1px solid rgba(76,175,130,.28);border-radius:7px;color:#7ecfaf;font-size:.74rem;font-weight:700;text-decoration:none}
+    .prop-audio-player{width:100%;border-radius:6px;display:block}
 
     /* Détail culte/événement */
     .prog-pub-detail{margin-top:1.5rem;background:linear-gradient(145deg,#1A2E45,#152438);border:1px solid rgba(201,168,76,.25);border-radius:16px;overflow:hidden}
@@ -96,7 +95,6 @@
     /* Audio inline */
     .prog-chanson-audio{display:flex;gap:.4rem;align-items:center;margin-top:.3rem;flex-wrap:wrap}
     .prog-btn-ecouter{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .65rem;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);border-radius:20px;color:#F0D98A;font-size:.7rem;font-weight:700;cursor:pointer}
-    .prog-btn-dl-chanson{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .65rem;background:rgba(76,175,130,.1);border:1px solid rgba(76,175,130,.25);border-radius:20px;color:#7ecfaf;font-size:.7rem;font-weight:700;text-decoration:none}
     .prog-inline-player{width:100%;border-radius:6px;margin-top:.4rem;display:none}
     .prog-inline-player.open{display:block}
 
@@ -298,7 +296,7 @@
           items.forEach(function(item){
             var ch=item.chansons||{};var audioId="ca-"+item.id;
             var audioHtml="";
-            if(ch.audio_url){audioHtml='<div class="prog-chanson-audio"><button class="prog-btn-ecouter" data-audio-id="'+audioId+'" data-url="'+escHtml(ch.audio_url)+'">&#127911; &Eacute;couter</button><a class="prog-btn-dl-chanson" href="'+escHtml(ch.audio_url)+'" download target="_blank">&#11015;&#65039; T&eacute;l&eacute;charger</a></div><audio class="prog-inline-player" id="'+audioId+'" controls preload="none"></audio>';}
+            if(ch.audio_url){audioHtml='<div class="prog-chanson-audio"><button class="prog-btn-ecouter" data-audio-id="'+audioId+'" data-url="'+escHtml(ch.audio_url)+'">&#127911; &Eacute;couter</button></div><audio class="prog-inline-player" id="'+audioId+'" controls controlsList="nodownload" preload="none"></audio>';}
             programmeHtml+='<div class="prog-detail-chanson"><div class="prog-detail-chanson-row"><span class="prog-detail-chanson-num">'+( ch.numero?"#"+escHtml(String(ch.numero)):"&mdash;")+'</span><span class="prog-detail-chanson-titre">'+escHtml(ch.titre||"&mdash;")+'</span><span class="prog-detail-chanson-langue">'+escHtml(ch.langue||"")+'</span></div>'+audioHtml+'</div>';
           });
           programmeHtml+="</div>";
@@ -406,7 +404,7 @@
           items.forEach(function(item){
             var ch=item.chansons||{};var audioId="ea-"+item.id;
             var audioHtml="";
-            if(ch.audio_url){audioHtml='<div class="prog-chanson-audio"><button class="prog-btn-ecouter" data-audio-id="'+audioId+'" data-url="'+escHtml(ch.audio_url)+'">&#127911; &Eacute;couter</button><a class="prog-btn-dl-chanson" href="'+escHtml(ch.audio_url)+'" download target="_blank">&#11015;&#65039; T&eacute;l&eacute;charger</a></div><audio class="prog-inline-player" id="'+audioId+'" controls preload="none"></audio>';}
+            if(ch.audio_url){audioHtml='<div class="prog-chanson-audio"><button class="prog-btn-ecouter" data-audio-id="'+audioId+'" data-url="'+escHtml(ch.audio_url)+'">&#127911; &Eacute;couter</button></div><audio class="prog-inline-player" id="'+audioId+'" controls controlsList="nodownload" preload="none"></audio>';}
             programmeHtml+='<div class="prog-detail-chanson"><div class="prog-detail-chanson-row"><span class="prog-detail-chanson-num">'+( ch.numero?"#"+escHtml(String(ch.numero)):"&mdash;")+'</span><span class="prog-detail-chanson-titre">'+escHtml(ch.titre||"&mdash;")+'</span><span class="prog-detail-chanson-langue">'+escHtml(ch.langue||"")+'</span></div>'+audioHtml+'</div>';
           });
           programmeHtml+="</div>";
@@ -476,7 +474,7 @@
           var card=document.createElement("div");card.className="prog-prop-card";
           var detailId="prop-det-"+p.id;var playerId="prop-player-"+p.id;
           var audioSection="";
-          if(p.audio_url){audioSection='<div class="prop-audio-bloc"><div class="prop-audio-label">&#127925; Audio joint</div><audio class="prop-audio-player" id="'+playerId+'" controls preload="none" src="'+escHtml(p.audio_url)+'"></audio><a class="prop-audio-dl" href="'+escHtml(p.audio_url)+'" download target="_blank">&#11015;&#65039; Télécharger l\'audio</a></div>';}
+          if(p.audio_url){audioSection='<div class="prop-audio-bloc"><div class="prop-audio-label">&#127925; Audio joint</div><audio class="prop-audio-player" id="'+playerId+'" controls controlsList="nodownload" preload="none" src="'+escHtml(p.audio_url)+'"></audio></div>';}
           var parolesSection=p.paroles?'<div style="padding:.7rem .8rem;background:rgba(13,27,42,.5);border-radius:8px;border-left:3px solid rgba(201,168,76,.35);margin-bottom:.6rem;"><div style="font-family:Cinzel,serif;font-size:.65rem;color:#C9A84C;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem;">Paroles</div><pre style="font-family:\'Playfair Display\',serif;font-size:.82rem;color:rgba(250,246,237,.85);white-space:pre-wrap;line-height:1.8;margin:0;">'+escHtml(p.paroles)+'</pre></div>':"";
           var commentaireSection=p.commentaire?'<div style="padding:.5rem .8rem;border-left:2px solid rgba(201,168,76,.3);background:rgba(201,168,76,.05);border-radius:0 6px 6px 0;"><div style="font-size:.7rem;color:#C9A84C;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;">Commentaire</div><p style="font-family:\'Playfair Display\',serif;font-style:italic;font-size:.82rem;color:rgba(250,246,237,.7);margin:0;line-height:1.6;">'+escHtml(p.commentaire)+'</p></div>':"";
           card.innerHTML='<div class="prog-prop-header"><div class="prog-prop-left"><div class="prog-prop-titre">'+escHtml(p.titre)+(p.audio_url?'<span style="font-size:.72rem;color:#C9A84C;margin-left:.3rem;">&#127925;</span>':"")+'</div><div class="prog-prop-meta">'+(p.artiste?escHtml(p.artiste)+" · ":"")+escHtml(p.langue||"")+(p.rubrique?" · "+escHtml(p.rubrique):"")+'</div><div class="prog-prop-auteur">&#128100; <span>'+escHtml(auteur)+'</span> · <span>'+date+"</span></div></div>"+'<span class="prog-prop-badge prog-prop-badge-'+p.statut+'">'+badgeLabel+"</span></div>"+'<div class="prog-prop-detail" id="'+detailId+'">'+audioSection+parolesSection+commentaireSection+"</div>";
@@ -490,7 +488,7 @@
     // INIT
     (async function init(){
       profilUser=await authGuard();if(!profilUser)return;
-      buildSharedNavbar(profilUser,"programme");
+      await buildSharedNavbar(profilUser,"programme");
       await Promise.all([chargerCultes(),chargerEvenements(),chargerPropositions()]);
       hideLoader();
     })();
