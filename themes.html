@@ -38,7 +38,7 @@
           <p class="themes-sous-titre">Explorez le répertoire par thème spirituel</p>
         </div>
       </div>
-      <a href="gestion-themes" class="btn-gerer" id="btnGerer" style="display:none">
+      <a href="gestion-themes" class="btn-gerer" id="btnGerer" style="display:none" data-online-only="1">
         ⚙️ Gérer les thèmes
       </a>
     </div>
@@ -55,7 +55,7 @@
       <div class="vide-icon">🏷️</div>
       <p class="vide-titre">Aucun thème trouvé</p>
       <p class="vide-desc" id="videDesc">Aucun thème n'a encore été créé.</p>
-      <a href="gestion-themes" class="btn-creer-theme" id="btnCreerTheme" style="display:none">+ Créer le premier thème</a>
+      <a href="gestion-themes" class="btn-creer-theme" id="btnCreerTheme" style="display:none" data-online-only="1">+ Créer le premier thème</a>
     </div>
 
     <!-- PANNEAU DÉTAIL -->
@@ -140,6 +140,7 @@
     if (isAdmin) {
       document.getElementById('btnGerer').style.display = 'inline-flex';
       document.getElementById('btnCreerTheme').style.display = 'inline-block';
+      if (window.melodieApplyOfflineGuards) window.melodieApplyOfflineGuards();
     }
 
     var params = new URLSearchParams(window.location.search);
