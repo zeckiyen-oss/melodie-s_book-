@@ -97,7 +97,7 @@
         </div>
         <div class="cpanel-actions" id="cpanelActions" style="display:none">
           <a href="#" class="btn-cpanel-modifier" id="btnModifierCulte">✏️ Modifier</a>
-          <button class="btn-cpanel-archiver" id="btnArchiverCulte">📦 Archiver</button>
+          <button class="btn-cpanel-archiver" id="btnArchiverCulte" data-online-only="1">📦 Archiver</button>
         </div>
       </div>
     </div>
@@ -319,6 +319,7 @@
       actDiv.style.display = 'flex';
       document.getElementById('btnModifierCulte').href = 'preparation-culte?id=' + id;
       document.getElementById('btnArchiverCulte').style.display = c.statut !== 'archive' ? 'inline-flex' : 'none';
+      if (window.melodieApplyOfflineGuards) window.melodieApplyOfflineGuards();
     }
 
     document.getElementById('cpanelProgramme').innerHTML = '<p class="chargement-txt">Chargement…</p>';
