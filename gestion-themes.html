@@ -252,7 +252,7 @@
             <span class="gt-search-icon">🔍</span>
             <input type="text" id="searchTheme" class="gt-search-input" placeholder="Rechercher un thème…" />
           </div>
-          <button class="btn-primary" id="btnNouveauTheme">&#10022; Nouveau thème</button>
+          <button class="btn-primary" id="btnNouveauTheme" data-online-only="1">&#10022; Nouveau thème</button>
         </div>
 
         <div class="gt-count" id="gtCount">Chargement…</div>
@@ -270,7 +270,7 @@
           <div class="gt-form-idle" id="gtFormIdle">
             <div class="gt-form-idle-icon">&#10022;</div>
             <p>Sélectionnez un thème pour le modifier, ou créez-en un nouveau.</p>
-            <button class="btn-primary" id="btnCreerDepuisIdle">+ Créer un thème</button>
+            <button class="btn-primary" id="btnCreerDepuisIdle" data-online-only="1">+ Créer un thème</button>
           </div>
 
           <div class="gt-form-body" id="gtFormBody" style="display:none;">
@@ -293,7 +293,7 @@
 
             <div class="gt-form-actions">
               <button class="btn-secondary" id="btnAnnulerForm">Annuler</button>
-              <button class="btn-primary" id="btnSauvegarder">&#128190; Sauvegarder</button>
+              <button class="btn-primary" id="btnSauvegarder" data-online-only="1">&#128190; Sauvegarder</button>
             </div>
           </div>
         </div>
@@ -332,7 +332,7 @@
       <p id="modalSupprimerMsg">Cette action est irréversible.</p>
       <div class="modal-actions">
         <button class="btn-secondary" id="btnAnnulerSupprimer">Annuler</button>
-        <button class="btn-danger" id="btnConfirmerSupprimer">Supprimer</button>
+        <button class="btn-danger" id="btnConfirmerSupprimer" data-online-only="1">Supprimer</button>
       </div>
     </div>
   </div>
@@ -376,7 +376,7 @@
       if (!identity.profil.actif) { window.location.href = '/'; return; }
       if (identity.profil.role !== 'admin') { window.location.href = 'dashboard'; return; }
 
-      buildSharedNavbar(identity.profil, 'gestion-themes');
+      await buildSharedNavbar(identity.profil, 'gestion-themes');
       await chargerThemes();
       hideLoader();
     }
@@ -415,8 +415,8 @@
           + '<div class="gt-card-footer">'
             + '<span class="gt-card-nb">' + nb + ' chanson' + (nb !== 1 ? 's' : '') + '</span>'
             + '<div class="gt-card-actions">'
-              + '<button class="gt-btn-edit btn-edit-theme" data-id="' + t.id + '" title="Modifier">&#9999;&#65039;</button>'
-              + '<button class="gt-btn-delete btn-del-theme" data-id="' + t.id + '" title="Supprimer">&#128465;</button>'
+              + '<button class="gt-btn-edit btn-edit-theme" data-id="' + t.id + '" title="Modifier" data-online-only="1">&#9999;&#65039;</button>'
+              + '<button class="gt-btn-delete btn-del-theme" data-id="' + t.id + '" title="Supprimer" data-online-only="1">&#128465;</button>'
             + '</div>'
           + '</div>';
         grid.appendChild(div);
@@ -428,6 +428,9 @@
       grid.querySelectorAll('.btn-del-theme').forEach(function(btn) {
         btn.addEventListener('click', function() { demanderSuppression(btn.getAttribute('data-id')); });
       });
+
+      // Réapplique les gardes hors ligne sur les boutons qu'on vient d'injecter
+      if (window.melodieApplyOfflineGuards) window.melodieApplyOfflineGuards();
     }
 
     document.getElementById('searchTheme').addEventListener('input', function(e) {
