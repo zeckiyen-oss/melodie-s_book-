@@ -1,14 +1,20 @@
 // ============================================
 // Mélodie's Book — sw.js
-// Service Worker minimaliste — v8
+// Service Worker minimaliste — v9
 // v8 : les cache.put() hors installation n'étaient
 // pas protégés par waitUntil() — le SW pouvait être
 // tué avant la fin de l'écriture en cache, empêchant
 // silencieusement la mise en cache de pages visitées
 // en ligne.
+// v9 : bump de version pour propager les corrections du
+// 2026-08-14 (accordéon comptes, PWA install, retrait
+// bouton télécharger/champ style, garde-fous offline,
+// bugfix chanson.html melodieFetch) aux appareils déjà
+// installés. skipWaiting()/clients.claim() déjà en place
+// plus bas assurent une prise de contrôle immédiate.
 // ============================================
 
-const CACHE_NAME = 'melodie-cache-v8';
+const CACHE_NAME = 'melodie-cache-v9';
 const AUDIO_CACHE_NAME = 'melodie-audio-cache-v1';
 
 const STATIC_ASSETS = [
