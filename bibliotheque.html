@@ -353,7 +353,7 @@
       <div class="vide-icon">📭</div>
       <p class="vide-titre">Aucune ressource trouvée</p>
       <p class="vide-desc">Modifiez vos filtres ou ajoutez des audios aux chansons.</p>
-      <a href="ajouter-chanson" class="btn-ajouter-vide" id="btnAjouterVide" style="display:none">
+      <a href="ajouter-chanson" class="btn-ajouter-vide" id="btnAjouterVide" style="display:none" data-online-only="1">
         + Ajouter une chanson
       </a>
     </div>
@@ -365,7 +365,7 @@
           <span class="lecteur-titre" id="lecteurTitre">—</span>
           <span class="lecteur-rubrique" id="lecteurRubrique">—</span>
         </div>
-        <audio id="lecteurAudio" controls>Votre navigateur ne supporte pas l'audio.</audio>
+        <audio id="lecteurAudio" controls controlsList="nodownload">Votre navigateur ne supporte pas l'audio.</audio>
         <button class="lecteur-fermer" id="btnFermerLecteur">✕</button>
       </div>
     </div>
@@ -419,6 +419,7 @@
 
     if (isAdmin) {
       document.getElementById('btnAjouterVide').style.display = 'inline-block';
+      if (window.melodieApplyOfflineGuards) window.melodieApplyOfflineGuards();
     }
 
     await chargerChansons();
@@ -557,7 +558,7 @@
         + (c.numero ? '<span class="item-num">#' + escHtml(String(c.numero)) + '</span>' : '')
         + '<div class="item-info">'
           + '<a href="chanson?id=' + escHtml(c.id) + '" class="item-titre">' + escHtml(c.titre) + '</a>'
-          + '<span class="item-langue">' + escHtml(c.langue || '') + (c.style ? ' · ' + escHtml(c.style) : '') + '</span>'
+          + '<span class="item-langue">' + escHtml(c.langue || '') + '</span>'
         + '</div>'
       + '</div>'
       + '<div class="biblio-item-right">'
