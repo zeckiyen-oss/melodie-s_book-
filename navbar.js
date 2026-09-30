@@ -123,11 +123,11 @@ async function buildSharedNavbar(profil, pageActive) {
   }
 
   var liens = [
-    { href: "dashboard",             label: "🏠 Accueil",           id: "dashboard",             roles: ["membre","preparateur","admin"] },
+    { href: "dashboard",             label: "<svg class="nav-icon"><use href="icons.svg#icon-home"></use></svg> Accueil",           id: "dashboard",             roles: ["membre","preparateur","admin"] },
     { href: "repertoire",            label: "<svg class="logo-icon"><use href="icons.svg#icon-musical-note"></use></svg> Répertoire",        id: "repertoire",            roles: ["membre","preparateur","admin"] },
-    { href: "themes",                label: "📖 Thèmes",            id: "themes",                roles: ["membre","preparateur","admin"] },
-    { href: "historique",            label: "📜 Historique",        id: "historique",            roles: ["membre","preparateur","admin"] },
-    { href: "bibliotheque",          label: "📚 Bibliothèque",      id: "bibliotheque",          roles: ["membre","preparateur","admin"] },
+    { href: "themes",                label: "<svg class="nav-icon"><use href="icons.svg#icon-book-open"></use></svg> Thèmes",            id: "themes",                roles: ["membre","preparateur","admin"] },
+    { href: "historique",            label: "<svg class="nav-icon"><use href="icons.svg#icon-scroll"></use></svg> Historique",        id: "historique",            roles: ["membre","preparateur","admin"] },
+    { href: "bibliotheque",          label: "<svg class="nav-icon"><use href="icons.svg#icon-book"></use></svg> Bibliothèque",      id: "bibliotheque",          roles: ["membre","preparateur","admin"] },
     { href: "proposer",              label: "<svg class="action-icon"><use href="icons.svg#icon-lightbulb"></use></svg> Proposer",          id: "proposer",              roles: ["membre","preparateur","admin"] },
     { href: "programme",             label: "🕊️ Programme",         id: "programme",             roles: ["membre","preparateur","admin"] },
     { href: "preparation-culte",     label: "<svg class="nav-icon"><use href="icons.svg#icon-church"></use></svg> Prépa. culte",      id: "preparation-culte",     roles: ["preparateur","admin"] },
@@ -168,7 +168,7 @@ async function buildSharedNavbar(profil, pageActive) {
     + '<span class="snav-user-role" style="' + roleCouleur + '">' + roleLabel + '</span>'
     + '</div>'
     + '<button class="theme-toggle-btn" onclick="toggleTheme()" title="Changer de th\u00e8me">'
-    + '<span id="theme-toggle-icon">\u2600\ufe0f</span>'
+    + '<span id="theme-toggle-icon"><svg class="theme-icon"><use href="icons.svg#icon-sun"></use></svg></span>'
     + '</button>'
     + (isDashboard ? '<button class="snav-quit" onclick="snavLogout()">&#11161; Quitter</button>' : '')
     + '</div>'
@@ -337,7 +337,7 @@ function updateThemeToggleIcon() {
   var currentTheme = localStorage.getItem('melodie-theme') || 'dark';
   var toggleIcon = document.getElementById('theme-toggle-icon');
   if (toggleIcon) {
-    toggleIcon.textContent = currentTheme === 'light' ? '\u263e' : '\u2600\ufe0f';
+    toggleIcon.textContent = currentTheme === 'light' ? '<svg class="theme-icon"><use href="icons.svg#icon-moon"></use></svg>' : '<svg class="theme-icon"><use href="icons.svg#icon-sun"></use></svg>';
   }
 }
 
