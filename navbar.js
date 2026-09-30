@@ -167,6 +167,9 @@ async function buildSharedNavbar(profil, pageActive) {
     + '<span class="snav-user-nom">' + _esc(nom) + '</span>'
     + '<span class="snav-user-role" style="' + roleCouleur + '">' + roleLabel + '</span>'
     + '</div>'
+    + '<button class="theme-toggle-btn" onclick="toggleTheme()" title="Changer de th\u00e8me">'
+    + '<span id="theme-toggle-icon">\u2600\ufe0f</span>'
+    + '</button>'
     + (isDashboard ? '<button class="snav-quit" onclick="snavLogout()">&#11161; Quitter</button>' : '')
     + '</div>'
     + '</div>'
@@ -203,6 +206,8 @@ async function buildSharedNavbar(profil, pageActive) {
       ".snav-user-nom{font-family:'Lato',sans-serif;font-size:0.8rem;font-weight:700;color:#FAF6ED;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;}",
       ".snav-user-role{font-size:0.62rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;padding:1px 7px;border-radius:20px;white-space:nowrap;}",
       ".snav-quit{background:transparent;border:1px solid rgba(201,168,76,0.3);color:rgba(250,246,237,0.55);font-size:0.72rem;font-family:'Lato',sans-serif;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;padding:0.28rem 0.7rem;border-radius:6px;cursor:pointer;transition:all 0.2s;white-space:nowrap;}",
+      ".theme-toggle-btn{background:transparent;border:1px solid rgba(201,168,76,0.3);color:var(--accent-light);font-size:1.2rem;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;margin-left:0.5rem;}",
+      ".theme-toggle-btn:hover{border-color:var(--accent);background:rgba(201,168,76,0.1);}",
       ".snav-quit:hover{border-color:rgba(192,57,43,0.5);color:#E57373;background:rgba(192,57,43,0.08);}",
       ".snav-links-wrap{overflow-x:auto;scrollbar-width:none;border-top:1px solid rgba(201,168,76,0.1);}",
       ".snav-links-wrap::-webkit-scrollbar{display:none;}",
@@ -302,6 +307,43 @@ async function snavLogout() {
   }
   localStorage.removeItem('melodie-last-user');
   window.location.href = "/";
+}
+
+// Theme Manager Functions
+function initTheme() {
+  var savedTheme = localStorage.getItem('melodie-theme') || 'dark';
+  applyTheme(savedTheme);
+}
+
+function applyTheme(theme) {
+  var body = document.body;
+  body.classList.remove('dark-mode', 'light-mode');
+  if (theme === 'light') {
+    body.classList.add('light-mode');
+  } else {
+    body.classList.add('dark-mode');
+  }
+  localStorage.setItem('melodie-theme', theme);
+  updateThemeToggleIcon();
+}
+
+function toggleTheme() {
+  var currentTheme = localStorage.getItem('melodie-theme') || 'dark';
+  var newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  applyTheme(newTheme);
+}
+
+function updateThemeToggleIcon() {
+  var currentTheme = localStorage.getItem('melodie-theme') || 'dark';
+  var toggleIcon = document.getElementById('theme-toggle-icon');
+  if (toggleIcon) {
+    toggleIcon.textContent = currentTheme === 'light' ? '\u263e' : '\u2600\ufe0f';
+  }
+}
+
+// Initialize theme on page load
+if (typeof window !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', initTheme);
 }
 
 function _esc(str) {

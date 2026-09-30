@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Préparation - Mélodie's Book</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,500;1,400&display=swap" rel="stylesheet" />
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Feuille de style commune -->
+  <link rel="stylesheet" href="css/style.css" />
+  
+  <style>
+    :root {
+      --bg-primary: #0D1B2A;
+      --bg-secondary: #1A2E45;
+      --bg-tertiary: #26476A;
+      --text-primary: #FAF6ED;
+      --text-secondary: rgba(250, 246, 237, 0.7);
+      --accent: #C9A84C;
+      --accent-light: #F0D98A;
+      --border-color: rgba(201, 168, 76, 0.2);
+    }
+
+    body {
+      font-family: var(--font-corps);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    .menu-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+    }
+
+    .menu-title {
+      font-family: var(--font-titre);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent-light);
+      letter-spacing: 0.05em;
+    }
+
+    .menu-content {
+      padding: 2rem 1.5rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .menu-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .menu-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(201, 168, 76, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .menu-card-icon {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 1rem;
+      background: rgba(201, 168, 76, 0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+    }
+
+    .menu-card-title {
+      font-family: var(--font-corps);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: 0.03em;
+    }
+
+    .menu-card-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+    }
+
+    /* Theme toggle button */
+    .theme-toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .theme-toggle {
+      width: 40px;
+      height: 22px;
+      background: rgba(201, 168, 76, 0.2);
+      border: 1px solid var(--accent);
+      border-radius: 11px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .theme-toggle::before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      background: var(--accent-light);
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+    }
+
+    body.light-mode .theme-toggle::before {
+      transform: translateX(18px);
+    }
+
+    .theme-toggle-icon {
+      font-size: 1.2rem;
+      color: var(--accent-light);
+    }
+
+    /* Bottom navbar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      padding: 0.5rem 0;
+      z-index: 1000;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .bottom-nav a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.5rem 1rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.7rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+      border-radius: var(--radius-sm);
+    }
+
+    .bottom-nav a:hover {
+      color: var(--accent-light);
+    }
+
+    .bottom-nav a.active {
+      color: var(--accent-light);
+    }
+
+    .bottom-nav a.active .nav-icon {
+      filter: brightness(1.2);
+    }
+
+    .nav-icon {
+      font-size: 1.4rem;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Active tab indicator */
+    .bottom-nav::after {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: 40%;
+      width: 20%;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 3px 3px 0 0;
+      transition: left 0.2s ease;
+    }
+
+    .bottom-nav a:nth-child(1).active ~ .bottom-nav::after { left: 0; }
+    .bottom-nav a:nth-child(2).active ~ .bottom-nav::after { left: 20%; }
+    .bottom-nav a:nth-child(3).active ~ .bottom-nav::after { left: 40%; }
+    .bottom-nav a:nth-child(4).active ~ .bottom-nav::after { left: 60%; }
+    .bottom-nav a:nth-child(5).active ~ .bottom-nav::after { left: 80%; }
+  </style>
+</head>
+<body>
+  <header class="menu-header">
+    <h1 class="menu-title">Préparation</h1>
+    <div class="theme-toggle-container">
+      <span class="theme-toggle-icon" id="themeIcon">☀️</span>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Basculer entre les thèmes clair et sombre"></button>
+    </div>
+  </header>
+
+  <main class="menu-content">
+    <div class="menu-grid">
+      <a href="preparation-culte" class="menu-card">
+        <div class="menu-card-icon">🎭</div>
+        <h2 class="menu-card-title">Préparation de culte</h2>
+        <p class="menu-card-desc">Préparez les chants pour le culte</p>
+      </a>
+      
+      <a href="preparation-evenement" class="menu-card">
+        <div class="menu-card-icon">📅</div>
+        <h2 class="menu-card-title">Préparation d'événement</h2>
+        <p class="menu-card-desc">Organisez les événements spéciaux</p>
+      </a>
+      
+      <a href="programme" class="menu-card">
+        <div class="menu-card-icon">📋</div>
+        <h2 class="menu-card-title">Programme</h2>
+        <p class="menu-card-desc">Visualisez et gérez les programmes</p>
+      </a>
+      
+      <a href="validation-programme" class="menu-card">
+        <div class="menu-card-icon">✅</div>
+        <h2 class="menu-card-title">Validation</h2>
+        <p class="menu-card-desc">Validez les programmes préparés</p>
+      </a>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav" id="bottomNav">
+    <a href="dashboard" class="nav-link" data-page="dashboard">
+      <span class="nav-icon">🏠</span>
+      <span>Accueil</span>
+    </a>
+    <a href="repertoire-menu" class="nav-link" data-page="repertoire-menu">
+      <span class="nav-icon">📖</span>
+      <span>Répertoire</span>
+    </a>
+    <a href="preparation-menu" class="nav-link active" data-page="preparation-menu">
+      <span class="nav-icon">🎭</span>
+      <span>Préparation</span>
+    </a>
+    <a href="admin-menu" class="nav-link" data-page="admin-menu">
+      <span class="nav-icon">⚙️</span>
+      <span>Admin</span>
+    </a>
+    <a href="propositions-menu" class="nav-link" data-page="propositions-menu">
+      <span class="nav-icon">💡</span>
+      <span>Propositions</span>
+    </a>
+  </nav>
+
+  <!-- Supabase Config -->
+  <script>
+    const SUPABASE_URL = 'https://tjqicfxkxhlciebmswqu.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqcWljZnhreGhsY2llYm1zd3F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODg1NzQsImV4cCI6MjA5NDY2NDU3NH0.VyLZE6ldvMb4dYt5qqbqeS7OAS7fwYKxaj_x2wEHWJQ';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  </script>
+
+  <!-- Theme Management -->
+  <script>
+    // Charger le thème sauvegardé
+    function loadTheme() {
+      const savedTheme = localStorage.getItem('melodie-theme') || 'dark';
+      document.body.classList.toggle('light-mode', savedTheme === 'light');
+      updateThemeIcon();
+    }
+
+    // Basculer entre les thèmes
+    function toggleTheme() {
+      const isLight = document.body.classList.toggle('light-mode');
+      localStorage.setItem('melodie-theme', isLight ? 'light' : 'dark');
+      updateThemeIcon();
+    }
+
+    // Mettre à jour l'icône du thème
+    function updateThemeIcon() {
+      const icon = document.getElementById('themeIcon');
+      if (document.body.classList.contains('light-mode')) {
+        icon.textContent = '🌙';
+      } else {
+        icon.textContent = '☀️';
+      }
+    }
+
+    // Appliquer le thème au chargement
+    document.addEventListener('DOMContentLoaded', loadTheme);
+  </script>
+
+  <!-- Navigation Active State -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentPage = window.location.pathname.split('/').pop();
+      const navLinks = document.querySelectorAll('.nav-link');
+      
+      navLinks.forEach(link => {
+        if (link.getAttribute('href') === currentPage) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+
+  <!-- Navbar Integration -->
+  <script src="navbar.js"></script>
+</body>
+</html>
