@@ -17,7 +17,23 @@
 
   <style>
     html, body { background: #0D1B2A !important; color: #FAF6ED !important; }
-  </style>
+  
+/* SVG Icons */
+.nav-icon, .action-icon, .logo-icon, .theme-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-right: 0.25em;
+}
+.theme-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+.logo-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+</style>
 </head>
 <body class="page-historique">
 
@@ -32,7 +48,7 @@
 
     <div class="histo-header">
       <div class="histo-header-left">
-        <div class="histo-header-icon">📅</div>
+        <div class="histo-header-icon"><svg class="action-icon"><use href="icons.svg#icon-calendar"></use></svg></div>
         <div>
           <h1 class="histo-titre">Historique des cultes</h1>
           <p class="histo-sous-titre">Tous les programmes de culte archivés</p>
@@ -52,7 +68,7 @@
 
     <div class="histo-filtres">
       <div class="filtre-recherche">
-        <span>🔍</span>
+        <span><svg class="action-icon"><use href="icons.svg#icon-search"></use></svg></span>
         <input type="text" id="searchInput" placeholder="Rechercher par thème…" />
       </div>
       <div class="filtre-tabs" id="filtreTabs">
@@ -96,7 +112,7 @@
           <p class="chargement-txt">Chargement du programme…</p>
         </div>
         <div class="cpanel-actions" id="cpanelActions" style="display:none">
-          <a href="#" class="btn-cpanel-modifier" id="btnModifierCulte">✏️ Modifier</a>
+          <a href="#" class="btn-cpanel-modifier" id="btnModifierCulte"><svg class="action-icon"><use href="icons.svg#icon-edit"></use></svg> Modifier</a>
           <button class="btn-cpanel-archiver" id="btnArchiverCulte" data-online-only="1">📦 Archiver</button>
         </div>
       </div>

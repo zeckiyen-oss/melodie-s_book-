@@ -17,7 +17,23 @@
 
   <style>
     html, body { background: #0D1B2A !important; color: #FAF6ED !important; }
-  </style>
+  
+/* SVG Icons */
+.nav-icon, .action-icon, .logo-icon, .theme-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-right: 0.25em;
+}
+.theme-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+.logo-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+</style>
 </head>
 <body class="page-themes">
 
@@ -39,12 +55,12 @@
         </div>
       </div>
       <a href="gestion-themes" class="btn-gerer" id="btnGerer" style="display:none" data-online-only="1">
-        ⚙️ Gérer les thèmes
+        <svg class="action-icon"><use href="icons.svg#icon-settings"></use></svg> Gérer les thèmes
       </a>
     </div>
 
     <div class="themes-recherche">
-      <span class="recherche-icon">🔍</span>
+      <span class="recherche-icon"><svg class="action-icon"><use href="icons.svg#icon-search"></use></svg></span>
       <input type="text" id="searchInput" class="recherche-input" placeholder="Rechercher un thème…" />
     </div>
 

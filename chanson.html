@@ -89,7 +89,23 @@
     }
     .badge-default { background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3); color: #F0D98A; }
     .badge-reflexion { background: rgba(130,180,200,0.12); border: 1px solid rgba(130,180,200,0.4); color: #A8D8EA; }
-  </style>
+  
+/* SVG Icons */
+.nav-icon, .action-icon, .logo-icon, .theme-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-right: 0.25em;
+}
+.theme-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+.logo-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+</style>
 </head>
 <body class="page-chanson">
 
@@ -121,8 +137,8 @@
         </div>
       </div>
       <div class="chanson-actions" id="chActions" style="display:none">
-        <a href="#" class="btn-action btn-modifier" id="btnModifier" data-online-only="1">✏️ Modifier</a>
-        <button class="btn-action btn-supprimer" id="btnSupprimer" data-online-only="1">🗑️ Supprimer</button>
+        <a href="#" class="btn-action btn-modifier" id="btnModifier" data-online-only="1"><svg class="action-icon"><use href="icons.svg#icon-edit"></use></svg> Modifier</a>
+        <button class="btn-action btn-supprimer" id="btnSupprimer" data-online-only="1"><svg class="action-icon"><use href="icons.svg#icon-trash"></use></svg> Supprimer</button>
       </div>
     </header>
 
@@ -133,7 +149,7 @@
         <!-- SECTION AUDIO -->
         <section class="card-sacre" id="sectionAudio">
           <div class="card-sacre-header">
-            <span class="card-icon">🎵</span>
+            <span class="card-icon"><svg class="logo-icon"><use href="icons.svg#icon-musical-note"></use></svg></span>
             <h2 class="card-title">Écouter</h2>
           </div>
 
@@ -142,7 +158,7 @@
               Votre navigateur ne supporte pas l'audio.
             </audio>
             <p class="audio-hint">Utilisez les contrôles pour lire la chanson</p>
-            <button class="btn-suppr-audio" id="btnSupprimerAudio" style="display:none" data-online-only="1">🗑️ Supprimer l'audio</button>
+            <button class="btn-suppr-audio" id="btnSupprimerAudio" style="display:none" data-online-only="1"><svg class="action-icon"><use href="icons.svg#icon-trash"></use></svg> Supprimer l'audio</button>
           </div>
 
           <div id="audioVide" style="display:none">
@@ -173,7 +189,7 @@
 
         <section class="card-sacre">
           <div class="card-sacre-header">
-            <span class="card-icon">📅</span>
+            <span class="card-icon"><svg class="action-icon"><use href="icons.svg#icon-calendar"></use></svg></span>
             <h2 class="card-title">Utilisée dans</h2>
           </div>
           <div class="cultes-list" id="cultesList">
@@ -188,7 +204,7 @@
           <div class="card-sacre-header">
             <span class="card-icon">📖</span>
             <h2 class="card-title">Paroles</h2>
-            <button class="btn-copier" id="btnCopierParoles" title="Copier les paroles">📋 Copier</button>
+            <button class="btn-copier" id="btnCopierParoles" title="Copier les paroles"><svg class="action-icon"><use href="icons.svg#icon-list"></use></svg> Copier</button>
           </div>
           <div class="paroles-content" id="parolesContent">
             <p class="no-data">Aucune parole enregistrée.</p>

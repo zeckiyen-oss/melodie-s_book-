@@ -293,7 +293,23 @@
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .toast-success { border-color: #4CAF82; }
     .toast-error   { border-color: #e07070; }
-  </style>
+  
+/* SVG Icons */
+.nav-icon, .action-icon, .logo-icon, .theme-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-right: 0.25em;
+}
+.theme-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+.logo-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+</style>
 </head>
 <body class="page-comptes">
 
@@ -350,7 +366,7 @@
         <button class="cp-tab" data-filtre="tous">Tous</button>
       </div>
       <div class="cp-search-wrapper">
-        <span class="cp-search-icon">🔍</span>
+        <span class="cp-search-icon"><svg class="action-icon"><use href="icons.svg#icon-search"></use></svg></span>
         <input type="text" id="cpSearch" class="cp-search-input" placeholder="Rechercher un membre…" />
       </div>
     </div>

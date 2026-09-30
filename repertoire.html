@@ -61,7 +61,23 @@
       .rep-item { padding:0.75rem 0.9rem; }
       .rep-titre { font-size:0.86rem; }
     }
-  </style>
+  
+/* SVG Icons */
+.nav-icon, .action-icon, .logo-icon, .theme-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-right: 0.25em;
+}
+.theme-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+.logo-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+</style>
 </head>
 
 <body class="dashboard-body">
@@ -75,7 +91,7 @@
 
     <div class="page-header">
       <div class="page-header-left">
-        <div class="page-header-icon">🎵</div>
+        <div class="page-header-icon"><svg class="logo-icon"><use href="icons.svg#icon-musical-note"></use></svg></div>
         <div>
           <h1 class="page-title">Répertoire</h1>
           <p class="page-subtitle">Bibliothèque des chansons de la chorale</p>
@@ -83,14 +99,14 @@
       </div>
       <div class="page-header-actions" id="adminActions" style="display:none;">
         <a href="ajouter-chanson" class="btn-primary" data-online-only="1">
-          <span>➕</span> Ajouter une chanson
+          <span><svg class="action-icon"><use href="icons.svg#icon-plus"></use></svg></span> Ajouter une chanson
         </a>
       </div>
     </div>
 
     <div class="repertoire-controls">
       <div class="search-bar">
-        <span class="search-icon">🔍</span>
+        <span class="search-icon"><svg class="action-icon"><use href="icons.svg#icon-search"></use></svg></span>
         <input type="text" id="searchInput" placeholder="Rechercher par titre, numéro…" class="search-input" />
         <button class="search-clear hidden" id="searchClear">✕</button>
       </div>
@@ -196,15 +212,15 @@
 
       pageItems.forEach(function(c) {
         var rc = RUBRIQUES_COLORS[c.rubrique] || { bg:'rgba(255,255,255,0.05)', border:'rgba(255,255,255,0.2)', text:'#FAF6ED' };
-        var icon = RUBRIQUES_ICONS[c.rubrique] || '🎵';
+        var icon = RUBRIQUES_ICONS[c.rubrique] || '<svg class="logo-icon"><use href="icons.svg#icon-musical-note"></use></svg>';
 
         var div = document.createElement('div');
         div.className = 'rep-item';
 
         var adminBtn = userRole === 'admin'
-          ? '<a href="modifier-chanson?id=' + c.id + '" class="rep-btn-edit" title="Modifier" data-online-only="1" onclick="event.stopPropagation()">✏️</a>' : '';
+          ? '<a href="modifier-chanson?id=' + c.id + '" class="rep-btn-edit" title="Modifier" data-online-only="1" onclick="event.stopPropagation()"><svg class="action-icon"><use href="icons.svg#icon-edit"></use></svg></a>' : '';
 
-        var audioBadge = c.audio_url ? '<span title="Audio disponible">🎵</span>' : '';
+        var audioBadge = c.audio_url ? '<span title="Audio disponible"><svg class="logo-icon"><use href="icons.svg#icon-musical-note"></use></svg></span>' : '';
 
         var mainHtml = '<a href="chanson?id=' + c.id + '" class="rep-item-main">'
           + '<div class="rep-num">' + (c.numero ? '#' + escHtml(String(c.numero)) : '—') + '</div>'

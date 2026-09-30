@@ -218,7 +218,23 @@
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .toast-success { border-color: #4CAF82; }
     .toast-error   { border-color: #e07070; }
-  </style>
+  
+/* SVG Icons */
+.nav-icon, .action-icon, .logo-icon, .theme-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-right: 0.25em;
+}
+.theme-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+.logo-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+</style>
 </head>
 <body class="page-gestion-themes">
 
@@ -249,7 +265,7 @@
       <section class="gt-list-section">
         <div class="gt-toolbar">
           <div class="gt-search-wrapper">
-            <span class="gt-search-icon">🔍</span>
+            <span class="gt-search-icon"><svg class="action-icon"><use href="icons.svg#icon-search"></use></svg></span>
             <input type="text" id="searchTheme" class="gt-search-input" placeholder="Rechercher un thème…" />
           </div>
           <button class="btn-primary" id="btnNouveauTheme" data-online-only="1">&#10022; Nouveau thème</button>

@@ -105,7 +105,23 @@
       padding: 0 .2rem;
     }
     audio#audioPreview { width: 100%; border-radius: 8px; margin-top: .6rem; display: none; }
-  </style>
+  
+/* SVG Icons */
+.nav-icon, .action-icon, .logo-icon, .theme-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-right: 0.25em;
+}
+.theme-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+.logo-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+</style>
 </head>
 <body class="page-ajouter">
 
@@ -200,7 +216,7 @@
         </div>
 
         <div class="editeur-toolbar">
-          <button type="button" class="toolbar-btn" id="btnCouplet">📝 Couplet</button>
+          <button type="button" class="toolbar-btn" id="btnCouplet"><svg class="action-icon"><use href="icons.svg#icon-document"></use></svg> Couplet</button>
           <button type="button" class="toolbar-btn" id="btnRefrain">🔁 Refrain</button>
           <button type="button" class="toolbar-btn" id="btnPont">🌉 Pont</button>
           <button type="button" class="toolbar-btn" id="btnBridge">🎶 Bridge</button>
@@ -212,7 +228,7 @@
         </div>
 
         <div class="editeur-guide" id="editeurGuide">
-          <span>💡 Sépare chaque couplet/refrain par une <strong>ligne vide</strong>.</span>
+          <span><svg class="action-icon"><use href="icons.svg#icon-lightbulb"></use></svg> Sépare chaque couplet/refrain par une <strong>ligne vide</strong>.</span>
         </div>
 
         <textarea
@@ -236,7 +252,7 @@
         </div>
 
         <div class="audio-drop-zone" id="audioDropZone" data-online-only="1">
-          <div class="audio-drop-icon">🎵</div>
+          <div class="audio-drop-icon"><svg class="logo-icon"><use href="icons.svg#icon-musical-note"></use></svg></div>
           <p class="audio-drop-label">Glisse ton fichier audio ici ou clique pour choisir</p>
           <button type="button" class="btn-choisir-audio" id="btnChoisirAudio" data-online-only="1">📂 Choisir un fichier</button>
           <input type="file" id="audioFileInput" accept="audio/*" />

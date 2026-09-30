@@ -63,7 +63,23 @@
     .audio-prop-fichier-suppr { background:none; border:none; color:#e5534b; cursor:pointer; font-size:.85rem; padding:0 .2rem; }
     audio#audioPropPreview { width:100%; border-radius:8px; margin-top:.5rem; display:none; }
     .form-hint-audio { font-size:.75rem; color:rgba(250,246,237,.4); margin-top:.4rem; }
-  </style>
+  
+/* SVG Icons */
+.nav-icon, .action-icon, .logo-icon, .theme-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-right: 0.25em;
+}
+.theme-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+.logo-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+</style>
 </head>
 <body class="page-proposer">
 
@@ -95,7 +111,7 @@
       <section class="proposer-form-section">
         <div class="form-card">
           <div class="form-card-header">
-            <span class="form-card-icon">🎵</span>
+            <span class="form-card-icon"><svg class="logo-icon"><use href="icons.svg#icon-musical-note"></use></svg></span>
             <h2>Informations de la chanson</h2>
           </div>
           <div class="form-body">
@@ -153,7 +169,7 @@
 
             <!-- SECTION AUDIO -->
             <div class="form-group">
-              <label class="form-label">🎵 Audio de la chanson <span style="font-weight:400;font-style:italic;font-size:0.75rem;color:#78909C;">(optionnel)</span></label>
+              <label class="form-label"><svg class="logo-icon"><use href="icons.svg#icon-musical-note"></use></svg> Audio de la chanson <span style="font-weight:400;font-style:italic;font-size:0.75rem;color:#78909C;">(optionnel)</span></label>
 
               <div class="audio-prop-zone" id="audioPropZone">
                 <div class="audio-prop-icon">🎧</div>
@@ -205,7 +221,7 @@
         </div>
 
         <div class="aside-card aside-mes-props">
-          <h3 class="aside-card-title"><span>📋</span> Mes propositions</h3>
+          <h3 class="aside-card-title"><span><svg class="action-icon"><use href="icons.svg#icon-list"></use></svg></span> Mes propositions</h3>
           <div id="mesPropositions" class="mes-props-list">
             <div class="props-loading">Chargement…</div>
           </div>
@@ -300,7 +316,7 @@
       return;
     }
 
-    var labels = { en_attente:'⏳ En attente', accepte:'✅ Accepté', refuse:'❌ Refusé' };
+    var labels = { en_attente:'⏳ En attente', accepte:'<svg class="nav-icon"><use href="icons.svg#icon-check"></use></svg> Accepté', refuse:'❌ Refusé' };
     container.innerHTML = res.data.map(function(p) {
       return '<div class="prop-item prop-' + p.statut + '">'
         + '<div class="prop-item-info">'

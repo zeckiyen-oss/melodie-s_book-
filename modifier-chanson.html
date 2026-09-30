@@ -37,7 +37,23 @@
     .audio-fichier-nom { font-size:.8rem; color:rgba(250,246,237,.7); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .audio-fichier-suppr { background:none; border:none; color:#e5534b; cursor:pointer; font-size:.85rem; padding:0 .2rem; }
     audio#audioNouveauPreview { width:100%; border-radius:8px; margin-top:.5rem; display:none; }
-  </style>
+  
+/* SVG Icons */
+.nav-icon, .action-icon, .logo-icon, .theme-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-right: 0.25em;
+}
+.theme-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+.logo-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+</style>
 </head>
 <body class="page-ajouter">
 
@@ -49,7 +65,7 @@
   <main class="ajouter-main" id="mainContent" style="display:none">
 
     <div class="page-header">
-      <div class="page-header-icon">✏️</div>
+      <div class="page-header-icon"><svg class="action-icon"><use href="icons.svg#icon-edit"></use></svg></div>
       <div>
         <h1 class="page-titre" id="pageTitre">Modifier la chanson</h1>
         <p class="page-sous-titre" id="pageSousTitre">Chargement…</p>
@@ -57,7 +73,7 @@
     </div>
 
     <div class="bandeau-info">
-      <span class="bandeau-icon">💡</span>
+      <span class="bandeau-icon"><svg class="action-icon"><use href="icons.svg#icon-lightbulb"></use></svg></span>
       Les champs marqués d'un <span class="req">*</span> sont obligatoires.
     </div>
 
@@ -125,7 +141,7 @@
           <h2 class="section-titre">Paroles</h2>
         </div>
         <div class="editeur-toolbar">
-          <button type="button" class="toolbar-btn" id="btnCouplet">📝 Couplet</button>
+          <button type="button" class="toolbar-btn" id="btnCouplet"><svg class="action-icon"><use href="icons.svg#icon-document"></use></svg> Couplet</button>
           <button type="button" class="toolbar-btn" id="btnRefrain">🔁 Refrain</button>
           <button type="button" class="toolbar-btn" id="btnPont">🌉 Pont</button>
           <button type="button" class="toolbar-btn" id="btnBridge">🎶 Bridge</button>
@@ -136,7 +152,7 @@
           <button type="button" class="toolbar-btn toolbar-btn-sm" id="btnApercu">👁 Aperçu</button>
         </div>
         <div class="editeur-guide">
-          <span>💡 Sépare chaque couplet/refrain par une <strong>ligne vide</strong>.</span>
+          <span><svg class="action-icon"><use href="icons.svg#icon-lightbulb"></use></svg> Sépare chaque couplet/refrain par une <strong>ligne vide</strong>.</span>
         </div>
         <textarea id="paroles" class="field-textarea paroles-textarea" rows="16"></textarea>
         <div class="paroles-apercu" id="parolesApercu" style="display:none">
@@ -153,17 +169,17 @@
 
         <div id="audioActuelWrap" style="display:none">
           <div class="audio-actuel-wrap">
-            <div class="audio-actuel-label">🎵 Audio actuel</div>
+            <div class="audio-actuel-label"><svg class="logo-icon"><use href="icons.svg#icon-musical-note"></use></svg> Audio actuel</div>
             <audio id="audioActuelPlayer" class="audio-actuel-player" controls controlsList="nodownload" preload="metadata"></audio>
             <div class="audio-actuel-actions">
-              <button type="button" class="btn-suppr-audio-actuel" id="btnSupprimerAudioActuel" data-online-only="1">🗑️ Supprimer l'audio</button>
+              <button type="button" class="btn-suppr-audio-actuel" id="btnSupprimerAudioActuel" data-online-only="1"><svg class="action-icon"><use href="icons.svg#icon-trash"></use></svg> Supprimer l'audio</button>
             </div>
           </div>
           <p class="field-hint" style="margin-bottom:.6rem;">Pour remplacer l'audio, choisissez un nouveau fichier ci-dessous.</p>
         </div>
 
         <div class="audio-drop-zone" id="audioDropZone" data-online-only="1">
-          <div class="audio-drop-icon">🎵</div>
+          <div class="audio-drop-icon"><svg class="logo-icon"><use href="icons.svg#icon-musical-note"></use></svg></div>
           <p class="audio-drop-label" id="audioDropLabel">Glisse un fichier audio ou clique pour choisir</p>
           <button type="button" class="btn-choisir-audio" id="btnChoisirAudio" data-online-only="1">📂 Choisir un fichier</button>
           <input type="file" id="audioFileInput" accept="audio/*" />

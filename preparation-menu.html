@@ -214,13 +214,29 @@
     .bottom-nav a:nth-child(3).active ~ .bottom-nav::after { left: 40%; }
     .bottom-nav a:nth-child(4).active ~ .bottom-nav::after { left: 60%; }
     .bottom-nav a:nth-child(5).active ~ .bottom-nav::after { left: 80%; }
-  </style>
+  
+/* SVG Icons */
+.nav-icon, .action-icon, .logo-icon, .theme-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-right: 0.25em;
+}
+.theme-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+.logo-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+</style>
 </head>
 <body>
   <header class="menu-header">
     <h1 class="menu-title">Préparation</h1>
     <div class="theme-toggle-container">
-      <span class="theme-toggle-icon" id="themeIcon">☀️</span>
+      <span class="theme-toggle-icon" id="themeIcon"><svg class="theme-icon"><use href="icons.svg#icon-sun"></use></svg></span>
       <button class="theme-toggle" onclick="toggleTheme()" aria-label="Basculer entre les thèmes clair et sombre"></button>
     </div>
   </header>
@@ -228,25 +244,25 @@
   <main class="menu-content">
     <div class="menu-grid">
       <a href="preparation-culte" class="menu-card">
-        <div class="menu-card-icon">🎭</div>
+        <div class="menu-card-icon"><svg class="action-icon"><use href="icons.svg#icon-theater"></use></svg></div>
         <h2 class="menu-card-title">Préparation de culte</h2>
         <p class="menu-card-desc">Préparez les chants pour le culte</p>
       </a>
       
       <a href="preparation-evenement" class="menu-card">
-        <div class="menu-card-icon">📅</div>
+        <div class="menu-card-icon"><svg class="action-icon"><use href="icons.svg#icon-calendar"></use></svg></div>
         <h2 class="menu-card-title">Préparation d'événement</h2>
         <p class="menu-card-desc">Organisez les événements spéciaux</p>
       </a>
       
       <a href="programme" class="menu-card">
-        <div class="menu-card-icon">📋</div>
+        <div class="menu-card-icon"><svg class="action-icon"><use href="icons.svg#icon-list"></use></svg></div>
         <h2 class="menu-card-title">Programme</h2>
         <p class="menu-card-desc">Visualisez et gérez les programmes</p>
       </a>
       
       <a href="validation-programme" class="menu-card">
-        <div class="menu-card-icon">✅</div>
+        <div class="menu-card-icon"><svg class="nav-icon"><use href="icons.svg#icon-check"></use></svg></div>
         <h2 class="menu-card-title">Validation</h2>
         <p class="menu-card-desc">Validez les programmes préparés</p>
       </a>
@@ -264,15 +280,15 @@
       <span>Répertoire</span>
     </a>
     <a href="preparation-menu" class="nav-link active" data-page="preparation-menu">
-      <span class="nav-icon">🎭</span>
+      <span class="nav-icon"><svg class="action-icon"><use href="icons.svg#icon-theater"></use></svg></span>
       <span>Préparation</span>
     </a>
     <a href="admin-menu" class="nav-link" data-page="admin-menu">
-      <span class="nav-icon">⚙️</span>
+      <span class="nav-icon"><svg class="action-icon"><use href="icons.svg#icon-settings"></use></svg></span>
       <span>Admin</span>
     </a>
     <a href="propositions-menu" class="nav-link" data-page="propositions-menu">
-      <span class="nav-icon">💡</span>
+      <span class="nav-icon"><svg class="action-icon"><use href="icons.svg#icon-lightbulb"></use></svg></span>
       <span>Propositions</span>
     </a>
   </nav>
@@ -304,9 +320,9 @@
     function updateThemeIcon() {
       const icon = document.getElementById('themeIcon');
       if (document.body.classList.contains('light-mode')) {
-        icon.textContent = '🌙';
+        icon.textContent = '<svg class="theme-icon"><use href="icons.svg#icon-moon"></use></svg>';
       } else {
-        icon.textContent = '☀️';
+        icon.textContent = '<svg class="theme-icon"><use href="icons.svg#icon-sun"></use></svg>';
       }
     }
 

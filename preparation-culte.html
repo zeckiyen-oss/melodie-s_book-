@@ -285,7 +285,23 @@
     .toast.toast-show { opacity: 1; transform: translateY(0); }
     .toast-success { border-color: #4CAF82; }
     .toast-error   { border-color: #e07070; }
-  </style>
+  
+/* SVG Icons */
+.nav-icon, .action-icon, .logo-icon, .theme-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-right: 0.25em;
+}
+.theme-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+.logo-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+</style>
 </head>
 <body class="prep-page">
 
@@ -651,7 +667,7 @@
               + libreStyle + ' />'
           + '</div>'
           + '<div class="rubrique-search-row">'
-            + '<span>🔍</span>'
+            + '<span><svg class="action-icon"><use href="icons.svg#icon-search"></use></svg></span>'
             + '<input type="text" placeholder="Rechercher dans ' + escHtml(rubrique) + '…"'
               + ' id="rSearch_' + rubrique.replace(/\s/g,"_") + '" />'
           + '</div>'

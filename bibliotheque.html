@@ -285,7 +285,23 @@
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .toast-success { border-color: #4CAF82; }
     .toast-error   { border-color: #e07070; }
-  </style>
+  
+/* SVG Icons */
+.nav-icon, .action-icon, .logo-icon, .theme-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-right: 0.25em;
+}
+.theme-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+.logo-icon {
+  width: 1.2em;
+  height: 1.2em;
+}
+</style>
 </head>
 <body class="page-bibliotheque">
 
@@ -323,14 +339,14 @@
 
     <div class="biblio-filtres">
       <div class="filtre-recherche">
-        <span>🔍</span>
+        <span><svg class="action-icon"><use href="icons.svg#icon-search"></use></svg></span>
         <input type="text" id="searchInput" placeholder="Rechercher par titre…" />
       </div>
 
       <!-- Seulement Tout et Audios — Partitions et Complet supprimés -->
       <div class="filtre-tabs" id="filtreTabs">
         <button class="ftab ftab-actif" data-filtre="tous">Tout</button>
-        <button class="ftab" data-filtre="audio">🎵 Audios</button>
+        <button class="ftab" data-filtre="audio"><svg class="logo-icon"><use href="icons.svg#icon-musical-note"></use></svg> Audios</button>
       </div>
 
       <select id="filtreRubrique" class="filtre-select">

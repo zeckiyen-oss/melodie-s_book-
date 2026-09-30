@@ -124,20 +124,20 @@ async function buildSharedNavbar(profil, pageActive) {
 
   var liens = [
     { href: "dashboard",             label: "🏠 Accueil",           id: "dashboard",             roles: ["membre","preparateur","admin"] },
-    { href: "repertoire",            label: "🎵 Répertoire",        id: "repertoire",            roles: ["membre","preparateur","admin"] },
+    { href: "repertoire",            label: "<svg class="logo-icon"><use href="icons.svg#icon-musical-note"></use></svg> Répertoire",        id: "repertoire",            roles: ["membre","preparateur","admin"] },
     { href: "themes",                label: "📖 Thèmes",            id: "themes",                roles: ["membre","preparateur","admin"] },
     { href: "historique",            label: "📜 Historique",        id: "historique",            roles: ["membre","preparateur","admin"] },
     { href: "bibliotheque",          label: "📚 Bibliothèque",      id: "bibliotheque",          roles: ["membre","preparateur","admin"] },
-    { href: "proposer",              label: "💡 Proposer",          id: "proposer",              roles: ["membre","preparateur","admin"] },
+    { href: "proposer",              label: "<svg class="action-icon"><use href="icons.svg#icon-lightbulb"></use></svg> Proposer",          id: "proposer",              roles: ["membre","preparateur","admin"] },
     { href: "programme",             label: "🕊️ Programme",         id: "programme",             roles: ["membre","preparateur","admin"] },
-    { href: "preparation-culte",     label: "⛪ Prépa. culte",      id: "preparation-culte",     roles: ["preparateur","admin"] },
-    { href: "preparation-evenement", label: "📅 Prépa. événement",  id: "preparation-evenement", roles: ["admin"], rolesExtra: ["preparateur"], requiresEvenement: true },
-    { href: "propositions",          label: "📋 Propositions",      id: "propositions",          roles: ["admin"] },
-    { href: "validation-programme",  label: "✅ Validation",        id: "validation-programme",  roles: ["admin"] },
+    { href: "preparation-culte",     label: "<svg class="nav-icon"><use href="icons.svg#icon-church"></use></svg> Prépa. culte",      id: "preparation-culte",     roles: ["preparateur","admin"] },
+    { href: "preparation-evenement", label: "<svg class="action-icon"><use href="icons.svg#icon-calendar"></use></svg> Prépa. événement",  id: "preparation-evenement", roles: ["admin"], rolesExtra: ["preparateur"], requiresEvenement: true },
+    { href: "propositions",          label: "<svg class="action-icon"><use href="icons.svg#icon-list"></use></svg> Propositions",      id: "propositions",          roles: ["admin"] },
+    { href: "validation-programme",  label: "<svg class="nav-icon"><use href="icons.svg#icon-check"></use></svg> Validation",        id: "validation-programme",  roles: ["admin"] },
     { href: "designateur",           label: "🎯 Désignateur",       id: "designateur",           roles: ["admin"] },
     { href: "gestion-themes",        label: "🏷️ Gestion thèmes",   id: "gestion-themes",        roles: ["admin"] },
-    { href: "evenements",            label: "📅 Événements",        id: "evenements",            roles: ["admin"] },
-    { href: "statistiques",          label: "📊 Statistiques",      id: "statistiques",          roles: ["membre","preparateur","admin"] },
+    { href: "evenements",            label: "<svg class="action-icon"><use href="icons.svg#icon-calendar"></use></svg> Événements",        id: "evenements",            roles: ["admin"] },
+    { href: "statistiques",          label: "<svg class="action-icon"><use href="icons.svg#icon-chart"></use></svg> Statistiques",      id: "statistiques",          roles: ["membre","preparateur","admin"] },
     { href: "comptes",               label: "👥 Comptes",           id: "comptes",               roles: ["admin"] }
   ];
 
@@ -159,7 +159,7 @@ async function buildSharedNavbar(profil, pageActive) {
   var navHtml = '<nav class="snav">'
     + '<div class="snav-top">'
     + '<a href="dashboard" class="snav-brand">'
-    + '<span class="snav-logo">&#9834;</span>'
+    + '<span class="snav-logo"><svg class="logo-icon"><use href="icons.svg#icon-musical-note"></use></svg></span>'
     + '<span class="snav-title">Mélodie\'s Book</span>'
     + '</a>'
     + '<div class="snav-user">'
